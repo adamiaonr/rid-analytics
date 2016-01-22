@@ -67,7 +67,10 @@ void get_node_str(char * node_str, Node * node, int depth, int breadth) {
     // label
 //    output += std::string("[label=\"") + NODE_CHARS[node_type_int] + std::to_string(depth) + std::to_string(breadth) + "\"";
 //    output += std::string("[label=\"") + node->get_uid() + "\"";
-    output += std::string("[label=\"") + NODE_CHARS[node_type_int] + "(" + std::to_string(node->get_level()) + ")" "\"";
+    output += std::string("[label=\"") + NODE_CHARS[node_type_int] + "(" 
+        + std::to_string(node->get_curr_level()) + ":"
+        + (node->get_next_level() == END_OF_PATH ? "EOP" : std::to_string(node->get_next_level())) 
+        + ")" "\"";
     // color
     output += std::string(", color=") + GRAPHVIZ_COLORS[node_type_int];
 
@@ -123,6 +126,9 @@ void Graph::add_node(
     int breadth,
     double prob_val) {
 
+    // don't add nodes which are impossible to reach...
+    //if (prob_val == 0.0) return;
+
     char node_str[MAX_STRING_SIZE];
     char edge_str[MAX_STRING_SIZE];
 
@@ -136,14 +142,21 @@ void Graph::add_node(
 }
 
 void Graph::align_nodes(
-    Node * i_node,
-    Node * c_node,
-    Node * n_node) {
+    Node ** nodes,
+    int nodes_size) {
 
-    this->graph_filestream << std::string("\t{rank = same; ") 
-        + i_node->get_uid() + ", " 
-        + c_node->get_uid() + ", " 
-        + n_node->get_uid() + " };\n"; 
+    this->graph_filestream << std::string("\t{rank = same; ");
+
+    for (int i = 0; i < nodes_size; i++) {
+
+        this->graph_filestream << nodes[i]->get_uid();
+
+        if (i + 1 < nodes_size) {
+            this->graph_filestream << ", ";
+        }
+    }    
+
+    this->graph_filestream << " };\n"; 
 }
 
 void Graph::terminate() {

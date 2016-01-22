@@ -112,6 +112,8 @@ int DataParser::get_int_property_array(const char * property_name, int * int_arr
             continue;
         }
 
+        fprintf(stderr, "DataParser::get_int_property_array() : got property = %s\n", token[0]);
+
         if (token[0]) {
 
             for (n = 0; n < MAX_TOKENS_PER_LINE; ++n) {
@@ -124,7 +126,9 @@ int DataParser::get_int_property_array(const char * property_name, int * int_arr
 
                 } else {
 
-                    int_array[n - 1] = atoi(token[n]);
+                    fprintf(stderr, "DataParser::get_int_property_array() : got value = %s\n", token[n]);
+
+                    int_array[n] = atoi(token[n]);
                 }
             }
 
@@ -275,7 +279,7 @@ int DataParser::get_double_property_array(
 
                 } else {
 
-                    double_array[n - 1] = atof(token[n]);
+                    double_array[n] = atof(token[n]);
                 }
             }
 

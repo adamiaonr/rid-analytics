@@ -1,5 +1,6 @@
 #include <math.h>
 #include <cfloat>
+#include <algorithm>
 
 #include "argvparser.h"
 #include "tree/tree.hh"
@@ -75,6 +76,24 @@ ArgvParser * create_argv_parser() {
 double fp_rate(double m, double n, double k, double c) {
 
     return pow((1.0 - exp(-((n / m) * k))), k * c);
+}
+
+int is_all_eop(tree<Node *> tree_obj) {
+
+    tree<Node *>::leaf_iterator leaf_itr = tree_obj.begin_leaf();
+    tree<Node *>::leaf_iterator end_leaf_itr = tree_obj.end_leaf();
+
+    while (leaf_itr != end_leaf_itr) {
+
+        if ((*leaf_itr)->get_next_level() != END_OF_PATH) {
+
+            return 0;
+        }
+
+        ++leaf_itr;
+    }
+
+    return 1;
 }
 
 int main (int argc, char **argv) {
@@ -268,29 +287,44 @@ int main (int argc, char **argv) {
         }
     }
 
-    // 2.7) o-optimistic values per level. to calculate the o-optimistic value 
-    // for a router at level i, C[i], we perform a simple computation which 
-    // uses 2 inputs:
-    //  -# content sources visible at level i, i.e. CONTENT_SOURCE_DIST[i] 
-    //  -# LEVEL_BREADTH at level i - 1, LEVEL_BREADTH[i - 1]
-    //
-    // we assume a completely uniform distribution of sources behind the other 
-    // level i routers. therefore we calculate C[i] as 
-    //
-    // C[i] = min(CONTENT_SOURCE_DIST[i] / (LEVEL_BREADTH[i - 1] - 1), 1.0)
-    //
-    double o_optimistic[MAX_LEVEL_DEPTH];
+    // 2.7) o-optimistic transition matrix
+    double o_optimistic[MAX_LEVEL_DEPTH][MAX_LEVEL_DEPTH];
 
-    // 2.7.1) C[0] is special, in the sense that we don't specify the 
-    // nr. of routers within level 0.
-    o_optimistic[0] = DEFAULT_O_OPTIMISTIC;
-
-    for (int l = 1; l < level_depth; l++) {
-
-        // FIXME: what happens if LEVEL_BREADTH - 1 = 0 ? does it choose 1.0 as 
-        // we expect?
-        o_optimistic[l] = abs(min((double) content_source_dist[l] / ((double) level_breadth[l] - 1.0), 1.0));
+    // 2.7.1) initialize everything to 0.0
+    for (int i = 0; i < MAX_LEVEL_DEPTH; i++) {
+        memset(&o_optimistic[i][0], 0.0, MAX_LEVEL_DEPTH * sizeof(double));
     }
+
+    // 2.7.2) optimistic[0][0] is special, in the sense that we don't specify 
+    // the nr. of routers within level 0.
+    o_optimistic[0][0] = DEFAULT_O_OPTIMISTIC;
+
+    // 2.7.3) we now build the rest of the o-optimistic matrix, which will give 
+    // us the o-optimistic value for a transition between levels. the possible 
+    // tranistions are: 
+    //  1) i -> i
+    //  2) i -> i - 1
+    //
+    // note that one only goes up when a N decision occurs, and so the 
+    // o-optimistic value doesn't come into play for i -> i + 1 transitions
+
+    // case 1 : fill o_optimistic[i][i]. take into account the content sources 
+    // which are accessible via level i (minus those which were accessible via 
+    // the previous level i - 1 : we assume we never go back), and divide this 
+    // by the breadth of the level i - 1 (this approximates the number of 
+    // interfaces at level i)
+    for (int r = 1; r < level_depth; r++) {
+        o_optimistic[r][r] = abs(min((double) (content_source_dist[r] - content_source_dist[r - 1]) / ((double) level_breadth[r - 1] - 1.0), 1.0));
+    }
+
+    // case 2 : fill o_optimistic[i][i - 1]. since we're going down from level 
+    // i, this is simply 1 / level_breadth[r - 1]
+    for (int r = (level_depth - 1); r - 1 >= 0; r--) {
+
+        o_optimistic[r][r - 1] = 1.0 / ((double) level_breadth[r - 1]);
+    }
+
+    // 2.7.4) print the transition matrix (later)
 
     // 2.8) latency values per level, in multiples of some time unit.
     double latencies[MAX_LEVEL_DEPTH];
@@ -406,7 +440,7 @@ int main (int argc, char **argv) {
 
     // 2.9) print all parameters
 
-    printf("\n*** PARAMETERS ***\n");
+    printf("\n\n*** PARAMETERS ***\n");
 
     // 2.9.1) initial row & midrule
     printf("\n[LEVEL]   : |");
@@ -420,22 +454,49 @@ int main (int argc, char **argv) {
         printf("----------");
 
     // 2.9.2) penalty row per level
+    printf("\n[SOURCES] : |");
+
+    for (int i = 0; i < level_depth; i++)
+        printf(" %-.8d|", content_source_dist[i]);
+
+    // 2.9.3) penalty row per level
+    printf("\n[BREADTH] : |");
+
+    for (int i = 0; i < level_depth; i++)
+        printf(" %-.8d|", level_breadth[i]);
+
+    // 2.9.4) penalty row per level
     printf("\n[PENALTY] : |");
 
     for (int i = 0; i < level_depth; i++)
         printf(" %-.6f|", penalties[i]);
 
-    // 2.9.3) o-opt row per level
-    printf("\n[O-OPT]   : |");
-
-    for (int i = 0; i < level_depth; i++)
-        printf(" %-.6f|", o_optimistic[i]);
-
-    // 2.9.3) o-opt row per level
+    // 2.9.6) o-opt row per level
     printf("\n[FP-PROB] : |");
 
     for (int i = 0; i < level_depth; i++)
         printf(" %-.2E|", fp_prob[i]);
+
+    // 2.9.5) o-optimistic matrix
+    printf("\n\n[O-OPTIMISTIC MATRIX] : \n");
+    printf("\n   |");
+
+    for (int i = 0; i < level_depth; i++)
+        printf(" %-9d|", i + 1);
+
+    printf("\n-------");
+
+    for (int i = 0; i < level_depth; i++)
+        printf("----------");    
+
+    for (int r = 0; r < level_depth; r++) {
+
+        printf("\n %d |", r + 1);
+
+        for (int c = 0; c < level_depth; c++) {
+            printf(" %-.3E|", o_optimistic[r][c]);
+        }
+    }
 
     printf("\n\n");
 
@@ -450,7 +511,7 @@ int main (int argc, char **argv) {
     // initialize the probability tree using begin() and add a root 
     // (dummy) node with insert(). after this, we use append_child() all the 
     // way.
-    Node * root_node = new Node(0, 0, 1.0, latencies[0], Node::O_NODE);
+    Node * root_node = new Node(0, 0, 0, 1.0, latencies[0], Node::O_NODE);
     root = decision_tree.begin();
     root = decision_tree.insert(root, root_node);
 
@@ -481,6 +542,8 @@ int main (int argc, char **argv) {
     double prev_node_latency = 0.0;
     Node::Type prev_node_type = Node::UNKNOWN;
 
+    double next_node_prob = 0.0;
+    double path_latency = 0.0;
     double penalty_latency = 0.0;
 
     // start the .dot file for rendering the probability tree
@@ -494,7 +557,7 @@ int main (int argc, char **argv) {
 
     // note the limit condition : on the longest possible path (i.e. going 
     // through the max. level) we make 2 * level_depth decisions
-    for (depth = 0; depth < (2 * level_depth); depth++) {
+    for (depth = 0; depth < ((2 * level_depth)); depth++) {
 
         // // just a dummy guard
         // if (depth > 3)
@@ -508,7 +571,7 @@ int main (int argc, char **argv) {
         // cycle through the previous decisions, append children
         while (decision_tree.is_valid(depth_itr)) {
 
-            curr_node_level = (*depth_itr)->get_level();
+            curr_node_level = (*depth_itr)->get_next_level();
             curr_node_max_level = (*depth_itr)->get_max_level();
 
             // if this is a 'dead end', don't append children to it
@@ -533,9 +596,9 @@ int main (int argc, char **argv) {
             prev_node_type = (*depth_itr)->get_type();
 
             // create the children Node objects, specifying the diff types
-            i_node = new Node(curr_node_max_level, Node::I_NODE);
-            c_node = new Node(curr_node_max_level, Node::C_NODE);
-            n_node = new Node(curr_node_max_level, Node::N_NODE);
+            i_node = new Node(curr_node_max_level, curr_node_level, Node::I_NODE);
+            c_node = new Node(curr_node_max_level, curr_node_level, Node::C_NODE);
+            n_node = new Node(curr_node_max_level, curr_node_level, Node::N_NODE);
 
             // what was the previous decision type? this will influence the 
             // next decision: 
@@ -553,17 +616,15 @@ int main (int argc, char **argv) {
             //
             // if a decision type does not show up in the 'NEXT' column, it is 
             // given a prob of 0.0 and it's next level is set to END_OF_PATH.  
+            //
             if (prev_node_type == Node::N_NODE || prev_node_type == Node::O_NODE) {
 
-                // if N or O, the request has just been forwarded from a level 
-                // below. any decision - I, C, N - is possible
-
                 // Q1) if NEXT is N : +1 level (and update the max level)
-                n_node->set_level(curr_node_level + 1);
+                n_node->set_next_level(curr_node_level + 1);
                 n_node->set_max_level(curr_node_level + 1);
                 // Q1) if NEXT is I or C : next level stays the same
-                i_node->set_level(curr_node_level);
-                c_node->set_level(curr_node_level);
+                i_node->set_next_level(curr_node_level);
+                c_node->set_next_level(curr_node_level);
 
                 // Q2) for all decisions, we add +1 latency of the curr_node_level
                 i_node->set_latency_val(prev_node_latency + latencies[curr_node_level]);
@@ -577,20 +638,21 @@ int main (int argc, char **argv) {
                     // if there are 'visible' sources, then there's no way we 
                     // can get an N decision. mark it as END_OF_PATH.
                     n_node->set_prob_val(prev_node_prob * 0.0);
-                    n_node->set_level(END_OF_PATH);
+                    n_node->set_next_level(END_OF_PATH);
 
                     // we may then follow a C or I decision. to determine the 
                     // probability of each case, we 'split' them according to 
                     // the o_optimistic value for curr_node_level. 
-                    i_node->set_prob_val(prev_node_prob * (1.0 - o_optimistic[curr_node_level]) * 1.0);
-                    c_node->set_prob_val(prev_node_prob * o_optimistic[curr_node_level] * 1.0);
+                    i_node->set_prob_val(prev_node_prob * (1.0 - o_optimistic[curr_node_level][i_node->get_next_level()]) * 1.0);
+                    c_node->set_prob_val(prev_node_prob * o_optimistic[curr_node_level][c_node->get_next_level()] * 1.0);
 
                     // add nodes to the .dot file for graph rendering
-                    graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, (1.0 - o_optimistic[curr_node_level]) * 1.0);
-                    graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, o_optimistic[curr_node_level] * 1.0);
-                    graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, 0.0);
+                    graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, (1.0 - o_optimistic[curr_node_level][i_node->get_next_level()]) * 1.0);
+                    graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, o_optimistic[curr_node_level][c_node->get_next_level()] * 1.0);
+                    //graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, 0.0);
 
-                    graphviz_graph->align_nodes(i_node, c_node, n_node);
+                    Node * nodes[] = {i_node, c_node};
+                    graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
 
                 } else {
 
@@ -598,7 +660,7 @@ int main (int argc, char **argv) {
                     // of making a C decision: all FPs will be (I)ncorrect. 
                     // mark it as END_OF_PATH.
                     c_node->set_prob_val(prev_node_prob * 0.0);
-                    c_node->set_level(END_OF_PATH);
+                    c_node->set_next_level(END_OF_PATH);
 
                     // we may then follow an I or N decision, which basically 
                     // comes down to P(FP) or (1 - P(FP)).
@@ -607,70 +669,87 @@ int main (int argc, char **argv) {
 
                     // add nodes to the .dot file for graph rendering
                     graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, fp_prob[curr_node_level]);
-                    graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, 0.0);
+                    //graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, 0.0);
                     graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - fp_prob[curr_node_level]));
 
-                    graphviz_graph->align_nodes(i_node, c_node, n_node);
+                    Node * nodes[] = {i_node, n_node};
+                    graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                 }
 
             } else if (prev_node_type == Node::I_NODE) {
 
                 // if the previous decision was I, we can either make another I 
-                // decision or come to a dead e(N)d. mark the C node 
-                // as END_OF_PATH.
+                // decision or come to a dead e(N)d (N will require relaying as 
+                // a solution).
+
+                // making a C decision is impossible
                 c_node->set_prob_val(prev_node_prob * 0.0);
-                c_node->set_level(END_OF_PATH);
+
+                // mark the C and N nodes as END_OF_PATH.
+                c_node->set_next_level(END_OF_PATH);
+                n_node->set_next_level(END_OF_PATH);
 
                 // Q1) if the previous decision was I, we will now go down 
                 // a level
                 int next_node_level = curr_node_level - 1;
+
+                printf(" *** %s's level is now %d\n", (*depth_itr)->get_uid().c_str(), next_node_level);
 
                 // check if the request is about to be delivered to a content 
                 // source
                 if (next_node_level == END_OF_PATH) {
 
                     // penalty due to relaying
+                    path_latency = latencies[0];
                     penalty_latency = penalties[curr_node_max_level];
 
-                    // FIXME: this is an hack to avoid an "index out of bounds" 
-                    // segfault
-                    next_node_level = 0;
+                    // we did not change levels, and so fwd tables will remain 
+                    // the same. we'll make the same decision again.
+                    next_node_prob = 1.0;
 
                 } else {
 
+                    // the next component of path latency will be that of 
+                    // the level below: notice that we're essentially forwarding 
+                    // between hops within the same level (in this case, 
+                    // next_node_level)
+                    path_latency = latencies[next_node_level];
                     penalty_latency = 0.0;
+
+                    next_node_prob = fp_prob[next_node_level];
                 }   
 
-                n_node->set_level(next_node_level);
-                i_node->set_level(next_node_level);
+                i_node->set_next_level(next_node_level);
 
                 // Q2) the P(FP) we use is that of the next level
-                n_node->set_prob_val(prev_node_prob * (1.0 - fp_prob[next_node_level]));
-                i_node->set_prob_val(prev_node_prob * fp_prob[next_node_level]);
+                n_node->set_prob_val(prev_node_prob * (1.0 - next_node_prob));
+                i_node->set_prob_val(prev_node_prob * next_node_prob);
 
-                // Q3) regarding latencies, we use those for the next level, 
-                // adding the penalty latency to the I decision
-                i_node->set_latency_val(prev_node_latency + latencies[next_node_level] + penalty_latency);
-                n_node->set_latency_val(prev_node_latency + latencies[next_node_level]);
+                // Q3) regarding latencies:
+                //  I node : use the values calculated above
+                i_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
+                //  N node : the policy is to relay when a I > N transition 
+                //           happens, so simply add this level's penalty
+                n_node->set_latency_val(prev_node_latency + penalties[curr_node_max_level]);
 
                 // add nodes to the .dot file for graph rendering
-                graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, fp_prob[next_node_level]);
-                graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, 0.0);
-                graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - fp_prob[next_node_level]));
+                graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, next_node_prob);
+                //graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, 0.0);
+                graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - next_node_prob));
 
-                graphviz_graph->align_nodes(i_node, c_node, n_node);
+                Node * nodes[] = {i_node, n_node};
+                graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
 
             } else {
 
                 // if the previous decision was C, we can either make another 
                 // C or an I decision. mark the N node as END_OF_PATH.
                 n_node->set_prob_val(prev_node_prob * 0.0);
-                n_node->set_level(END_OF_PATH);
+                n_node->set_next_level(END_OF_PATH);
 
                 // Q1) if the previous decision was C, we will also go down 
                 // a level
                 int next_node_level = curr_node_level - 1;
-
 
                 // check if the request is about to be delivered to a content 
                 // source
@@ -679,32 +758,32 @@ int main (int argc, char **argv) {
                     // penalty due to relaying
                     penalty_latency = penalties[curr_node_max_level];
 
-                    // FIXME: this is an hack to avoid an "index out of bounds" 
-                    // segfault
-                    next_node_level = 0;
+                    next_node_prob = o_optimistic[0][0];
 
                 } else {
 
                     penalty_latency = 0.0;
+                    next_node_prob = o_optimistic[curr_node_level][next_node_level];
                 }
 
-                i_node->set_level(next_node_level);
-                c_node->set_level(next_node_level);
+                i_node->set_next_level(next_node_level);
+                c_node->set_next_level(next_node_level);
 
                 // Q2) probabilities 
-                i_node->set_prob_val(prev_node_prob * (1.0 - o_optimistic[next_node_level]) * 1.0);
-                c_node->set_prob_val(prev_node_prob * o_optimistic[next_node_level] * 1.0);
+                i_node->set_prob_val(prev_node_prob * (1.0 - next_node_prob) * 1.0);
+                c_node->set_prob_val(prev_node_prob * next_node_prob * 1.0);
 
                 // Q3) latencies
                 i_node->set_latency_val(prev_node_latency + latencies[next_node_level] + penalty_latency);
                 c_node->set_latency_val(prev_node_latency + latencies[next_node_level]);
 
                 // add nodes to the .dot file for graph rendering
-                graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, (1.0 - o_optimistic[next_node_level]) * 1.0);
-                graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, o_optimistic[next_node_level] * 1.0);
-                graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, 0.0);
+                graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, (1.0 - next_node_prob) * 1.0);
+                graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, next_node_prob * 1.0);
+                //graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, 0.0);
 
-                graphviz_graph->align_nodes(i_node, c_node, n_node);
+                Node * nodes[] = {i_node, c_node};
+                graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
             }
 
             // finally append the 3 children
@@ -717,6 +796,9 @@ int main (int argc, char **argv) {
             // go to the next node in the previous level and repeat the process
             ++depth_itr;
         }
+
+        if (is_all_eop(decision_tree) > 0)
+            break;
     }
 
     // wrap the .dot file up
@@ -727,7 +809,7 @@ int main (int argc, char **argv) {
     tree<Node *>::leaf_iterator leaf_itr = decision_tree.begin_leaf();
     tree<Node *>::leaf_iterator end_leaf_itr = decision_tree.end_leaf();
 
-    printf("*** FINAL RESULTS ***\n\n");
+    printf("\n*** FINAL RESULTS ***\n\n");
 
     double checksum = 0.0;
 
@@ -745,7 +827,7 @@ int main (int argc, char **argv) {
         ++leaf_itr;
     }
 
-    printf("\n[CHECKSUM : %02.6f]\n", checksum);
+    printf("\n[CHECKSUM : %-.8E]\n", checksum);
 
     return 0;
 }

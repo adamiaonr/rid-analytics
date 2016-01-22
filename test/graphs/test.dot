@@ -1,634 +1,109 @@
 digraph {
 	rankdir=LR
 
-	I10[label="I(0)", color=red];
-	O00 -> I10[label ="9.69E-11", weight="9.69E-11"];
+	I10[label="I(0:0)", color=red];
+	O00 -> I10[label ="8.62E-08", weight="8.62E-08"];
 
-	C11[label="C(-1)", color=green];
-	O00 -> C11[label ="0.00E+00", weight="0.00E+00"];
-
-	N12[label="N(1)", color=gray];
+	N12[label="N(0:1)", color=gray];
 	O00 -> N12[label ="1.00E+00", weight="1.00E+00"];
 
-	{rank = same; I10, C11, N12 };
-	I20[label="I(0)", color=red];
-	I10 -> I20[label ="9.69E-11", weight="9.69E-11"];
+	{rank = same; I10, N12 };
+	I20[label="I(0:EOP)", color=red];
+	I10 -> I20[label ="1.00E+00", weight="1.00E+00"];
 
-	C21[label="C(-1)", color=green];
-	I10 -> C21[label ="0.00E+00", weight="0.00E+00"];
+	N22[label="N(0:EOP)", color=gray];
+	I10 -> N22[label ="0.00E+00", weight="0.00E+00"];
 
-	N22[label="N(0)", color=gray];
-	I10 -> N22[label ="1.00E+00", weight="1.00E+00"];
+	{rank = same; I20, N22 };
+	I26[label="I(1:1)", color=red];
+	N12 -> I26[label ="1.72E-07", weight="1.72E-07"];
 
-	{rank = same; I20, C21, N22 };
-	I26[label="I(1)", color=red];
-	N12 -> I26[label ="0.00E+00", weight="0.00E+00"];
+	N28[label="N(1:2)", color=gray];
+	N12 -> N28[label ="1.00E+00", weight="1.00E+00"];
 
-	C27[label="C(1)", color=green];
-	N12 -> C27[label ="1.00E+00", weight="1.00E+00"];
+	{rank = same; I26, N28 };
+	I39[label="I(1:0)", color=red];
+	I26 -> I39[label ="8.62E-08", weight="8.62E-08"];
 
-	N28[label="N(-1)", color=gray];
-	N12 -> N28[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I26, C27, N28 };
-	I30[label="I(0)", color=red];
-	I20 -> I30[label ="9.69E-11", weight="9.69E-11"];
-
-	C31[label="C(-1)", color=green];
-	I20 -> C31[label ="0.00E+00", weight="0.00E+00"];
-
-	N32[label="N(0)", color=gray];
-	I20 -> N32[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I30, C31, N32 };
-	I36[label="I(0)", color=red];
-	N22 -> I36[label ="9.69E-11", weight="9.69E-11"];
-
-	C37[label="C(-1)", color=green];
-	N22 -> C37[label ="0.00E+00", weight="0.00E+00"];
-
-	N38[label="N(1)", color=gray];
-	N22 -> N38[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I36, C37, N38 };
-	I39[label="I(0)", color=red];
-	I26 -> I39[label ="9.69E-11", weight="9.69E-11"];
-
-	C310[label="C(-1)", color=green];
-	I26 -> C310[label ="0.00E+00", weight="0.00E+00"];
-
-	N311[label="N(0)", color=gray];
+	N311[label="N(1:EOP)", color=gray];
 	I26 -> N311[label ="1.00E+00", weight="1.00E+00"];
 
-	{rank = same; I39, C310, N311 };
-	I312[label="I(0)", color=red];
-	C27 -> I312[label ="9.00E-01", weight="9.00E-01"];
+	{rank = same; I39, N311 };
+	I315[label="I(2:2)", color=red];
+	N28 -> I315[label ="9.47E-01", weight="9.47E-01"];
 
-	C313[label="C(0)", color=green];
-	C27 -> C313[label ="1.00E-01", weight="1.00E-01"];
+	C316[label="C(2:2)", color=green];
+	N28 -> C316[label ="5.26E-02", weight="5.26E-02"];
 
-	N314[label="N(-1)", color=gray];
-	C27 -> N314[label ="0.00E+00", weight="0.00E+00"];
+	{rank = same; I315, C316 };
+	I40[label="I(0:EOP)", color=red];
+	I39 -> I40[label ="1.00E+00", weight="1.00E+00"];
 
-	{rank = same; I312, C313, N314 };
-	I40[label="I(0)", color=red];
-	I30 -> I40[label ="9.69E-11", weight="9.69E-11"];
+	N42[label="N(0:EOP)", color=gray];
+	I39 -> N42[label ="0.00E+00", weight="0.00E+00"];
 
-	C41[label="C(-1)", color=green];
-	I30 -> C41[label ="0.00E+00", weight="0.00E+00"];
+	{rank = same; I40, N42 };
+	I49[label="I(2:1)", color=red];
+	I315 -> I49[label ="1.72E-07", weight="1.72E-07"];
 
-	N42[label="N(0)", color=gray];
-	I30 -> N42[label ="1.00E+00", weight="1.00E+00"];
+	N411[label="N(2:EOP)", color=gray];
+	I315 -> N411[label ="1.00E+00", weight="1.00E+00"];
 
-	{rank = same; I40, C41, N42 };
-	I46[label="I(0)", color=red];
-	N32 -> I46[label ="9.69E-11", weight="9.69E-11"];
+	{rank = same; I49, N411 };
+	I412[label="I(2:1)", color=red];
+	C316 -> I412[label ="9.50E-01", weight="9.50E-01"];
 
-	C47[label="C(-1)", color=green];
-	N32 -> C47[label ="0.00E+00", weight="0.00E+00"];
+	C413[label="C(2:1)", color=green];
+	C316 -> C413[label ="5.00E-02", weight="5.00E-02"];
 
-	N48[label="N(1)", color=gray];
-	N32 -> N48[label ="1.00E+00", weight="1.00E+00"];
+	{rank = same; I412, C413 };
+	I59[label="I(1:0)", color=red];
+	I49 -> I59[label ="8.62E-08", weight="8.62E-08"];
 
-	{rank = same; I46, C47, N48 };
-	I49[label="I(0)", color=red];
-	I36 -> I49[label ="9.69E-11", weight="9.69E-11"];
+	N511[label="N(1:EOP)", color=gray];
+	I49 -> N511[label ="1.00E+00", weight="1.00E+00"];
 
-	C410[label="C(-1)", color=green];
-	I36 -> C410[label ="0.00E+00", weight="0.00E+00"];
+	{rank = same; I59, N511 };
+	I518[label="I(1:0)", color=red];
+	I412 -> I518[label ="8.62E-08", weight="8.62E-08"];
 
-	N411[label="N(0)", color=gray];
-	I36 -> N411[label ="1.00E+00", weight="1.00E+00"];
+	N520[label="N(1:EOP)", color=gray];
+	I412 -> N520[label ="1.00E+00", weight="1.00E+00"];
 
-	{rank = same; I49, C410, N411 };
-	I415[label="I(1)", color=red];
-	N38 -> I415[label ="0.00E+00", weight="0.00E+00"];
+	{rank = same; I518, N520 };
+	I521[label="I(1:0)", color=red];
+	C413 -> I521[label ="9.00E-01", weight="9.00E-01"];
 
-	C416[label="C(1)", color=green];
-	N38 -> C416[label ="1.00E+00", weight="1.00E+00"];
+	C522[label="C(1:0)", color=green];
+	C413 -> C522[label ="1.00E-01", weight="1.00E-01"];
 
-	N417[label="N(-1)", color=gray];
-	N38 -> N417[label ="0.00E+00", weight="0.00E+00"];
+	{rank = same; I521, C522 };
+	I60[label="I(0:EOP)", color=red];
+	I59 -> I60[label ="1.00E+00", weight="1.00E+00"];
 
-	{rank = same; I415, C416, N417 };
-	I418[label="I(0)", color=red];
-	I39 -> I418[label ="9.69E-11", weight="9.69E-11"];
+	N62[label="N(0:EOP)", color=gray];
+	I59 -> N62[label ="0.00E+00", weight="0.00E+00"];
 
-	C419[label="C(-1)", color=green];
-	I39 -> C419[label ="0.00E+00", weight="0.00E+00"];
+	{rank = same; I60, N62 };
+	I69[label="I(0:EOP)", color=red];
+	I518 -> I69[label ="1.00E+00", weight="1.00E+00"];
 
-	N420[label="N(0)", color=gray];
-	I39 -> N420[label ="1.00E+00", weight="1.00E+00"];
+	N611[label="N(0:EOP)", color=gray];
+	I518 -> N611[label ="0.00E+00", weight="0.00E+00"];
 
-	{rank = same; I418, C419, N420 };
-	I424[label="I(0)", color=red];
-	N311 -> I424[label ="9.69E-11", weight="9.69E-11"];
+	{rank = same; I69, N611 };
+	I618[label="I(0:EOP)", color=red];
+	I521 -> I618[label ="1.00E+00", weight="1.00E+00"];
 
-	C425[label="C(-1)", color=green];
-	N311 -> C425[label ="0.00E+00", weight="0.00E+00"];
+	N620[label="N(0:EOP)", color=gray];
+	I521 -> N620[label ="0.00E+00", weight="0.00E+00"];
 
-	N426[label="N(1)", color=gray];
-	N311 -> N426[label ="1.00E+00", weight="1.00E+00"];
+	{rank = same; I618, N620 };
+	I621[label="I(0:EOP)", color=red];
+	C522 -> I621[label ="9.00E-01", weight="9.00E-01"];
 
-	{rank = same; I424, C425, N426 };
-	I427[label="I(0)", color=red];
-	I312 -> I427[label ="9.69E-11", weight="9.69E-11"];
+	C622[label="C(0:EOP)", color=green];
+	C522 -> C622[label ="1.00E-01", weight="1.00E-01"];
 
-	C428[label="C(-1)", color=green];
-	I312 -> C428[label ="0.00E+00", weight="0.00E+00"];
-
-	N429[label="N(0)", color=gray];
-	I312 -> N429[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I427, C428, N429 };
-	I430[label="I(0)", color=red];
-	C313 -> I430[label ="9.00E-01", weight="9.00E-01"];
-
-	C431[label="C(0)", color=green];
-	C313 -> C431[label ="1.00E-01", weight="1.00E-01"];
-
-	N432[label="N(-1)", color=gray];
-	C313 -> N432[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I430, C431, N432 };
-	I50[label="I(0)", color=red];
-	I40 -> I50[label ="9.69E-11", weight="9.69E-11"];
-
-	C51[label="C(-1)", color=green];
-	I40 -> C51[label ="0.00E+00", weight="0.00E+00"];
-
-	N52[label="N(0)", color=gray];
-	I40 -> N52[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I50, C51, N52 };
-	I56[label="I(0)", color=red];
-	N42 -> I56[label ="9.69E-11", weight="9.69E-11"];
-
-	C57[label="C(-1)", color=green];
-	N42 -> C57[label ="0.00E+00", weight="0.00E+00"];
-
-	N58[label="N(1)", color=gray];
-	N42 -> N58[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I56, C57, N58 };
-	I59[label="I(0)", color=red];
-	I46 -> I59[label ="9.69E-11", weight="9.69E-11"];
-
-	C510[label="C(-1)", color=green];
-	I46 -> C510[label ="0.00E+00", weight="0.00E+00"];
-
-	N511[label="N(0)", color=gray];
-	I46 -> N511[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I59, C510, N511 };
-	I515[label="I(1)", color=red];
-	N48 -> I515[label ="0.00E+00", weight="0.00E+00"];
-
-	C516[label="C(1)", color=green];
-	N48 -> C516[label ="1.00E+00", weight="1.00E+00"];
-
-	N517[label="N(-1)", color=gray];
-	N48 -> N517[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I515, C516, N517 };
-	I518[label="I(0)", color=red];
-	I49 -> I518[label ="9.69E-11", weight="9.69E-11"];
-
-	C519[label="C(-1)", color=green];
-	I49 -> C519[label ="0.00E+00", weight="0.00E+00"];
-
-	N520[label="N(0)", color=gray];
-	I49 -> N520[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I518, C519, N520 };
-	I524[label="I(0)", color=red];
-	N411 -> I524[label ="9.69E-11", weight="9.69E-11"];
-
-	C525[label="C(-1)", color=green];
-	N411 -> C525[label ="0.00E+00", weight="0.00E+00"];
-
-	N526[label="N(1)", color=gray];
-	N411 -> N526[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I524, C525, N526 };
-	I527[label="I(0)", color=red];
-	I415 -> I527[label ="9.69E-11", weight="9.69E-11"];
-
-	C528[label="C(-1)", color=green];
-	I415 -> C528[label ="0.00E+00", weight="0.00E+00"];
-
-	N529[label="N(0)", color=gray];
-	I415 -> N529[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I527, C528, N529 };
-	I530[label="I(0)", color=red];
-	C416 -> I530[label ="9.00E-01", weight="9.00E-01"];
-
-	C531[label="C(0)", color=green];
-	C416 -> C531[label ="1.00E-01", weight="1.00E-01"];
-
-	N532[label="N(-1)", color=gray];
-	C416 -> N532[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I530, C531, N532 };
-	I536[label="I(0)", color=red];
-	I418 -> I536[label ="9.69E-11", weight="9.69E-11"];
-
-	C537[label="C(-1)", color=green];
-	I418 -> C537[label ="0.00E+00", weight="0.00E+00"];
-
-	N538[label="N(0)", color=gray];
-	I418 -> N538[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I536, C537, N538 };
-	I542[label="I(0)", color=red];
-	N420 -> I542[label ="9.69E-11", weight="9.69E-11"];
-
-	C543[label="C(-1)", color=green];
-	N420 -> C543[label ="0.00E+00", weight="0.00E+00"];
-
-	N544[label="N(1)", color=gray];
-	N420 -> N544[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I542, C543, N544 };
-	I545[label="I(0)", color=red];
-	I424 -> I545[label ="9.69E-11", weight="9.69E-11"];
-
-	C546[label="C(-1)", color=green];
-	I424 -> C546[label ="0.00E+00", weight="0.00E+00"];
-
-	N547[label="N(0)", color=gray];
-	I424 -> N547[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I545, C546, N547 };
-	I551[label="I(1)", color=red];
-	N426 -> I551[label ="0.00E+00", weight="0.00E+00"];
-
-	C552[label="C(1)", color=green];
-	N426 -> C552[label ="1.00E+00", weight="1.00E+00"];
-
-	N553[label="N(-1)", color=gray];
-	N426 -> N553[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I551, C552, N553 };
-	I554[label="I(0)", color=red];
-	I427 -> I554[label ="9.69E-11", weight="9.69E-11"];
-
-	C555[label="C(-1)", color=green];
-	I427 -> C555[label ="0.00E+00", weight="0.00E+00"];
-
-	N556[label="N(0)", color=gray];
-	I427 -> N556[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I554, C555, N556 };
-	I560[label="I(0)", color=red];
-	N429 -> I560[label ="9.69E-11", weight="9.69E-11"];
-
-	C561[label="C(-1)", color=green];
-	N429 -> C561[label ="0.00E+00", weight="0.00E+00"];
-
-	N562[label="N(1)", color=gray];
-	N429 -> N562[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I560, C561, N562 };
-	I563[label="I(0)", color=red];
-	I430 -> I563[label ="9.69E-11", weight="9.69E-11"];
-
-	C564[label="C(-1)", color=green];
-	I430 -> C564[label ="0.00E+00", weight="0.00E+00"];
-
-	N565[label="N(0)", color=gray];
-	I430 -> N565[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I563, C564, N565 };
-	I566[label="I(0)", color=red];
-	C431 -> I566[label ="9.00E-01", weight="9.00E-01"];
-
-	C567[label="C(0)", color=green];
-	C431 -> C567[label ="1.00E-01", weight="1.00E-01"];
-
-	N568[label="N(-1)", color=gray];
-	C431 -> N568[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I566, C567, N568 };
-	I60[label="I(0)", color=red];
-	I50 -> I60[label ="9.69E-11", weight="9.69E-11"];
-
-	C61[label="C(-1)", color=green];
-	I50 -> C61[label ="0.00E+00", weight="0.00E+00"];
-
-	N62[label="N(0)", color=gray];
-	I50 -> N62[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I60, C61, N62 };
-	I66[label="I(0)", color=red];
-	N52 -> I66[label ="9.69E-11", weight="9.69E-11"];
-
-	C67[label="C(-1)", color=green];
-	N52 -> C67[label ="0.00E+00", weight="0.00E+00"];
-
-	N68[label="N(1)", color=gray];
-	N52 -> N68[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I66, C67, N68 };
-	I69[label="I(0)", color=red];
-	I56 -> I69[label ="9.69E-11", weight="9.69E-11"];
-
-	C610[label="C(-1)", color=green];
-	I56 -> C610[label ="0.00E+00", weight="0.00E+00"];
-
-	N611[label="N(0)", color=gray];
-	I56 -> N611[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I69, C610, N611 };
-	I615[label="I(1)", color=red];
-	N58 -> I615[label ="0.00E+00", weight="0.00E+00"];
-
-	C616[label="C(1)", color=green];
-	N58 -> C616[label ="1.00E+00", weight="1.00E+00"];
-
-	N617[label="N(-1)", color=gray];
-	N58 -> N617[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I615, C616, N617 };
-	I618[label="I(0)", color=red];
-	I59 -> I618[label ="9.69E-11", weight="9.69E-11"];
-
-	C619[label="C(-1)", color=green];
-	I59 -> C619[label ="0.00E+00", weight="0.00E+00"];
-
-	N620[label="N(0)", color=gray];
-	I59 -> N620[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I618, C619, N620 };
-	I624[label="I(0)", color=red];
-	N511 -> I624[label ="9.69E-11", weight="9.69E-11"];
-
-	C625[label="C(-1)", color=green];
-	N511 -> C625[label ="0.00E+00", weight="0.00E+00"];
-
-	N626[label="N(1)", color=gray];
-	N511 -> N626[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I624, C625, N626 };
-	I627[label="I(0)", color=red];
-	I515 -> I627[label ="9.69E-11", weight="9.69E-11"];
-
-	C628[label="C(-1)", color=green];
-	I515 -> C628[label ="0.00E+00", weight="0.00E+00"];
-
-	N629[label="N(0)", color=gray];
-	I515 -> N629[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I627, C628, N629 };
-	I630[label="I(0)", color=red];
-	C516 -> I630[label ="9.00E-01", weight="9.00E-01"];
-
-	C631[label="C(0)", color=green];
-	C516 -> C631[label ="1.00E-01", weight="1.00E-01"];
-
-	N632[label="N(-1)", color=gray];
-	C516 -> N632[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I630, C631, N632 };
-	I636[label="I(0)", color=red];
-	I518 -> I636[label ="9.69E-11", weight="9.69E-11"];
-
-	C637[label="C(-1)", color=green];
-	I518 -> C637[label ="0.00E+00", weight="0.00E+00"];
-
-	N638[label="N(0)", color=gray];
-	I518 -> N638[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I636, C637, N638 };
-	I642[label="I(0)", color=red];
-	N520 -> I642[label ="9.69E-11", weight="9.69E-11"];
-
-	C643[label="C(-1)", color=green];
-	N520 -> C643[label ="0.00E+00", weight="0.00E+00"];
-
-	N644[label="N(1)", color=gray];
-	N520 -> N644[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I642, C643, N644 };
-	I645[label="I(0)", color=red];
-	I524 -> I645[label ="9.69E-11", weight="9.69E-11"];
-
-	C646[label="C(-1)", color=green];
-	I524 -> C646[label ="0.00E+00", weight="0.00E+00"];
-
-	N647[label="N(0)", color=gray];
-	I524 -> N647[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I645, C646, N647 };
-	I651[label="I(1)", color=red];
-	N526 -> I651[label ="0.00E+00", weight="0.00E+00"];
-
-	C652[label="C(1)", color=green];
-	N526 -> C652[label ="1.00E+00", weight="1.00E+00"];
-
-	N653[label="N(-1)", color=gray];
-	N526 -> N653[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I651, C652, N653 };
-	I654[label="I(0)", color=red];
-	I527 -> I654[label ="9.69E-11", weight="9.69E-11"];
-
-	C655[label="C(-1)", color=green];
-	I527 -> C655[label ="0.00E+00", weight="0.00E+00"];
-
-	N656[label="N(0)", color=gray];
-	I527 -> N656[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I654, C655, N656 };
-	I660[label="I(0)", color=red];
-	N529 -> I660[label ="9.69E-11", weight="9.69E-11"];
-
-	C661[label="C(-1)", color=green];
-	N529 -> C661[label ="0.00E+00", weight="0.00E+00"];
-
-	N662[label="N(1)", color=gray];
-	N529 -> N662[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I660, C661, N662 };
-	I663[label="I(0)", color=red];
-	I530 -> I663[label ="9.69E-11", weight="9.69E-11"];
-
-	C664[label="C(-1)", color=green];
-	I530 -> C664[label ="0.00E+00", weight="0.00E+00"];
-
-	N665[label="N(0)", color=gray];
-	I530 -> N665[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I663, C664, N665 };
-	I666[label="I(0)", color=red];
-	C531 -> I666[label ="9.00E-01", weight="9.00E-01"];
-
-	C667[label="C(0)", color=green];
-	C531 -> C667[label ="1.00E-01", weight="1.00E-01"];
-
-	N668[label="N(-1)", color=gray];
-	C531 -> N668[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I666, C667, N668 };
-	I672[label="I(0)", color=red];
-	I536 -> I672[label ="9.69E-11", weight="9.69E-11"];
-
-	C673[label="C(-1)", color=green];
-	I536 -> C673[label ="0.00E+00", weight="0.00E+00"];
-
-	N674[label="N(0)", color=gray];
-	I536 -> N674[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I672, C673, N674 };
-	I678[label="I(0)", color=red];
-	N538 -> I678[label ="9.69E-11", weight="9.69E-11"];
-
-	C679[label="C(-1)", color=green];
-	N538 -> C679[label ="0.00E+00", weight="0.00E+00"];
-
-	N680[label="N(1)", color=gray];
-	N538 -> N680[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I678, C679, N680 };
-	I681[label="I(0)", color=red];
-	I542 -> I681[label ="9.69E-11", weight="9.69E-11"];
-
-	C682[label="C(-1)", color=green];
-	I542 -> C682[label ="0.00E+00", weight="0.00E+00"];
-
-	N683[label="N(0)", color=gray];
-	I542 -> N683[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I681, C682, N683 };
-	I687[label="I(1)", color=red];
-	N544 -> I687[label ="0.00E+00", weight="0.00E+00"];
-
-	C688[label="C(1)", color=green];
-	N544 -> C688[label ="1.00E+00", weight="1.00E+00"];
-
-	N689[label="N(-1)", color=gray];
-	N544 -> N689[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I687, C688, N689 };
-	I690[label="I(0)", color=red];
-	I545 -> I690[label ="9.69E-11", weight="9.69E-11"];
-
-	C691[label="C(-1)", color=green];
-	I545 -> C691[label ="0.00E+00", weight="0.00E+00"];
-
-	N692[label="N(0)", color=gray];
-	I545 -> N692[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I690, C691, N692 };
-	I696[label="I(0)", color=red];
-	N547 -> I696[label ="9.69E-11", weight="9.69E-11"];
-
-	C697[label="C(-1)", color=green];
-	N547 -> C697[label ="0.00E+00", weight="0.00E+00"];
-
-	N698[label="N(1)", color=gray];
-	N547 -> N698[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I696, C697, N698 };
-	I699[label="I(0)", color=red];
-	I551 -> I699[label ="9.69E-11", weight="9.69E-11"];
-
-	C6100[label="C(-1)", color=green];
-	I551 -> C6100[label ="0.00E+00", weight="0.00E+00"];
-
-	N6101[label="N(0)", color=gray];
-	I551 -> N6101[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I699, C6100, N6101 };
-	I6102[label="I(0)", color=red];
-	C552 -> I6102[label ="9.00E-01", weight="9.00E-01"];
-
-	C6103[label="C(0)", color=green];
-	C552 -> C6103[label ="1.00E-01", weight="1.00E-01"];
-
-	N6104[label="N(-1)", color=gray];
-	C552 -> N6104[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I6102, C6103, N6104 };
-	I6108[label="I(0)", color=red];
-	I554 -> I6108[label ="9.69E-11", weight="9.69E-11"];
-
-	C6109[label="C(-1)", color=green];
-	I554 -> C6109[label ="0.00E+00", weight="0.00E+00"];
-
-	N6110[label="N(0)", color=gray];
-	I554 -> N6110[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I6108, C6109, N6110 };
-	I6114[label="I(0)", color=red];
-	N556 -> I6114[label ="9.69E-11", weight="9.69E-11"];
-
-	C6115[label="C(-1)", color=green];
-	N556 -> C6115[label ="0.00E+00", weight="0.00E+00"];
-
-	N6116[label="N(1)", color=gray];
-	N556 -> N6116[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I6114, C6115, N6116 };
-	I6117[label="I(0)", color=red];
-	I560 -> I6117[label ="9.69E-11", weight="9.69E-11"];
-
-	C6118[label="C(-1)", color=green];
-	I560 -> C6118[label ="0.00E+00", weight="0.00E+00"];
-
-	N6119[label="N(0)", color=gray];
-	I560 -> N6119[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I6117, C6118, N6119 };
-	I6123[label="I(1)", color=red];
-	N562 -> I6123[label ="0.00E+00", weight="0.00E+00"];
-
-	C6124[label="C(1)", color=green];
-	N562 -> C6124[label ="1.00E+00", weight="1.00E+00"];
-
-	N6125[label="N(-1)", color=gray];
-	N562 -> N6125[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I6123, C6124, N6125 };
-	I6126[label="I(0)", color=red];
-	I563 -> I6126[label ="9.69E-11", weight="9.69E-11"];
-
-	C6127[label="C(-1)", color=green];
-	I563 -> C6127[label ="0.00E+00", weight="0.00E+00"];
-
-	N6128[label="N(0)", color=gray];
-	I563 -> N6128[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I6126, C6127, N6128 };
-	I6132[label="I(0)", color=red];
-	N565 -> I6132[label ="9.69E-11", weight="9.69E-11"];
-
-	C6133[label="C(-1)", color=green];
-	N565 -> C6133[label ="0.00E+00", weight="0.00E+00"];
-
-	N6134[label="N(1)", color=gray];
-	N565 -> N6134[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I6132, C6133, N6134 };
-	I6135[label="I(0)", color=red];
-	I566 -> I6135[label ="9.69E-11", weight="9.69E-11"];
-
-	C6136[label="C(-1)", color=green];
-	I566 -> C6136[label ="0.00E+00", weight="0.00E+00"];
-
-	N6137[label="N(0)", color=gray];
-	I566 -> N6137[label ="1.00E+00", weight="1.00E+00"];
-
-	{rank = same; I6135, C6136, N6137 };
-	I6138[label="I(0)", color=red];
-	C567 -> I6138[label ="9.00E-01", weight="9.00E-01"];
-
-	C6139[label="C(0)", color=green];
-	C567 -> C6139[label ="1.00E-01", weight="1.00E-01"];
-
-	N6140[label="N(-1)", color=gray];
-	C567 -> N6140[label ="0.00E+00", weight="0.00E+00"];
-
-	{rank = same; I6138, C6139, N6140 };
+	{rank = same; I621, C622 };
 }

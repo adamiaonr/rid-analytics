@@ -17,7 +17,8 @@ class Node {
 
         Node() {
 
-            this->level = 0;
+            this->curr_level = 0;
+            this->next_level = 0;
             this->max_level = 0;
             this->prob_val = 0.0;
             this->latency_val = 0.0;
@@ -26,34 +27,38 @@ class Node {
 
         Node(Node::Type type) {
 
-            this->level = 0;
+            this->curr_level = 0;
+            this->next_level = 0;
             this->max_level = 0;
             this->prob_val = 0.0;
             this->latency_val = 0.0;
             this->type = type;
         }
 
-        Node(int max_level, Node::Type type) {
+        Node(int max_level, int curr_level, Node::Type type) {
 
-            this->level = 0;
+            this->curr_level = curr_level;
+            this->next_level = 0;
             this->max_level = max_level;
             this->prob_val = 0.0;
             this->latency_val = 0.0;
             this->type = type;
         }
 
-        Node(int level, int max_level, double prob_val, double latency_val) {
+        Node(int curr_level, int next_level, int max_level, double prob_val, double latency_val) {
 
-            this->level = level;
+            this->curr_level = curr_level;
+            this->next_level = next_level;
             this->max_level = max_level;
             this->prob_val = prob_val;
             this->latency_val = latency_val;
             this->type = Node::UNKNOWN;
         }
 
-        Node(int level, int max_level, double prob_val, double latency_val, Node::Type type) {
+        Node(int curr_level, int next_level, int max_level, double prob_val, double latency_val, Node::Type type) {
 
-            this->level = level;
+            this->curr_level = curr_level;
+            this->next_level = next_level;
             this->max_level = max_level;
             this->prob_val = prob_val;
             this->latency_val = latency_val;
@@ -62,21 +67,29 @@ class Node {
 
         ~Node() {};
 
-        void set_level(int level) { this->level = level; }
+        void set_curr_level(int curr_level) { this->curr_level = curr_level; }
+        void set_next_level(int next_level) { this->next_level = next_level; }
         void set_max_level(int max_level) { this->max_level = max_level; }
-        void set_type(Node::Type type) { this->type = type; }
         void set_prob_val(double prob_val) { this->prob_val = prob_val; }
         void set_latency_val(double latency_val) { this->latency_val = latency_val; }
+        void set_type(Node::Type type) { this->type = type; }
         void set_uid(std::string uid) { this->uid = uid; }
 
-        int get_level() { return this->level; }
-        int get_max_level() { return this->max_level; }
-        double get_prob_val() { return this->prob_val; }
-        double get_latency_val() { return this->latency_val; }
+        int get_curr_level() const { return this->curr_level; }
+        int get_next_level() const { return this->next_level; }
+        int get_max_level() const { return this->max_level; }
 
-        std::string get_uid() { return this->uid; }
+        double get_prob_val() const { return this->prob_val; }
+        double get_latency_val() const { return this->latency_val; }
 
-        Node::Type get_type() { return this->type; }
+        // check this stackoverflow post for a 'const' explanation: 
+        // http://goo.gl/0u4Alx
+        // TL;DR: gcc assumes that member functions *NOT* declared as 
+        // const *WILL* modify const objects, and so terminates compilation with 
+        // an error. solution: make the functions const.
+        std::string get_uid() const { return this->uid; }
+
+        Node::Type get_type() const { return this->type; }
 
         char * to_string() {
 
@@ -113,12 +126,12 @@ class Node {
 
     private:
 
-        int level;
+        int curr_level;
+        int next_level;
         int max_level;
         double prob_val;
         double latency_val;
         Node::Type type;
-
         std::string uid;
 };
 

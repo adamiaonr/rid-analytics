@@ -33,6 +33,8 @@
 #define O_NODE_INT 0x03
 #define U_NODE_INT 0x04
 
+#define END_OF_PATH (int) -1
+
 using namespace std;
 
 class Graph {
@@ -52,9 +54,8 @@ class Graph {
             double prob_val);
         
         void align_nodes(
-            Node * i_node,
-            Node * c_node,
-            Node * n_node);
+            Node ** nodes,
+            int nodes_size);
 
     private: 
 

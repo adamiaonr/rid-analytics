@@ -1,7 +1,7 @@
 caching=0
 level_depth=3
-level_breadth=4,4,1
+level_breadth=10,20,1
 content_source_dist=0,0,1
-complement_dist=l,l,s
+complement_dist=b,s,s
 latencies=1,1,1,1
 request_size=5
