@@ -90,7 +90,7 @@ void get_edge_str(
     std::string output;
 
     int prev_node_type_int = get_node_type_int(prev_node);
-    int next_node_type_int = get_node_type_int(next_node);
+    //int next_node_type_int = get_node_type_int(next_node);
 
     // initial part of edge
     // output = NODE_CHARS[get_node_type_int(prev_node)] + std::to_string(prev_depth) + std::to_string((breadth / 1)) + " -> " 
@@ -106,14 +106,14 @@ void get_edge_str(
     
     output += next_node->get_uid();
 
-    printf("Graph::get_edge_str(): adding edge for %s(%d, %d) -> %s(%d, %d). edge_str = %s\n",
-        NODE_CHARS[get_node_type_int(prev_node)], prev_depth, breadth,
-        NODE_CHARS[get_node_type_int(next_node)], next_depth, (breadth * 3 + next_node_type_int),
-        output.c_str());
+    // printf("Graph::get_edge_str(): adding edge for %s(%d, %d) -> %s(%d, %d). edge_str = %s\n",
+    //     NODE_CHARS[get_node_type_int(prev_node)], prev_depth, breadth,
+    //     NODE_CHARS[get_node_type_int(next_node)], next_depth, (breadth * 3 + next_node_type_int),
+    //     output.c_str());
 
     // appropriately format probability value
     char prob_val_str[MAX_STRING_SIZE];
-    snprintf(prob_val_str, MAX_STRING_SIZE, "%-.2E", prob_val);
+    snprintf(prob_val_str, MAX_STRING_SIZE, "%-.3E", prob_val);
     // add probability value as 'label' and 'weight'
     output += "[label =\"" + std::string(prob_val_str) + "\", weight=\"" + std::string(prob_val_str) + "\"];\n";
 

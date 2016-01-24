@@ -91,6 +91,32 @@ class Node {
 
         Node::Type get_type() const { return this->type; }
 
+        char * get_type_str() { 
+        
+            char * type_str = (char *) calloc(MAX_NODE_STRING_SIZE, sizeof(char));
+
+            switch(this->type) {
+
+                case Node::I_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "I");
+                    break;
+                case Node::C_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "C");
+                    break;
+                case Node::N_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "N");
+                    break;
+                case Node::O_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "O");
+                    break;
+                default:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "U");
+                    break;
+            }
+
+            return type_str;
+        }
+
         char * to_string() {
 
             // using calloc() since node_str will be returned

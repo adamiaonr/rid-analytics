@@ -1,7 +1,9 @@
 caching=0
-level_depth=3
-level_breadth=10,20,1
-content_source_dist=0,0,1
-complement_dist=b,s,s
-latencies=1,1,1,1
+expected_f=1
+table_size=100000000
+level_depth=5
+level_breadth=30,20,10,5,1
+content_source_dist=0,5,10,15,20
+fdist=b,b,b,b,b
+latencies=1,1,1,1,1,1
 request_size=5
