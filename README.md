@@ -11,4 +11,6 @@ test rid-analytics quickly by running the following sequence of commands (tested
 
 `$ make`
 
-`$ ./rid-analytics --scn-file test/configs/sample.scn --dat-dir test/configs/data/ --graphviz-file test/graphs/test; dot -Tps test/graphs/test.dot -o test/graphs/test.pdf; evince test/graphs/test.pdf`
+`$ ./rid-analytics --scn-file test/configs/sample.scn --fdist-dir test/configs/fdist --graphviz-file test/graphs/test --data-file test/data/base; dot -Tps test/graphs/test.dot -o test/graphs/test.pdf; evince test/graphs/test.pdf`
+
+`$ cd scripts; python plot.py ../test/data/base.csv ../test/graphs/base.png`
