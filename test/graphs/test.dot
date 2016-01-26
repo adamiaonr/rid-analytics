@@ -2,10 +2,10 @@ digraph {
 	rankdir=LR
 
 	I10[label="I(0:0)", color=red];
-	O00 -> I10[label ="9.998E-01", weight="9.998E-01"];
+	O00 -> I10[label ="5.000E-01", weight="5.000E-01"];
 
 	N12[label="N(0:1)", color=gray];
-	O00 -> N12[label ="1.799E-04", weight="1.799E-04"];
+	O00 -> N12[label ="5.000E-01", weight="5.000E-01"];
 
 	{rank = same; I10, N12 };
 	I20[label="I(0:EOP)", color=red];
@@ -16,26 +16,26 @@ digraph {
 
 	{rank = same; I20, N22 };
 	I26[label="I(1:1)", color=red];
-	N12 -> I26[label ="8.274E-01", weight="8.274E-01"];
+	N12 -> I26[label ="5.000E-01", weight="5.000E-01"];
 
-	C27[label="C(1:1)", color=green];
-	N12 -> C27[label ="1.726E-01", weight="1.726E-01"];
+	N28[label="N(1:2)", color=gray];
+	N12 -> N28[label ="5.000E-01", weight="5.000E-01"];
 
-	{rank = same; I26, C27 };
+	{rank = same; I26, N28 };
 	I39[label="I(1:0)", color=red];
-	I26 -> I39[label ="9.998E-01", weight="9.998E-01"];
+	I26 -> I39[label ="5.000E-01", weight="5.000E-01"];
 
 	N311[label="N(1:EOP)", color=gray];
-	I26 -> N311[label ="1.799E-04", weight="1.799E-04"];
+	I26 -> N311[label ="5.000E-01", weight="5.000E-01"];
 
 	{rank = same; I39, N311 };
-	I312[label="I(1:0)", color=red];
-	C27 -> I312[label ="9.665E-01", weight="9.665E-01"];
+	I315[label="I(2:2)", color=red];
+	N28 -> I315[label ="3.889E-01", weight="3.889E-01"];
 
-	C313[label="C(1:0)", color=green];
-	C27 -> C313[label ="3.351E-02", weight="3.351E-02"];
+	C316[label="C(2:2)", color=green];
+	N28 -> C316[label ="6.111E-01", weight="6.111E-01"];
 
-	{rank = same; I312, C313 };
+	{rank = same; I315, C316 };
 	I40[label="I(0:EOP)", color=red];
 	I39 -> I40[label ="1.000E+00", weight="1.000E+00"];
 
@@ -43,18 +43,67 @@ digraph {
 	I39 -> N42[label ="0.000E+00", weight="0.000E+00"];
 
 	{rank = same; I40, N42 };
-	I49[label="I(0:EOP)", color=red];
-	I312 -> I49[label ="1.000E+00", weight="1.000E+00"];
+	I49[label="I(2:1)", color=red];
+	I315 -> I49[label ="5.000E-01", weight="5.000E-01"];
 
-	N411[label="N(0:EOP)", color=gray];
-	I312 -> N411[label ="0.000E+00", weight="0.000E+00"];
+	N411[label="N(2:EOP)", color=gray];
+	I315 -> N411[label ="5.000E-01", weight="5.000E-01"];
 
 	{rank = same; I49, N411 };
-	I412[label="I(0:EOP)", color=red];
-	C313 -> I412[label ="8.998E-01", weight="8.998E-01"];
+	I412[label="I(2:1)", color=red];
+	C316 -> I412[label ="4.500E-01", weight="4.500E-01"];
 
-	C413[label="C(0:EOP)", color=green];
-	C313 -> C413[label ="1.002E-01", weight="1.002E-01"];
+	C413[label="C(2:1)", color=green];
+	C316 -> C413[label ="5.500E-01", weight="5.500E-01"];
 
 	{rank = same; I412, C413 };
+	I59[label="I(1:0)", color=red];
+	I49 -> I59[label ="5.000E-01", weight="5.000E-01"];
+
+	N511[label="N(1:EOP)", color=gray];
+	I49 -> N511[label ="5.000E-01", weight="5.000E-01"];
+
+	{rank = same; I59, N511 };
+	I518[label="I(1:0)", color=red];
+	I412 -> I518[label ="5.000E-01", weight="5.000E-01"];
+
+	N520[label="N(1:EOP)", color=gray];
+	I412 -> N520[label ="5.000E-01", weight="5.000E-01"];
+
+	{rank = same; I518, N520 };
+	I521[label="I(1:0)", color=red];
+	C413 -> I521[label ="4.500E-01", weight="4.500E-01"];
+
+	C522[label="C(1:0)", color=green];
+	C413 -> C522[label ="5.500E-01", weight="5.500E-01"];
+
+	{rank = same; I521, C522 };
+	I60[label="I(0:EOP)", color=red];
+	I59 -> I60[label ="1.000E+00", weight="1.000E+00"];
+
+	N62[label="N(0:EOP)", color=gray];
+	I59 -> N62[label ="0.000E+00", weight="0.000E+00"];
+
+	{rank = same; I60, N62 };
+	I69[label="I(0:EOP)", color=red];
+	I518 -> I69[label ="1.000E+00", weight="1.000E+00"];
+
+	N611[label="N(0:EOP)", color=gray];
+	I518 -> N611[label ="0.000E+00", weight="0.000E+00"];
+
+	{rank = same; I69, N611 };
+	I618[label="I(0:EOP)", color=red];
+	I521 -> I618[label ="1.000E+00", weight="1.000E+00"];
+
+	N620[label="N(0:EOP)", color=gray];
+	I521 -> N620[label ="0.000E+00", weight="0.000E+00"];
+
+	{rank = same; I618, N620 };
+	I621[label="I(0:EOP)", color=red];
+	C522 -> I621[label ="4.500E-01", weight="4.500E-01"];
+
+	C622[label="C(0:EOP)", color=green];
+	C522 -> C622[label ="5.500E-01", weight="5.500E-01"];
+
+	{rank = same; I621, C622 };
 }

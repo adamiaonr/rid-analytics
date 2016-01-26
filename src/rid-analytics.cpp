@@ -31,10 +31,24 @@
 #define LATENCIES           (char *) "latencies"
 #define REQUEST_SIZE        (char *) "request_size"
 #define TABLE_SIZE          (char *) "table_size"
+#define PENALTY_TYPE        (char *) "penalty_type"
+#define FP_RATE_TYPE        (char *) "fp_rate_type"
+#define ORIGIN_LEVEL        (char *) "origin_level"
 
 #define AVERAGE_LATENCY     (char *) "average_latency"
 #define CACHE_LATENCY       (char *) "cache_latency"
 #define ORIGIN_LATENCY      (char *) "origin_latency"
+
+#define PENALTY_TYPE_FEEDBACK   0x00
+#define PENALTY_TYPE_FALLBACK   0x01
+
+#define FP_RATE_TYPE_PRMT           0x00
+#define FP_RATE_TYPE_AUTO_V         0x01
+#define FP_RATE_TYPE_AUTO_INV_V     0x02
+#define FP_RATE_TYPE_AUTO_RISE      0x03
+#define FP_RATE_TYPE_AUTO_DECREASE  0x04
+#define FP_RATE_TYPE_AUTO_HIGH      0x05
+#define FP_RATE_TYPE_AUTO_LOW       0x06
 
 #define BF_SIZE 160
 
@@ -106,6 +120,38 @@ int is_all_eop(tree<Node *> tree_obj) {
     }
 
     return 1;
+}
+
+double latency_to_level(int level, double * latencies) {
+
+    // go up to level, then down
+    double penalty_candidate = 2.0 * latencies[0] + latencies[level];
+
+    for (int l = 0; l < level; l++) {
+        penalty_candidate += 2.0 * latencies[l];
+    }
+
+    return penalty_candidate;
+}
+
+double latency_to_content(double * latencies, int * content_source_dist) {
+
+    double latency_to_content = 2.0 * latencies[0];
+
+    for (int l = 0; l < MAX_LEVEL_DEPTH; l++) {
+
+         if (content_source_dist[l] > 1) {
+            
+            latency_to_content += latencies[l];
+
+            // 'that's it, the rebels are there!'
+            break;
+         }
+
+         latency_to_content += 2 * latencies[l];
+    }
+
+    return latency_to_content;
 }
 
 int main (int argc, char **argv) {
@@ -279,7 +325,141 @@ int main (int argc, char **argv) {
     //  level 2  |       |
     //    ...       ...   
     //  level n  |       |
-    //
+    double fp_prob[MAX_LEVEL_DEPTH];
+    double k = ceil(log(2) * (BF_SIZE / request_size));
+
+    // we have 2 ways of getting it:
+    //  -# if FP_RATE_TYPE is set to FP_RATE_TYPE_AUTO, we generate a matrix 
+    //      directly, without using input parameters
+    //  -# if FP_RATE_TYPE is set to FP_RATE_TYPE_PRMT, we calculate FP rates 
+    //      with input parameters from .dat files
+
+    // 2.6.1) extract the |F| for which we expect a match. this makes sense, 
+    // because we're trying to know if this scheme works well for the times 
+    // we're fecthing content from CDNs (matches for low |F|) or from 
+    // an opportunistic cache (matches for high |F|)
+    int expected_f[MAX_LEVEL_DEPTH];
+    scn_parser->get_int_property_array(EXPECTED_F, expected_f);
+
+    // 2.6.2) extract the table size
+    int table_size[MAX_LEVEL_DEPTH];
+    scn_parser->get_int_property_array(TABLE_SIZE, table_size);
+
+    int fp_prob_type = 0;
+    scn_parser->get_int_property_value(FP_RATE_TYPE, fp_prob_type);
+
+    if (fp_prob_type > FP_RATE_TYPE_PRMT) {
+
+        double fp_prob_min = 0.0;
+        double fp_prob_max = 1.0;
+        double fp_prob_nxt = 0.0;
+
+        switch(fp_prob_type) {
+
+            case FP_RATE_TYPE_AUTO_V:
+
+                fp_prob_min = 0.5;
+                fp_prob_max = 0.9;
+
+                fp_prob_nxt = fp_prob_max;
+
+                for (int l = 0; l < (level_depth / 2); l++) {
+                    fp_prob[l] = fp_prob_nxt;
+                    fp_prob[level_depth - l - 1] = fp_prob_nxt;
+                    fp_prob_nxt -= (fp_prob_max - fp_prob_min) / (((double) level_depth) / 2.0);
+                }
+
+                if ((level_depth % 2) > 0) fp_prob[(level_depth / 2) + 1] = fp_prob_nxt;
+
+                break;
+            
+            case FP_RATE_TYPE_AUTO_INV_V:
+
+                fp_prob_min = 0.1;
+                fp_prob_max = 0.4;
+
+                fp_prob_nxt = fp_prob_min;
+
+                for (int l = 0; l < (level_depth / 2); l++) {
+                    fp_prob[l] = fp_prob_nxt;
+                    fp_prob[level_depth - l - 1] = fp_prob_nxt;
+                    fp_prob_nxt += (fp_prob_max - fp_prob_min) / (((double) level_depth) / 2.0);
+                }
+
+                if ((level_depth % 2) > 0) fp_prob[(level_depth / 2) + 1] = fp_prob_nxt;
+
+                break;
+            
+            case FP_RATE_TYPE_AUTO_RISE:        
+
+                fp_prob_min = 0.1;
+                fp_prob_max = 0.9;
+
+                fp_prob_nxt = fp_prob_min;
+
+                for (int l = 0; l < level_depth; l++) {
+                    fp_prob[l] = fp_prob_nxt;
+                    fp_prob_nxt += (fp_prob_max - fp_prob_min) / ((double) level_depth);
+                }
+
+                break;
+
+            case FP_RATE_TYPE_AUTO_DECREASE:    
+
+                fp_prob_min = 0.1;
+                fp_prob_max = 0.9;
+
+                fp_prob_nxt = fp_prob_max;
+
+                for (int l = 0; l < level_depth; l++) {
+                    fp_prob[l] = fp_prob_nxt;
+                    fp_prob_nxt -= (fp_prob_max - fp_prob_min) / ((double) level_depth);
+                }
+
+                break;
+
+            case FP_RATE_TYPE_AUTO_HIGH:    
+
+                fp_prob_min = 0.1;
+                fp_prob_max = 0.5;
+
+                fp_prob_nxt = fp_prob_max;
+
+                for (int l = 0; l < level_depth; l++) {
+                    fp_prob[l] = fp_prob_nxt;
+                }
+
+                break;
+
+            case FP_RATE_TYPE_AUTO_LOW:    
+
+                fp_prob_min = 0.01;
+                fp_prob_max = 0.9;
+
+                fp_prob_nxt = fp_prob_min;
+
+                for (int l = 0; l < level_depth; l++) {
+                    fp_prob[l] = fp_prob_nxt;
+                }
+
+                break;
+
+            default:
+
+                fp_prob_min = 0.5;
+                fp_prob_max = 0.5;
+
+                fp_prob_nxt = fp_prob_min;
+
+                for (int l = 0; l < level_depth; l++) {
+                    fp_prob[l] = fp_prob_nxt;
+                }
+
+                break;
+        }
+
+    } else {
+
     // P(FP) should be the probability of having the forwarding engine pick a 
     // FP entry at level i. note that this is NOT the same as: 
     //  -# the Bloom Filter FP rate, (1 - exp((m/n) * k))^k, which tells 
@@ -314,31 +494,37 @@ int main (int argc, char **argv) {
     //
     // does this make sense? i think it (finally) does!
 
-    // 2.6.1) extract the |F| for which we expect a match. this makes sense, 
-    // because we're trying to know if this scheme works well for the times 
-    // we're fecthing content from CDNs (matches for low |F|) or from 
-    // an opportunistic cache (matches for high |F|)
-    int expected_f = 0;
-    scn_parser->get_int_property_value(EXPECTED_F, expected_f);
-
-    // 2.6.2) extract the table size
-    int table_size = 0;
-    scn_parser->get_int_property_value(TABLE_SIZE, table_size);
-
-    double fp_prob[MAX_LEVEL_DEPTH];
-    double k = ceil(log(2) * (BF_SIZE / request_size));
     double tn_prob_log = 0.0;
-    double fp_prob_entry = fp_rate((double) BF_SIZE, (double) request_size, k, (double) (expected_f));
+    double fp_prob_entry = 0.0;
 
     int subtable_size = 0;
 
     for (int l = 0; l < level_depth; l++) {
 
+        tn_prob_log = 0.0;
+        fp_prob_entry = 0.0;
         fp_prob[l] = 0.0;
-        subtable_size = ceil(((double) table_size) * (fdist_matrix[l][expected_f - 1] / 100.0));
 
-        tn_prob_log = subtable_size * log(1.0 - fp_prob_entry);
+        if (expected_f[l] > 0) {
+
+            fp_prob_entry = fp_rate((double) BF_SIZE, (double) request_size, k, (double) (expected_f[l]));
+            subtable_size = ceil(((double) table_size[l]) * (fdist_matrix[l][expected_f[l] - 1] / 100.0));
+
+            tn_prob_log = subtable_size * log(1.0 - fp_prob_entry);
+        
+        } else {
+
+            for (int f = 0; f < request_size; f++) {
+
+                fp_prob_entry = fp_rate((double) BF_SIZE, (double) request_size, k, (double) (f + 1));
+
+                subtable_size = ceil(((double) table_size[l]) * (fdist_matrix[l][f] / 100.0));
+                tn_prob_log += subtable_size * log(1.0 - fp_prob_entry);
+            }
+        }
+
         fp_prob[l] = 1.0 - exp(tn_prob_log);
+    }
     }
 
     // 2.7) o-optimistic transition matrix
@@ -392,109 +578,118 @@ int main (int argc, char **argv) {
     //     being evaluated
     //  -# we know the avg. latencies of forwarding between routers at level l 
     //
-    // this can be pre-calculated 'a priori'. how? 
-    //
-    //  1) for each max. level m, we calculate PENALTY(m, l), i.e. 
-    //     the penalties of relaying a request to hypothetical sources on each 
-    //     of the other levels l. 
-    //  2) then we take the min(PENALTY(m, l)), for all l, and use it as 
-    //     PENALTY(m).
+    // this can be pre-calculated 'a priori'. how? see below...
     //
     // FIXME: i think i'm making this too complicated
     double penalties[MAX_LEVEL_DEPTH];
 
-    // Q1) say that we know that max. level is m. how do we calculate 
-    //     PENALTY(m, l)? we have 3 (m, l) combinations:
-    //
-    //  -# if l = m : we can have 2 situations: 
-    //
-    //     1) there may be a source right next to us, reachable with a cost of 
-    //        3*L[0]. what is the probability of that happening? it is 
-    //     
-    //        P(min_cost) = min(content_source_dist[m] / level_breadth[m], 1.0)
-    //     
-    //     2) other sources may exist which are reachable through level m. in 
-    //        this case the cost is L[m] + SUM(2*L[m - i]) + 2*L[0], 
-    //        with 1 <= i <= m. the prob. of this happening is 1 - P(min_cost)
-    //        
-    //        the minimal penalty will *ALWAYS* come from this case, if 
-    //        applicable.
-    //
-    //  -# if l < m : you want to go back to level 0, and through level m.
-    //     this always implies a cost of L[m] + SUM(2*L[m - i]) + 2*L[0], 
-    //     with 1 <= i <= m. this case provides intermediate penalties.
-    //
-    //  -# if l > m : you actually have to go through an upper level to 
-    //     relay the request. in that case, the cost is L[l] + SUM(2 * L[l - i]) + 2*L[0], 
-    //     with 1 <= i <= l. this is the last resort, as it always 
-    //     produces the larger penalties.
-    // 
-
-    // Q2) how do we know if each one of the 3 cases is applicable 
-    // or not?
-    // 
-    // easy: if there are sources 'visible' at some distance/level l, 
-    // we calculate the PENALTY(m, l). 
-
-    // here's a bunch of aux variables, used to keep candidate penalty values 
-    // for PENALTY(m), probabilities, etc. 
     double penalty_candidate = DBL_MAX;
     double penalty_min = DBL_MAX;
     double penalty_max = 0.0;
-    double penalty_base = DBL_MAX;
 
-    double prob_penalty_min = 0.0;
-    int possible_source_slots = 1;
+    int penalty_type = 0;
+    scn_parser->get_int_property_value(PENALTY_TYPE, penalty_type);
+    int origin_level = 0;
+    scn_parser->get_int_property_value(ORIGIN_LEVEL, origin_level);
 
-    for (int m = 0; m < level_depth; m++) {
+    if (penalty_type == PENALTY_TYPE_FEEDBACK) {
 
-        // initialize the candidate penalties
-        penalty_candidate = DBL_MAX;
+        // this case is straight forward: if we're at a destination after 
+        // passing through level m, the penalty will be composed by the 
+        // following parts:
+        //
+        //  1) latency of going back to the source of the request, i.e. 
+        //      2 * L[0] + 2 * L[1] + ... + 2 * L[m - 1] + L[m] 
+        //  2) latency of going up to the first visible origin server
+        //      2 * L[0] + 2 * L[1] + ... + 2 * L[v - 1] + L[v]
+        //
 
-        penalty_base = 2.0 * latencies[0] + latencies[m];
-        possible_source_slots = 1;
+        // calculate a penalty for each level max. m
+        for (int m = 0; m < level_depth; m++) {
 
-        for (int l = 0; l < m; l++) {
+            // 1) going back from m to content source
+            penalties[m] = latency_to_level(m, latencies);
 
-            penalty_base += 2.0 * latencies[l];
-            possible_source_slots = possible_source_slots * level_breadth[l];
+            // 2) we got to the source of the request, now moving back up, till 
+            // a content source is visible
+            //penalties[m] += latency_to_content(latencies, content_source_dist);
+            penalties[m] += latency_to_level(origin_level, latencies);
+
+            // penalties[m] += 2 * latencies[0];
+            // for (int l = 0; l < level_depth; l++) {
+            //     if (content_source_dist[l] > 1) {
+            //         penalties[m] += latencies[l];
+            //         // 'that's it, the rebels are there!'
+            //         break;
+            //     }
+            //     penalties[m] += 2 * latencies[l];
+            // }
         }
 
-        for (int l = 0; l < level_depth; l++) {
+    } else if (penalty_type == PENALTY_TYPE_FALLBACK) {
 
-            if (content_source_dist[l] < 1)
-                continue;
+        for (int m = 0; m < level_depth; m++) {
 
-            if (l == m) {
+            for (int l = level_depth; l >= 0; l--) {
 
-                // prob of finding a source within min_penalty
-                prob_penalty_min = min((double) ((double) content_source_dist[m] / (double) possible_source_slots), 1.0);
+                // if we don't have sources that become visible at level l, 
+                // there's no point in relaying packets there.
+                if (content_source_dist[l] < 1)
+                    continue;
 
-                // the penalty candidate for this round
-                penalty_candidate = (prob_penalty_min * (3.0 * latencies[0])) + ((1.0 - prob_penalty_min) * penalty_base);
+                // say that we can go up to level m and get to a visible 
+                // content source. how long would that take?
+                if (l > m) {
 
-            } else if (l > m) {
+                    // easy: go up to level l, then down
+                    penalty_candidate = latency_to_level(l, latencies);
 
-                penalty_candidate = 2.0 * latencies[0] + latencies[l];
+                } else if (l == m) {
 
-                for (int a = 0; a < l; a++)
-                    penalty_candidate += 2.0 * latencies[a];
+                    // say there are content sources that become visible at 
+                    // our level. we may even be 3 hops away from them! what's 
+                    // the probability of that happening?
+                    // at level l we have content_source_dist[l] sources that 
+                    // become visible. these can be distributed over 
+                    // breadth[l] * breadth[l - 1] * ... * breadth[0] different 
+                    // slots.
+                    double slots = 1.0;
+                    for (int a = l; a >= l; a--) {
+                        slots *= slots * (double) level_breadth[a];
+                    }
 
-            } else {
+                    // therefore, P('3 hops') = cs[l] / slots
+                    double prob_3_hops = min((double) ((double) content_source_dist[l] / slots), 1.0);
 
-                penalty_candidate = penalty_base;
+                    // besides the '3 hops', we can have the penalty of going 
+                    // to another domain of level l.
+                    double the_other = latency_to_level(l, latencies);
+
+                    // the penalty will then be the weighted average of these
+                    // two latencies. this is the minimum value we'll ever get.
+                    penalty_candidate = prob_3_hops * (3 * latencies[0]) +
+                        (1.0 - prob_3_hops) * the_other;
+
+                } else if (l < m) {
+
+                    // say we have to go down a level to get visible sources. 
+                    // we first go up to m, then go down to 0.
+                    penalty_candidate = latency_to_level(l, latencies);
+                }
+
+                // if a new min has been found, update it
+                if (penalty_candidate < penalty_min)
+                    penalty_min = penalty_candidate;
+
+                // keep track of the max too
+                if (penalty_candidate > penalty_max)
+                    penalty_max = penalty_candidate;
             }
 
-            // if a new min has been found, update it
-            if (penalty_candidate < penalty_min)
-                penalty_min = penalty_candidate;
-
-            // keep track of the max
-            if (penalty_candidate > penalty_max)
-                penalty_max = penalty_candidate;
+            // the FALLBACK penalty for level max. m becomes the minimum from 
+            // all values gathered above.
+            penalties[m] = penalty_min;
         }
-
-        penalties[m] = penalty_min;
     }
 
     // 2.9) print all parameters
@@ -502,9 +697,7 @@ int main (int argc, char **argv) {
     printf("\n*** PARAMETERS ***\n");
 
     printf("\n[REQUEST_SIZE] : %d\n", request_size);
-    printf("\n[EXPECTED_F] : %d\n", expected_f);
 
-    printf("\n[TABLE_SIZE].[BASE] : %d\n", table_size);
     printf("[TABLE_SIZE].[LEVEL][F] : \n");
     printf("\n[LEVEL][F]  |");
 
@@ -521,7 +714,7 @@ int main (int argc, char **argv) {
         printf("\n          %d |", r + 1);
 
         for (int c = 0; c < request_size; c++) {
-            printf(" %-.0E|", ceil(((double) table_size) * (fdist_matrix[r][c] / 100.0)));
+            printf(" %-.0E|", ceil(((double) table_size[r]) * (fdist_matrix[r][c] / 100.0)));
         }
     }
 
@@ -537,6 +730,16 @@ int main (int argc, char **argv) {
         printf("----------");
 
     // 2.9.2) penalty row per level
+    printf("\n[TAB_SIZ] : |");
+
+    for (int i = 0; i < level_depth; i++)
+        printf(" %-.2E|", (double) table_size[i]);
+
+    printf("\n[EXPEC_F] : |");
+
+    for (int i = 0; i < level_depth; i++)
+        printf(" %-.8d|", expected_f[i]);
+
     printf("\n[SOURCES] : |");
 
     for (int i = 0; i < level_depth; i++)
@@ -594,7 +797,7 @@ int main (int argc, char **argv) {
     // initialize the probability tree using begin() and add a root 
     // (dummy) node with insert(). after this, we use append_child() all the 
     // way.
-    Node * root_node = new Node(0, 0, 0, 1.0, latencies[0], Node::O_NODE);
+    Node * root_node = new Node(0, 0, 0, 1.0, 1.0, Node::O_NODE);
     root = decision_tree.begin();
     root = decision_tree.insert(root, root_node);
 
@@ -836,6 +1039,7 @@ int main (int argc, char **argv) {
                 if (next_node_level == END_OF_PATH) {
 
                     // penalty due to relaying
+                    path_latency = latencies[0];
                     penalty_latency = penalties[curr_node_max_level];
 
                     // notice this is the probability of an incorrect decision
@@ -843,7 +1047,9 @@ int main (int argc, char **argv) {
 
                 } else {
 
+                    path_latency = latencies[next_node_level];
                     penalty_latency = 0.0;
+
                     prob_incorrect = (1.0 - o_optimistic[curr_node_level][next_node_level]) * fp_prob[next_node_level];
                 }
 
@@ -855,8 +1061,8 @@ int main (int argc, char **argv) {
                 c_node->set_prob_val(prev_node_prob * (1.0 - prob_incorrect));
 
                 // Q3) latencies
-                i_node->set_latency_val(prev_node_latency + latencies[next_node_level] + penalty_latency);
-                c_node->set_latency_val(prev_node_latency + latencies[next_node_level]);
+                i_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
+                c_node->set_latency_val(prev_node_latency + path_latency);
 
                 // add nodes to the .dot file for graph rendering
                 graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_incorrect);
@@ -933,16 +1139,38 @@ int main (int argc, char **argv) {
 
     printf("\n[CHECKSUM : %-.8E]\n", checksum);
     printf("[AVG_LATENCY : %-.8LE]\n", avg_latency);
-    printf("[CACHE_LATENCY : %-.8E]\n", cache_latency);
-    printf("[ORIGIN_LATENCY : %-.8E]\n", 1.0 * penalty_max);
+    printf("[CACHE_LATENCY : %-.8E]\n", latency_to_content(latencies, content_source_dist));
+
+    double origin_latency = latency_to_level(origin_level, latencies);
+    printf("[ORIGIN_LATENCY : %-.8E]\n", origin_latency);
 
     // the single latencies
     data_filestream << std::string(AVERAGE_LATENCY) + "," + std::to_string(avg_latency) + "\n";
     data_filestream << std::string(CACHE_LATENCY) + "," + std::to_string(cache_latency) + "\n";
-    data_filestream << std::string(ORIGIN_LATENCY) + "," + std::to_string((1.0 * penalty_max)) + "\n";
+    data_filestream << std::string(ORIGIN_LATENCY) + "," + std::to_string(origin_latency) + "\n";
 
     // close filestream
     data_filestream.close();
+
+    ofstream databar_filestream;
+    databar_filestream.open("test/data/bar.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+    databar_filestream << std::to_string(fp_prob_type) + "," + std::to_string(avg_latency) + "\n";        
+    databar_filestream.close();
+
+    ofstream fp_rates_filestream;
+    fp_rates_filestream.open("test/data/fp_rates.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+
+    fp_rates_filestream << std::to_string(fp_prob_type) + ",";
+
+    for (int i = 0; i < level_depth; i++) {
+
+        memset(float_str, 0, 16 * sizeof(char));
+        snprintf(float_str, 16, "%-.8E", fp_prob[i]);
+        fp_rates_filestream << std::string(float_str) + ",";
+    }
+
+    fp_rates_filestream << "\n";
+    fp_rates_filestream.close();
 
     return 0;
 }
