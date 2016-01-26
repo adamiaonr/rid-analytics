@@ -4,7 +4,8 @@ CC := g++
 # Special directories
 SRCDIR := src
 BUILDDIR := build
-TARGET := rid-analytics
+#TARGET := rid-analytics
+TARGET := sensitivity-analysis
 
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
