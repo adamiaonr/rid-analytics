@@ -44,8 +44,12 @@ class RIDAnalytics {
             int cache_level, 
             int origin_level,
             int fp_resolution_tech,
+            bool verbose,
             bool save_cdf,
             bool save_graph,
+            bool save_outcomes,
+            FILE ** fp_prob_outcomes_file,
+            FILE ** o_optimistic_outcomes_file,
             std::string data_dir);
 };
 

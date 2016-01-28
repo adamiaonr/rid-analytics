@@ -12,6 +12,23 @@ double fp_rate(double m, double n, double k, double c) {
     return pow((1.0 - exp(-((n / m) * k))), k * c);
 }
 
+int erase_decision_tree(tree<Node *> tree_obj) {
+
+    tree<Node *>::post_order_iterator post_itr = tree_obj.begin_post();
+    tree<Node *>::post_order_iterator end_post_itr = tree_obj.end_post();
+
+    while (post_itr != end_post_itr) {
+
+        // delete the Node object associated with the tree node (not the 
+        // node itself)
+        delete (*post_itr);
+
+        ++post_itr;
+    }
+
+    return 0;
+}
+
 int is_all_eop(tree<Node *> tree_obj) {
 
     tree<Node *>::leaf_iterator leaf_itr = tree_obj.begin_leaf();
@@ -70,8 +87,12 @@ int RIDAnalytics::run_model(
     int cache_level, 
     int origin_level,
     int fp_resolution_tech,
+    bool verbose,
     bool save_cdf,
     bool save_graph,
+    bool save_outcomes,
+    FILE ** fp_prob_outcomes_file,
+    FILE ** o_optimistic_outcomes_file,
     std::string data_dir) {
 
     // latency values per level, in multiples of some time unit.
@@ -175,37 +196,40 @@ int RIDAnalytics::run_model(
         }
     }
 
-    // print all parameters
-    printf("\n*** PARAMETERS ***\n");
+    // print all parameters (if verbose mode is set)
+    if (verbose) {
 
-    // initial row & midrule
-    printf("\n\n[LEVEL]   : |");
+        printf("\n*** PARAMETERS ***\n");
 
-    for (int i = 0; i < level_depth; i++)
-        printf(" %-8d|", i + 1);
+        // initial row & midrule
+        printf("\n\n[LEVEL]   : |");
 
-    printf("\n-------------");
+        for (int i = 0; i < level_depth; i++)
+            printf(" %-8d|", i + 1);
 
-    for (int i = 0; i < level_depth; i++)
-        printf("----------");
+        printf("\n-------------");
 
-    // penalty row per level
-    printf("\n[PENALTY] : |");
+        for (int i = 0; i < level_depth; i++)
+            printf("----------");
 
-    for (int i = 0; i < level_depth; i++)
-        printf(" %-.6f|", penalties[i]);
+        // penalty row per level
+        printf("\n[PENALTY] : |");
 
-    printf("\n[FP-PROB] : |");
+        for (int i = 0; i < level_depth; i++)
+            printf(" %-.6f|", penalties[i]);
 
-    for (int i = 0; i < level_depth; i++)
-        printf(" %-.2E|", fp_prob[i]);
+        printf("\n[FP-PROB] : |");
 
-    printf("\n[O-OPT]   : |");
+        for (int i = 0; i < level_depth; i++)
+            printf(" %-.2E|", fp_prob[i]);
 
-    for (int i = 0; i < level_depth; i++)
-        printf(" %-.2E|", o_optimistic[i]);
+        printf("\n[O-OPT]   : |");
 
-    printf("\n\n");
+        for (int i = 0; i < level_depth; i++)
+            printf(" %-.2E|", o_optimistic[i]);
+
+        printf("\n\n");
+    }
 
     // ************************************************************************
     // build the n-ary tree representing all possible forwarding decisions 
@@ -252,8 +276,10 @@ int RIDAnalytics::run_model(
     double path_latency = 0.0;
     double penalty_latency = 0.0;
 
-    // // start the .dot file for rendering the probability tree
-    // Graph * graphviz_graph = new Graph(std::string(data_dir + "/graphviz.dot"));
+    // start the .dot file for rendering the probability tree
+    Graph * graphviz_graph = NULL;
+    if (save_graph)
+        graphviz_graph = new Graph(std::string(data_dir + "/graphviz").c_str());
 
     // depth and breadth are sort of (x, y) coordinates for nodes in a tree. 
     // these will be used to generate node names for the .dot file. the origin 
@@ -353,12 +379,14 @@ int RIDAnalytics::run_model(
                     i_node->set_prob_val(prev_node_prob * prob_fpi);
                     c_node->set_prob_val(prev_node_prob * (1.0 - prob_fpi));
 
-                    // // add nodes to the .dot file for graph rendering
-                    // graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_fpi);
-                    // graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, 1.0 - prob_fpi);
+                    if (save_graph) {
+                        // add nodes to the .dot file for graph rendering
+                        graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_fpi);
+                        graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, 1.0 - prob_fpi);
 
-                    // Node * nodes[] = {i_node, c_node};
-                    // graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
+                        Node * nodes[] = {i_node, c_node};
+                        graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
+                    }
 
                 } else {
 
@@ -370,15 +398,21 @@ int RIDAnalytics::run_model(
 
                     // we may then follow an I or N decision, which basically 
                     // comes down to P(FP) or (1 - P(FP)).
+                    // *********************************************************
+                    // FIXME: should we add the o_optimistic value here?
+                    // *********************************************************
                     n_node->set_prob_val(prev_node_prob * (1.0 - fp_prob[curr_node_level]));
                     i_node->set_prob_val(prev_node_prob * fp_prob[curr_node_level]);
 
-                    // // add nodes to the .dot file for graph rendering
-                    // graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, fp_prob[curr_node_level]);
-                    // graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - fp_prob[curr_node_level]));
+                    if (save_graph) {
 
-                    // Node * nodes[] = {i_node, n_node};
-                    // graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
+                        // add nodes to the .dot file for graph rendering
+                        graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, fp_prob[curr_node_level]);
+                        graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - fp_prob[curr_node_level]));
+
+                        Node * nodes[] = {i_node, n_node};
+                        graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
+                    }
                 }
 
             } else if (prev_node_type == Node::I_NODE) {
@@ -393,6 +427,7 @@ int RIDAnalytics::run_model(
                 // mark the C and N nodes as END_OF_PATH.
                 c_node->set_next_level(END_OF_PATH);
                 n_node->set_next_level(END_OF_PATH);
+                n_node->set_outcome(std::string(OUTCOME_DROPPED));
 
                 // Q1) if the previous decision was I, we will now go down 
                 // a level
@@ -406,6 +441,8 @@ int RIDAnalytics::run_model(
                     // penalty due to relaying
                     path_latency = latencies[0];
                     penalty_latency = penalties[curr_node_max_level];
+
+                    i_node->set_outcome(std::string(OUTCOME_IDEST_CSERVER));
 
                     // we did not change levels, and so fwd tables will remain 
                     // the same. we'll make the same decision again.
@@ -436,12 +473,15 @@ int RIDAnalytics::run_model(
                 //           happens, so simply add this level's penalty
                 n_node->set_latency_val(prev_node_latency + penalties[curr_node_max_level]);
 
-                // // add nodes to the .dot file for graph rendering
-                // graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_incorrect);
-                // graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - prob_incorrect));
+                if (save_graph) {
 
-                // Node * nodes[] = {i_node, n_node};
-                // graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
+                    // add nodes to the .dot file for graph rendering
+                    graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_incorrect);
+                    graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - prob_incorrect));
+
+                    Node * nodes[] = {i_node, n_node};
+                    graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
+                }
 
             } else {
 
@@ -462,6 +502,9 @@ int RIDAnalytics::run_model(
                     // penalty due to relaying
                     path_latency = latencies[0];
                     penalty_latency = penalties[curr_node_max_level];
+
+                    c_node->set_outcome(std::string(OUTCOME_CCACHE));
+                    i_node->set_outcome(std::string(OUTCOME_IDEST_CSERVER));
 
                     // notice this is the probability of an incorrect decision
                     prob_incorrect = (1.0 - o_optimistic[curr_node_level]) * fp_prob[curr_node_level];
@@ -485,12 +528,15 @@ int RIDAnalytics::run_model(
                 i_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
                 c_node->set_latency_val(prev_node_latency + path_latency);
 
-                // // add nodes to the .dot file for graph rendering
-                // graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_incorrect);
-                // graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, (1.0 - prob_incorrect));
+                if (save_graph) {
 
-                // Node * nodes[] = {i_node, c_node};
-                // graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
+                    // add nodes to the .dot file for graph rendering
+                    graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_incorrect);
+                    graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, (1.0 - prob_incorrect));
+
+                    Node * nodes[] = {i_node, c_node};
+                    graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
+                }
             }
 
             // finally append the 3 children
@@ -508,8 +554,9 @@ int RIDAnalytics::run_model(
             break;
     }
 
-    // // wrap the .dot file up
-    // graphviz_graph->terminate();
+    // wrap the .dot file up
+    if (save_graph)
+        graphviz_graph->terminate();
 
     // the decision tree is finished. let's iterate through the leafs to learn 
     // a bit about latencies for this scenario.
@@ -517,23 +564,28 @@ int RIDAnalytics::run_model(
     tree<Node *>::leaf_iterator end_leaf_itr = decision_tree.end_leaf();
 
     // print some results for quick checking
-    printf("\n*** FINAL RESULTS ***\n\n");
-
-    // // meanwhile, save results in a .csv file to generate a CDF graph later on
-    // ofstream data_filestream;
-    // data_filestream.open(std::string(data_dir + "/cdf.csv").c_str());
+    if (verbose)
+        printf("\n*** FINAL RESULTS ***\n\n");
 
     double cache_latency = DBL_MAX;
     double checksum = 0.0;
-//    char float_str[16];
+    
+    char * node_str = NULL;
 
     while (leaf_itr != end_leaf_itr) {
 
         if ((*leaf_itr)->get_prob_val() > 0.0) {
 
-            printf("[DEPTH %d] : %s\n", 
-                decision_tree.depth(leaf_itr), 
-                (*leaf_itr)->to_string());
+            if (verbose) {
+
+                node_str = (*leaf_itr)->to_string();
+
+                printf("[DEPTH %d] : %s\n", 
+                    decision_tree.depth(leaf_itr), 
+                    node_str);
+
+                free(node_str);
+            }
 
             checksum += (*leaf_itr)->get_prob_val();
             avg_latency += ((*leaf_itr)->get_prob_val() * (*leaf_itr)->get_latency_val());
@@ -541,34 +593,39 @@ int RIDAnalytics::run_model(
             if (cache_latency > (*leaf_itr)->get_latency_val())
                 cache_latency = (*leaf_itr)->get_latency_val();
 
-            // // the latencies for each different case, and probabilities
-            // snprintf(float_str, 16, "%-.8E", (*leaf_itr)->get_latency_val());
-            // data_filestream << std::string(float_str) + ",";
-            // memset(float_str, 0, 16 * sizeof(char));
+            if (save_outcomes) {
 
-            // snprintf(float_str, 16, "%-.8E", (*leaf_itr)->get_prob_val());
-            // data_filestream << std::string(float_str) + ",";
-            // memset(float_str, 0, 16 * sizeof(char));
+                // if requested, save outcome information in given files
+                for (int i = 0; i < level_depth; i++) {
 
-            // data_filestream << std::string((*leaf_itr)->get_type_str()) + "\n";
+                    fprintf(
+                        fp_prob_outcomes_file[i], 
+                        "%-.8E,%s,%-.8E\n", 
+                        fp_prob[i], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
+
+                    fprintf(
+                        o_optimistic_outcomes_file[i], 
+                        "%-.8E,%s,%-.8E\n", 
+                        o_optimistic[i], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
+                }
+            }
         }
 
         ++leaf_itr;
     }
 
-    printf("\n[CHECKSUM : %-.8E]\n", checksum);
-    printf("[AVG_LATENCY : %-.8E]\n", avg_latency);
-    printf("[CACHE_LATENCY : %-.8E]\n", latency_to_content(latencies, cache_level));
-    double origin_latency = latency_to_level(origin_level, latencies);
-    printf("[ORIGIN_LATENCY : %-.8E]\n", origin_latency);
+    if (verbose) {
 
-    // // the single latencies
-    // data_filestream << std::string(AVERAGE_LATENCY) + "," + std::to_string(avg_latency) + "\n";
-    // data_filestream << std::string(CACHE_LATENCY) + "," + std::to_string(cache_latency) + "\n";
-    // data_filestream << std::string(ORIGIN_LATENCY) + "," + std::to_string(origin_latency) + "\n";
+        printf("\n[CHECKSUM : %-.8E]\n", checksum);
+        printf("[AVG_LATENCY : %-.8E]\n", avg_latency);
+        printf("[CACHE_LATENCY : %-.8E]\n", latency_to_content(latencies, cache_level));
 
-    // // close filestream
-    // data_filestream.close();
+        double origin_latency = latency_to_level(origin_level, latencies);
+        printf("[ORIGIN_LATENCY : %-.8E]\n", origin_latency);
+    }
+
+    // erase the whole tree...
+    erase_decision_tree(decision_tree);
 
     return 0;
 }
