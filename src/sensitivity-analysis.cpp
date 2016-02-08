@@ -151,9 +151,9 @@ int main (int argc, char **argv) {
     int o_optimistic_size = get_array_size(o_optimistic);
 
     // 'levels' at which origin and cache are located
-    int origin_level = 0;
+    int origin_level = 3;
     scn_parser->get_int_property_value(ORIGIN_LEVEL, origin_level);
-    int cache_level = 3;
+    int cache_level = 2;
 
     // // fp resolution mechanisms
     // int fp_resolution[2] = {PENALTY_TYPE_FEEDBACK, PENALTY_TYPE_FALLBACK};

@@ -1,4 +1,4 @@
 fp_prob=0.001,1.0
 o_optimistic=1.0,0.01
-origin_level=4
+origin_level=3
 level_depth=4

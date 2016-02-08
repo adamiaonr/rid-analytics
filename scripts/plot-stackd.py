@@ -16,7 +16,7 @@ import math
 # place...
 
 LABEL_FONT_SIZE=16
-LEGEND_FONT_SIZE=10
+LEGEND_FONT_SIZE=12
 
 def custom_ceil(x, base=5):
 #    return int(base * math.ceil(float(x)/base))
@@ -72,23 +72,25 @@ def main():
         subplot_code += 1
         stackd = fig.add_subplot(subplot_code)
 
-        stackd.fill_between(x, 0, y_stack[0,:], facecolor="#CC6666", alpha=.7)
-        stackd.fill_between(x, y_stack[0,:], y_stack[1,:], facecolor="#1DACD6", alpha=.7)
-        stackd.fill_between(x, y_stack[1,:], y_stack[2,:], facecolor="#6E5160")
+        stackd.fill_between(x, 0, y_stack[0,:], facecolor='pink', alpha=.7)
+        stackd.fill_between(x, y_stack[0,:], y_stack[1,:], facecolor='lightgreen', alpha=.7)
+        stackd.fill_between(x, y_stack[1,:], y_stack[2,:], facecolor='gray')
 
-        stackd.set_xlabel("false positive rate (hop #" + str(n + 1) + ")", fontsize=LABEL_FONT_SIZE)
-        stackd.set_ylabel('outcome %', fontsize=LABEL_FONT_SIZE)
+        stackd.set_xlabel("False positive rate (@tier " + str(n + 1) + ")", fontsize=LABEL_FONT_SIZE)
+        stackd.set_ylabel('Outcome (%)', fontsize=LABEL_FONT_SIZE)
         
-        a = plt.plot([], [], color="#CC6666", linewidth=10)
-        b = plt.plot([], [], color="#1DACD6", linewidth=10)
-        c = plt.plot([], [], color="#6E5160", linewidth=10)
+        a = plt.plot([], [], color='pink', linewidth=10)
+        b = plt.plot([], [], color='lightgreen', linewidth=10)
+        c = plt.plot([], [], color='gray', linewidth=10)
 
-        stackd.legend((a[0], b[0], c[0]), ('wrong dest. > server', 'correct cache', 'dropped > server'), loc='upper left', fontsize=LEGEND_FONT_SIZE)
+        #if (n == 0):
+            #stackd.legend((a[0], b[0], c[0]), ('Incorrect delivery', 'Correct delivery', 'Dropped'), loc='upper left', fontsize=LEGEND_FONT_SIZE)
 
         stackd.grid(True)
         fig.tight_layout()
 
         stackd.set_xscale('log')
+        stackd.set_xticks([0.000000001, 0.0000001, 0.00001, 0.001, 0.1, 1.0])
         stackd.set_xlim(0.000000001, 1.0)
         stackd.set_ylim(0.0, 100.0)
 

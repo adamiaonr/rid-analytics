@@ -12,8 +12,8 @@ int main (int argc, char **argv) {
     double _o_optimistic[4] = {1.0, 1.0, 1.0, 1.0};
     
     int levels = 4;
-    int c_level = 3;
-    int o_level = 4;
+    int c_level = 1;
+    int o_level = 3;
 
     std::string data_dir ("test/graphs"); 
 

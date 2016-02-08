@@ -50,7 +50,7 @@ int is_all_eop(tree<Node *> tree_obj) {
 double latency_to_level(int level, double * latencies) {
 
     // go up to level, then down
-    double penalty_candidate = 2.0 * latencies[0] + latencies[level];
+    double penalty_candidate = 0.0 * latencies[0] + latencies[level];
 
     for (int l = 0; l < level; l++) {
         penalty_candidate += 2.0 * latencies[l];
@@ -61,7 +61,7 @@ double latency_to_level(int level, double * latencies) {
 
 double latency_to_content(double * latencies, int cache_level) {
 
-    double latency_to_content = 2.0 * latencies[0];
+    double latency_to_content = 0.0 * latencies[0];
 
     for (int l = 0; l < MAX_LEVEL_DEPTH; l++) {
 
@@ -180,7 +180,7 @@ int RIDAnalytics::run_model(
 
                 // the penalty will then be the weighted average of these
                 // two latencies. this is the minimum value we'll ever get.
-                penalty_candidate = prob_3_hops * (3 * latencies[0]) +
+                penalty_candidate = prob_3_hops * (1.0 * latencies[0]) +
                     (1.0 - prob_3_hops) * the_other;
 
             } else if (l < m) {
@@ -242,7 +242,7 @@ int RIDAnalytics::run_model(
     // initialize the probability tree using begin() and add a root 
     // (dummy) node with insert(). after this, we use append_child() all the 
     // way.
-    Node * root_node = new Node(0, 0, 0, 1.0, 1.0, Node::O_NODE);
+    Node * root_node = new Node(0, 0, 0, 1.0, 0.0, Node::O_NODE);
     root = decision_tree.begin();
     root = decision_tree.insert(root, root_node);
 
@@ -439,7 +439,7 @@ int RIDAnalytics::run_model(
                 if (next_node_level == END_OF_PATH) {
 
                     // penalty due to relaying
-                    path_latency = latencies[0];
+                    path_latency = 0.0;
                     penalty_latency = penalties[curr_node_max_level];
 
                     i_node->set_outcome(std::string(OUTCOME_IDEST_CSERVER));
@@ -500,7 +500,7 @@ int RIDAnalytics::run_model(
                 if (next_node_level == END_OF_PATH) {
 
                     // penalty due to relaying
-                    path_latency = latencies[0];
+                    path_latency = 0.0;
                     penalty_latency = penalties[curr_node_max_level];
 
                     c_node->set_outcome(std::string(OUTCOME_CCACHE));
