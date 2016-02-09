@@ -68,8 +68,8 @@ void get_node_str(char * node_str, Node * node, int depth, int breadth) {
 //    output += std::string("[label=\"") + NODE_CHARS[node_type_int] + std::to_string(depth) + std::to_string(breadth) + "\"";
 //    output += std::string("[label=\"") + node->get_uid() + "\"";
     output += std::string("[label=\"") + NODE_CHARS[node_type_int] + "(" 
-        + std::to_string(node->get_curr_level()) + ":"
-        + (node->get_next_level() == END_OF_PATH ? "EOP" : std::to_string(node->get_next_level())) 
+        + std::to_string(node->get_curr_tier()) + ":"
+        + (node->get_next_tier() == END_OF_PATH ? "EOP" : std::to_string(node->get_next_tier())) 
         + ")" "\"";
     // color
     output += std::string(", color=") + GRAPHVIZ_COLORS[node_type_int];

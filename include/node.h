@@ -21,9 +21,9 @@ class Node {
 
         Node() {
 
-            this->curr_level = 0;
-            this->next_level = 0;
-            this->max_level = 0;
+            this->curr_tier = 0;
+            this->next_tier = 0;
+            this->max_tier = 0;
             this->prob_val = 0.0;
             this->latency_val = 0.0;
             this->type = Node::UNKNOWN;
@@ -31,39 +31,39 @@ class Node {
 
         Node(Node::Type type) {
 
-            this->curr_level = 0;
-            this->next_level = 0;
-            this->max_level = 0;
+            this->curr_tier = 0;
+            this->next_tier = 0;
+            this->max_tier = 0;
             this->prob_val = 0.0;
             this->latency_val = 0.0;
             this->type = type;
         }
 
-        Node(int max_level, int curr_level, Node::Type type) {
+        Node(int max_tier, int curr_tier, Node::Type type) {
 
-            this->curr_level = curr_level;
-            this->next_level = 0;
-            this->max_level = max_level;
+            this->curr_tier = curr_tier;
+            this->next_tier = 0;
+            this->max_tier = max_tier;
             this->prob_val = 0.0;
             this->latency_val = 0.0;
             this->type = type;
         }
 
-        Node(int curr_level, int next_level, int max_level, double prob_val, double latency_val) {
+        Node(int curr_tier, int next_tier, int max_tier, double prob_val, double latency_val) {
 
-            this->curr_level = curr_level;
-            this->next_level = next_level;
-            this->max_level = max_level;
+            this->curr_tier = curr_tier;
+            this->next_tier = next_tier;
+            this->max_tier = max_tier;
             this->prob_val = prob_val;
             this->latency_val = latency_val;
             this->type = Node::UNKNOWN;
         }
 
-        Node(int curr_level, int next_level, int max_level, double prob_val, double latency_val, Node::Type type) {
+        Node(int curr_tier, int next_tier, int max_tier, double prob_val, double latency_val, Node::Type type) {
 
-            this->curr_level = curr_level;
-            this->next_level = next_level;
-            this->max_level = max_level;
+            this->curr_tier = curr_tier;
+            this->next_tier = next_tier;
+            this->max_tier = max_tier;
             this->prob_val = prob_val;
             this->latency_val = latency_val;
             this->type = type;
@@ -71,18 +71,18 @@ class Node {
 
         ~Node() {};
 
-        void set_curr_level(int curr_level) { this->curr_level = curr_level; }
-        void set_next_level(int next_level) { this->next_level = next_level; }
-        void set_max_level(int max_level) { this->max_level = max_level; }
+        void set_curr_tier(int curr_tier) { this->curr_tier = curr_tier; }
+        void set_next_tier(int next_tier) { this->next_tier = next_tier; }
+        void set_max_tier(int max_tier) { this->max_tier = max_tier; }
         void set_prob_val(double prob_val) { this->prob_val = prob_val; }
         void set_latency_val(double latency_val) { this->latency_val = latency_val; }
         void set_type(Node::Type type) { this->type = type; }
         void set_uid(std::string uid) { this->uid = uid; }
         void set_outcome(std::string outcome) { this->outcome = outcome; }
 
-        int get_curr_level() const { return this->curr_level; }
-        int get_next_level() const { return this->next_level; }
-        int get_max_level() const { return this->max_level; }
+        int get_curr_tier() const { return this->curr_tier; }
+        int get_next_tier() const { return this->next_tier; }
+        int get_max_tier() const { return this->max_tier; }
 
         double get_prob_val() const { return this->prob_val; }
         double get_latency_val() const { return this->latency_val; }
@@ -150,17 +150,17 @@ class Node {
 
             snprintf(
                 node_str, MAX_NODE_STRING_SIZE, 
-                "[TYPE : %s ][PROB : %02.6E][LATENCY : %08.6f][MAX_LEVEL : %d][OUTCOME: %s]",
-                node_type_str, this->prob_val, this->latency_val, this->max_level, this->outcome.c_str());
+                "[TYPE : %s ][PROB : %02.6E][LATENCY : %08.6f][MAX_TIER : %d][OUTCOME: %s]",
+                node_type_str, this->prob_val, this->latency_val, this->max_tier, this->outcome.c_str());
 
             return node_str;
         }
 
     private:
 
-        int curr_level;
-        int next_level;
-        int max_level;
+        int curr_tier;
+        int next_tier;
+        int max_tier;
         double prob_val;
         double latency_val;
         Node::Type type;

@@ -36,7 +36,7 @@ int is_all_eop(tree<Node *> tree_obj) {
 
     while (leaf_itr != end_leaf_itr) {
 
-        if ((*leaf_itr)->get_next_level() != END_OF_PATH) {
+        if ((*leaf_itr)->get_next_tier() != END_OF_PATH) {
 
             return 0;
         }
@@ -47,25 +47,25 @@ int is_all_eop(tree<Node *> tree_obj) {
     return 1;
 }
 
-double latency_to_level(int level, double * latencies) {
+double latency_to_tier(int tier, double * latencies) {
 
-    // go up to level, then down
-    double penalty_candidate = 0.0 * latencies[0] + latencies[level];
+    // go up to tier, then down
+    double penalty_candidate = 0.0 * latencies[0] + latencies[tier];
 
-    for (int l = 0; l < level; l++) {
+    for (int l = 0; l < tier; l++) {
         penalty_candidate += 2.0 * latencies[l];
     }
 
     return penalty_candidate;
 }
 
-double latency_to_content(double * latencies, int cache_level) {
+double latency_to_content(double * latencies, int cache_tier) {
 
     double latency_to_content = 0.0 * latencies[0];
 
-    for (int l = 0; l < MAX_LEVEL_DEPTH; l++) {
+    for (int l = 0; l < MAX_TIER_DEPTH; l++) {
 
-         if (l == cache_level) {
+         if (l == cache_tier) {
             
             latency_to_content += latencies[l];
 
@@ -81,46 +81,37 @@ double latency_to_content(double * latencies, int cache_level) {
 
 int RIDAnalytics::run_model(
     double & avg_latency,
-    double * fp_prob, 
-    double * o_optimistic, 
-    int level_depth,
-    int cache_level, 
-    int origin_level,
-    int fp_resolution_tech,
-    bool verbose,
-    bool save_cdf,
-    bool save_graph,
-    bool save_outcomes,
-    FILE ** fp_prob_outcomes_file,
-    FILE ** o_optimistic_outcomes_file,
+    struct rid_analytics_inputs input_params,
+    unsigned int modes, 
+    FILE ** outcomes_file,
     std::string data_dir) {
 
-    // latency values per level, in multiples of some time unit.
-    double latencies[MAX_LEVEL_DEPTH];
+    // latency values per tier, in multiples of some time unit.
+    double latencies[MAX_TIER_DEPTH];
     // FIXME: just initialize everything to 1.0
-    for (int lvl = 0; lvl < level_depth; lvl++)
-        latencies[lvl] = 1.0;
+    for (int tier = 0; tier < input_params.tier_depth; tier++)
+        latencies[tier] = 1.0;
 
     // the penalty array. our goal is to calculate the relaying 
     // penalty - PENALTY(m) - for a request, given the following conditions: 
     //
-    //  -# the request has crossed a level as high as level m
-    //  -# we know the distribution of sources per level for the scenario 
+    //  -# the request has crossed a tier as high as tier m
+    //  -# we know the distribution of sources per tier for the scenario 
     //     being evaluated
-    //  -# we know the avg. latencies of forwarding between routers at level l 
+    //  -# we know the avg. latencies of forwarding between routers at tier l 
     //
     // this can be pre-calculated 'a priori'. how? see below...
     //
-    double penalties[MAX_LEVEL_DEPTH];
+    double penalties[MAX_TIER_DEPTH];
 
     double penalty_candidate = DBL_MAX;
 //    double penalty_min = DBL_MAX;
 //    double penalty_max = 0.0;
 
-    if (fp_resolution_tech == PENALTY_TYPE_FEEDBACK) {
+    if (input_params.fp_resolution_tech == PENALTY_TYPE_FEEDBACK) {
 
         // this case is straight forward: if we're at a destination after 
-        // passing through level m, the penalty will be composed by the 
+        // passing through tier m, the penalty will be composed by the 
         // following parts:
         //
         //  1) latency of going back to the source of the request, i.e. 
@@ -129,54 +120,54 @@ int RIDAnalytics::run_model(
         //      2 * L[0] + 2 * L[1] + ... + 2 * L[v - 1] + L[v]
         //
 
-        // calculate a penalty for each level max. m
-        for (int m = 0; m < level_depth; m++) {
+        // calculate a penalty for each tier max. m
+        for (int m = 0; m < input_params.tier_depth; m++) {
 
             // 1) going back from m to content source
-            penalties[m] = latency_to_level(m, latencies);
+            penalties[m] = latency_to_tier(m, latencies);
 
             // 2) we got to the source of the request, now moving back up, till 
             // a content source is visible
             //penalties[m] += latency_to_content(latencies, content_source_dist);
-            penalties[m] += latency_to_level(origin_level, latencies);
+            penalties[m] += latency_to_tier(input_params.origin_tier, latencies);
         }
 
-    } else if (fp_resolution_tech == PENALTY_TYPE_FALLBACK) {
+    } else if (input_params.fp_resolution_tech == PENALTY_TYPE_FALLBACK) {
 
-        for (int m = 0; m < level_depth; m++) {
+        for (int m = 0; m < input_params.tier_depth; m++) {
 
             // FIXME: legacy is stupid...
-            int l = origin_level;
+            int l = input_params.origin_tier;
 
-            // say that we can go up to level m and get to a visible 
+            // say that we can go up to tier m and get to a visible 
             // content source. how long would that take?
             if (l > m) {
 
-                // easy: go up to level l, then down
-                penalty_candidate = latency_to_level(l, latencies);
+                // easy: go up to tier l, then down
+                penalty_candidate = latency_to_tier(l, latencies);
 
             } else if (l == m) {
 
                 // say there are content sources that become visible at 
-                // our level. we may even be 3 hops away from them! what's 
+                // our tier. we may even be 3 hops away from them! what's 
                 // the probability of that happening?
-                // at level l we have content_source_dist[l] sources that 
+                // at tier l we have content_source_dist[l] sources that 
                 // become visible. these can be distributed over 
                 // breadth[l] * breadth[l - 1] * ... * breadth[0] different 
                 // slots.
                 double slots = 1.0;
-                double level_breadth = 4.0;
+                double tier_breadth = 4.0;
 
                 for (int a = l; a >= l; a--) {
-                    slots *= slots * (double) level_breadth;
+                    slots *= slots * (double) tier_breadth;
                 }
 
                 // therefore, P('3 hops') = cs[l] / slots
                 double prob_3_hops = min((double) ((double) 1 / slots), 1.0);
 
                 // besides the '3 hops', we can have the penalty of going 
-                // to another domain of level l.
-                double the_other = latency_to_level(l, latencies);
+                // to another domain of tier l.
+                double the_other = latency_to_tier(l, latencies);
 
                 // the penalty will then be the weighted average of these
                 // two latencies. this is the minimum value we'll ever get.
@@ -185,48 +176,48 @@ int RIDAnalytics::run_model(
 
             } else if (l < m) {
 
-                // say we have to go down a level to get visible sources. 
+                // say we have to go down a tier to get visible sources. 
                 // we first go up to m, then go down to 0.
-                penalty_candidate = latency_to_level(l, latencies);
+                penalty_candidate = latency_to_tier(l, latencies);
             }
 
-            // the FALLBACK penalty for level max. m becomes the minimum from 
+            // the FALLBACK penalty for tier max. m becomes the minimum from 
             // all values gathered above.
             penalties[m] = penalty_candidate;
         }
     }
 
-    // print all parameters (if verbose mode is set)
-    if (verbose) {
+    // print all input parameters (if verbose mode is set)
+    if ((modes & MODE_VERBOSE)) {
 
         printf("\n*** PARAMETERS ***\n");
 
         // initial row & midrule
-        printf("\n\n[LEVEL]   : |");
+        printf("\n\n[TIER]   : |");
 
-        for (int i = 0; i < level_depth; i++)
+        for (int i = 0; i < input_params.tier_depth; i++)
             printf(" %-8d|", i + 1);
 
         printf("\n-------------");
 
-        for (int i = 0; i < level_depth; i++)
+        for (int i = 0; i < input_params.tier_depth; i++)
             printf("----------");
 
-        // penalty row per level
+        // penalty row per tier
         printf("\n[PENALTY] : |");
 
-        for (int i = 0; i < level_depth; i++)
+        for (int i = 0; i < input_params.tier_depth; i++)
             printf(" %-.6f|", penalties[i]);
 
         printf("\n[FP-PROB] : |");
 
-        for (int i = 0; i < level_depth; i++)
-            printf(" %-.2E|", fp_prob[i]);
+        for (int i = 0; i < input_params.tier_depth; i++)
+            printf(" %-.2E|", input_params.fp_prob[i]);
 
         printf("\n[O-OPT]   : |");
 
-        for (int i = 0; i < level_depth; i++)
-            printf(" %-.2E|", o_optimistic[i]);
+        for (int i = 0; i < input_params.tier_depth; i++)
+            printf(" %-.2E|", input_params.alpha[i]);
 
         printf("\n\n");
     }
@@ -246,8 +237,8 @@ int RIDAnalytics::run_model(
     root = decision_tree.begin();
     root = decision_tree.insert(root, root_node);
 
-    // we fill the tree level by level. we add children to each non-leaf node 
-    // of the previous level. to iterate over nodes of a given level, 
+    // we fill the tree tier by tier. we add children to each non-leaf node 
+    // of the previous tier. to iterate over nodes of a given tier, 
     // we use fixed_depth_iterators of tree.hh.
     tree<Node *>::fixed_depth_iterator depth_itr;
     tree<Node *>::fixed_depth_iterator end_depth_itr;
@@ -267,8 +258,8 @@ int RIDAnalytics::run_model(
     Node * c_node = NULL;
     Node * n_node = NULL;
 
-    int curr_node_level = 0;
-    int curr_node_max_level = 0;
+    int curr_node_tier = 0;
+    int curr_node_max_tier = 0;
     double prev_node_prob = 0.0;
     double prev_node_latency = 0.0;
     Node::Type prev_node_type = Node::UNKNOWN;
@@ -278,7 +269,7 @@ int RIDAnalytics::run_model(
 
     // start the .dot file for rendering the probability tree
     Graph * graphviz_graph = NULL;
-    if (save_graph)
+    if ((modes & MODE_SAVEGRAPH))
         graphviz_graph = new Graph(std::string(data_dir + "/graphviz").c_str());
 
     // depth and breadth are sort of (x, y) coordinates for nodes in a tree. 
@@ -288,8 +279,8 @@ int RIDAnalytics::run_model(
     int breadth = 0;
 
     // note the limit condition : on the longest possible path (i.e. going 
-    // through the max. level) we make 2 * level_depth decisions
-    for (depth = 0; depth < ((2 * level_depth)); depth++) {
+    // through the max. tier) we make 2 * tier_depth decisions
+    for (depth = 0; depth < ((2 * input_params.tier_depth)); depth++) {
 
         // update the iterators
         depth_itr = decision_tree.begin_fixed(root, depth);
@@ -299,11 +290,11 @@ int RIDAnalytics::run_model(
         // cycle through the previous decisions, append children
         while (decision_tree.is_valid(depth_itr)) {
 
-            curr_node_level = (*depth_itr)->get_next_level();
-            curr_node_max_level = (*depth_itr)->get_max_level();
+            curr_node_tier = (*depth_itr)->get_next_tier();
+            curr_node_max_tier = (*depth_itr)->get_max_tier();
 
             // if this is a 'dead end', don't append children to it
-            if (curr_node_level == END_OF_PATH) {
+            if (curr_node_tier == END_OF_PATH) {
                 
                 // obviously, increment the fixed_depth_iterator so that we 
                 // check the next node at the same depth
@@ -322,9 +313,9 @@ int RIDAnalytics::run_model(
             prev_node_type = (*depth_itr)->get_type();
 
             // create the children Node objects, specifying the diff types
-            i_node = new Node(curr_node_max_level, curr_node_level, Node::I_NODE);
-            c_node = new Node(curr_node_max_level, curr_node_level, Node::C_NODE);
-            n_node = new Node(curr_node_max_level, curr_node_level, Node::N_NODE);
+            i_node = new Node(curr_node_max_tier, curr_node_tier, Node::I_NODE);
+            c_node = new Node(curr_node_max_tier, curr_node_tier, Node::C_NODE);
+            n_node = new Node(curr_node_max_tier, curr_node_tier, Node::N_NODE);
 
             // what was the previous decision type? this will influence the 
             // next decision: 
@@ -336,40 +327,40 @@ int RIDAnalytics::run_model(
             //  C      | I or C       
             //
             // for each NEXT decision, we ask/answer 3 questions:
-            //  Q1) at what level will the NEXT decision leave the request?
+            //  Q1) at what tier will the NEXT decision leave the request?
             //  Q2) what latency does the NEXT decision add?
             //  Q3) what is the probability of making the NEXT decision?
             //
             // if a decision type does not show up in the 'NEXT' column, it is 
-            // given a prob of 0.0 and it's next level is set to END_OF_PATH.  
+            // given a prob of 0.0 and it's next tier is set to END_OF_PATH.  
             //
             if (prev_node_type == Node::N_NODE || prev_node_type == Node::O_NODE) {
 
-                // Q1) if NEXT is N : +1 level (and update the max level)
-                n_node->set_next_level(curr_node_level + 1);
-                n_node->set_max_level(curr_node_level + 1);
-                // Q1) if NEXT is I or C : next level stays the same
-                i_node->set_next_level(curr_node_level);
-                c_node->set_next_level(curr_node_level);
+                // Q1) if NEXT is N : +1 tier (and update the max tier)
+                n_node->set_next_tier(curr_node_tier + 1);
+                n_node->set_max_tier(curr_node_tier + 1);
+                // Q1) if NEXT is I or C : next tier stays the same
+                i_node->set_next_tier(curr_node_tier);
+                c_node->set_next_tier(curr_node_tier);
 
-                // Q2) for all decisions, we add +1 latency of the curr_node_level
-                i_node->set_latency_val(prev_node_latency + latencies[curr_node_level]);
-                c_node->set_latency_val(prev_node_latency + latencies[curr_node_level]);
-                n_node->set_latency_val(prev_node_latency + latencies[curr_node_level]);
+                // Q2) for all decisions, we add +1 latency of the curr_node_tier
+                i_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
+                c_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
+                n_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
 
                 // Q3) the probability depends on the content sources which 
-                // are 'visible' at the current level
-                if (curr_node_level == cache_level) {
+                // are 'visible' at the current tier
+                if (curr_node_tier == input_params.cache_tier) {
 
                     // if there are 'visible' sources, then there's no way we 
                     // can get an N decision. mark it as END_OF_PATH.
                     n_node->set_prob_val(prev_node_prob * 0.0);
-                    n_node->set_next_level(END_OF_PATH);
+                    n_node->set_next_tier(END_OF_PATH);
 
                     // we may then follow a C or I decision. as mentioned above, 
                     // the probability of an incorrect decision is only due to 
                     // FPs, multiplied by the 'pessimistic' factor.
-                    double prob_fpi = (1.0 - o_optimistic[curr_node_level]) * fp_prob[curr_node_level]; 
+                    double prob_fpi = (1.0 - input_params.alpha[curr_node_tier]) * input_params.fp_prob[curr_node_tier]; 
                     
                     // correct decisions can happen due to 'optimistic' FPs and 
                     // TPs. note that in this case (in which TNs are 
@@ -379,7 +370,7 @@ int RIDAnalytics::run_model(
                     i_node->set_prob_val(prev_node_prob * prob_fpi);
                     c_node->set_prob_val(prev_node_prob * (1.0 - prob_fpi));
 
-                    if (save_graph) {
+                    if ((modes & MODE_SAVEGRAPH)) {
                         // add nodes to the .dot file for graph rendering
                         graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_fpi);
                         graphviz_graph->add_node((*depth_itr), depth, c_node, depth + 1, breadth, 1.0 - prob_fpi);
@@ -394,21 +385,21 @@ int RIDAnalytics::run_model(
                     // of making a C decision: all FPs will be (I)ncorrect. 
                     // mark it as END_OF_PATH.
                     c_node->set_prob_val(prev_node_prob * 0.0);
-                    c_node->set_next_level(END_OF_PATH);
+                    c_node->set_next_tier(END_OF_PATH);
 
                     // we may then follow an I or N decision, which basically 
                     // comes down to P(FP) or (1 - P(FP)).
                     // *********************************************************
-                    // FIXME: should we add the o_optimistic value here?
+                    // FIXME: should we add the alpha value here?
                     // *********************************************************
-                    n_node->set_prob_val(prev_node_prob * (1.0 - fp_prob[curr_node_level]));
-                    i_node->set_prob_val(prev_node_prob * fp_prob[curr_node_level]);
+                    n_node->set_prob_val(prev_node_prob * (1.0 - input_params.fp_prob[curr_node_tier]));
+                    i_node->set_prob_val(prev_node_prob * input_params.fp_prob[curr_node_tier]);
 
-                    if (save_graph) {
+                    if ((modes & MODE_SAVEGRAPH)) {
 
                         // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, fp_prob[curr_node_level]);
-                        graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - fp_prob[curr_node_level]));
+                        graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, input_params.fp_prob[curr_node_tier]);
+                        graphviz_graph->add_node((*depth_itr), depth, n_node, depth + 1, breadth, (1.0 - input_params.fp_prob[curr_node_tier]));
 
                         Node * nodes[] = {i_node, n_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
@@ -425,44 +416,44 @@ int RIDAnalytics::run_model(
                 c_node->set_prob_val(prev_node_prob * 0.0);
 
                 // mark the C and N nodes as END_OF_PATH.
-                c_node->set_next_level(END_OF_PATH);
-                n_node->set_next_level(END_OF_PATH);
+                c_node->set_next_tier(END_OF_PATH);
+                n_node->set_next_tier(END_OF_PATH);
                 n_node->set_outcome(std::string(OUTCOME_DROPPED));
 
                 // Q1) if the previous decision was I, we will now go down 
-                // a level
-                int next_node_level = curr_node_level - 1;
+                // a tier
+                int next_node_tier = curr_node_tier - 1;
                 double prob_incorrect = 0.0;
 
                 // check if the request is about to be delivered to a content 
                 // source
-                if (next_node_level == END_OF_PATH) {
+                if (next_node_tier == END_OF_PATH) {
 
                     // penalty due to relaying
                     path_latency = 0.0;
-                    penalty_latency = penalties[curr_node_max_level];
+                    penalty_latency = penalties[curr_node_max_tier];
 
                     i_node->set_outcome(std::string(OUTCOME_IDEST_CSERVER));
 
-                    // we did not change levels, and so fwd tables will remain 
+                    // we did not change tiers, and so fwd tables will remain 
                     // the same. we'll make the same decision again.
                     prob_incorrect = 1.0;
 
                 } else {
 
                     // the next component of path latency will be that of 
-                    // the level below: notice that we're essentially forwarding 
-                    // between hops within the same level (in this case, 
-                    // next_node_level)
-                    path_latency = latencies[next_node_level];
+                    // the tier below: notice that we're essentially forwarding 
+                    // between hops within the same tier (in this case, 
+                    // next_node_tier)
+                    path_latency = latencies[next_node_tier];
                     penalty_latency = 0.0;
 
-                    prob_incorrect = fp_prob[next_node_level];
+                    prob_incorrect = input_params.fp_prob[next_node_tier];
                 }   
 
-                i_node->set_next_level(next_node_level);
+                i_node->set_next_tier(next_node_tier);
 
-                // Q2) the P(FP) we use is that of the next level
+                // Q2) the P(FP) we use is that of the next tier
                 n_node->set_prob_val(prev_node_prob * (1.0 - prob_incorrect));
                 i_node->set_prob_val(prev_node_prob * prob_incorrect);
 
@@ -470,10 +461,10 @@ int RIDAnalytics::run_model(
                 //  I node : use the values calculated above
                 i_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
                 //  N node : the policy is to relay when a I > N transition 
-                //           happens, so simply add this level's penalty
-                n_node->set_latency_val(prev_node_latency + penalties[curr_node_max_level]);
+                //           happens, so simply add this tier's penalty
+                n_node->set_latency_val(prev_node_latency + penalties[curr_node_max_tier]);
 
-                if (save_graph) {
+                if ((modes & MODE_SAVEGRAPH)) {
 
                     // add nodes to the .dot file for graph rendering
                     graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_incorrect);
@@ -488,37 +479,37 @@ int RIDAnalytics::run_model(
                 // if the previous decision was C, we can either make another 
                 // C or an I decision. mark the N node as END_OF_PATH.
                 n_node->set_prob_val(prev_node_prob * 0.0);
-                n_node->set_next_level(END_OF_PATH);
+                n_node->set_next_tier(END_OF_PATH);
 
                 // Q1) if the previous decision was C, we will also go down 
-                // a level
-                int next_node_level = curr_node_level - 1;
+                // a tier
+                int next_node_tier = curr_node_tier - 1;
                 double prob_incorrect = 0.0;
 
                 // check if the request is about to be delivered to a content 
                 // source
-                if (next_node_level == END_OF_PATH) {
+                if (next_node_tier == END_OF_PATH) {
 
                     // penalty due to relaying
                     path_latency = 0.0;
-                    penalty_latency = penalties[curr_node_max_level];
+                    penalty_latency = penalties[curr_node_max_tier];
 
                     c_node->set_outcome(std::string(OUTCOME_CCACHE));
                     i_node->set_outcome(std::string(OUTCOME_IDEST_CSERVER));
 
                     // notice this is the probability of an incorrect decision
-                    prob_incorrect = (1.0 - o_optimistic[curr_node_level]) * fp_prob[curr_node_level];
+                    prob_incorrect = (1.0 - input_params.alpha[curr_node_tier]) * input_params.fp_prob[curr_node_tier];
 
                 } else {
 
-                    path_latency = latencies[next_node_level];
+                    path_latency = latencies[next_node_tier];
                     penalty_latency = 0.0;
 
-                    prob_incorrect = (1.0 - o_optimistic[next_node_level]) * fp_prob[next_node_level];
+                    prob_incorrect = (1.0 - input_params.alpha[next_node_tier]) * input_params.fp_prob[next_node_tier];
                 }
 
-                i_node->set_next_level(next_node_level);
-                c_node->set_next_level(next_node_level);
+                i_node->set_next_tier(next_node_tier);
+                c_node->set_next_tier(next_node_tier);
 
                 // Q2) probabilities 
                 i_node->set_prob_val(prev_node_prob * prob_incorrect);
@@ -528,7 +519,7 @@ int RIDAnalytics::run_model(
                 i_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
                 c_node->set_latency_val(prev_node_latency + path_latency);
 
-                if (save_graph) {
+                if ((modes & MODE_SAVEGRAPH)) {
 
                     // add nodes to the .dot file for graph rendering
                     graphviz_graph->add_node((*depth_itr), depth, i_node, depth + 1, breadth, prob_incorrect);
@@ -546,7 +537,7 @@ int RIDAnalytics::run_model(
 
             breadth++;
 
-            // go to the next node in the previous level and repeat the process
+            // go to the next node in the previous tier and repeat the process
             ++depth_itr;
         }
 
@@ -555,7 +546,7 @@ int RIDAnalytics::run_model(
     }
 
     // wrap the .dot file up
-    if (save_graph)
+    if ((modes & MODE_SAVEGRAPH))
         graphviz_graph->terminate();
 
     // the decision tree is finished. let's iterate through the leafs to learn 
@@ -564,7 +555,7 @@ int RIDAnalytics::run_model(
     tree<Node *>::leaf_iterator end_leaf_itr = decision_tree.end_leaf();
 
     // print some results for quick checking
-    if (verbose)
+    if ((modes & MODE_VERBOSE))
         printf("\n*** FINAL RESULTS ***\n\n");
 
     double cache_latency = DBL_MAX;
@@ -576,7 +567,7 @@ int RIDAnalytics::run_model(
 
         if ((*leaf_itr)->get_prob_val() > 0.0) {
 
-            if (verbose) {
+            if ((modes & MODE_VERBOSE)) {
 
                 node_str = (*leaf_itr)->to_string();
 
@@ -593,20 +584,23 @@ int RIDAnalytics::run_model(
             if (cache_latency > (*leaf_itr)->get_latency_val())
                 cache_latency = (*leaf_itr)->get_latency_val();
 
-            if (save_outcomes) {
+            if ((modes & MODE_SAVEOUTCOMES)) {
 
-                // if requested, save outcome information in given files
-                for (int i = 0; i < level_depth; i++) {
-
-                    fprintf(
-                        fp_prob_outcomes_file[i], 
-                        "%-.8E,%s,%-.8E\n", 
-                        fp_prob[i], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
+                // if requested, save outcome information in files pointed 
+                // by the outcomes_file array. this will basically save lines 
+                // in the format: 
+                // [FP PROB AT TIER i], [LOOKUP OUTCOME TYPE], [OUTCOME TYPE PROBABILITY OF OCCURRENCE]
+                for (int i = 0; i < input_params.tier_depth; i++) {
 
                     fprintf(
-                        o_optimistic_outcomes_file[i], 
+                        outcomes_file[i], 
                         "%-.8E,%s,%-.8E\n", 
-                        o_optimistic[i], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
+                        input_params.fp_prob[i], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
+
+                    // fprintf(
+                    //     input_params.alpha_outcomes_file[i], 
+                    //     "%-.8E,%s,%-.8E\n", 
+                    //     input_params.alpha[i], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
                 }
             }
         }
@@ -614,13 +608,13 @@ int RIDAnalytics::run_model(
         ++leaf_itr;
     }
 
-    if (verbose) {
+    if ((modes & MODE_VERBOSE)) {
 
         printf("\n[CHECKSUM : %-.8E]\n", checksum);
         printf("[AVG_LATENCY : %-.8E]\n", avg_latency);
-        printf("[CACHE_LATENCY : %-.8E]\n", latency_to_content(latencies, cache_level));
+        printf("[CACHE_LATENCY : %-.8E]\n", latency_to_content(latencies, input_params.cache_tier));
 
-        double origin_latency = latency_to_level(origin_level, latencies);
+        double origin_latency = latency_to_tier(input_params.origin_tier, latencies);
         printf("[ORIGIN_LATENCY : %-.8E]\n", origin_latency);
     }
 

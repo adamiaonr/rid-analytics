@@ -12,9 +12,10 @@
 #define OPTION_VERBOSE      (char *) "verbose"
 
 #define FP_PROB             (char *) "fp_prob"
-#define O_OPTIMISTIC        (char *) "o_optimistic"
-#define ORIGIN_LEVEL        (char *) "origin_level"
-#define LEVEL_DEPTH         (char *) "level_depth"
+#define ALPHA               (char *) "alpha"
+#define ORIGIN_TIER         (char *) "origin_tier"
+#define CACHE_TIER          (char *) "cache_tier"
+#define TIER_DEPTH          (char *) "tier_depth"
 
 using namespace std;
 using namespace CommandLineProcessing;
@@ -75,7 +76,7 @@ int main (int argc, char **argv) {
     // string for directory path where all files with output data will be
     char * data_dir;
     // keeps track of verbose mode
-    bool verbose = false;
+    unsigned int verbose = 0;
 
     // parse() takes the arguments to main() and parses them according to 
     // ArgvParser rules
@@ -123,7 +124,7 @@ int main (int argc, char **argv) {
         }
 
         if (cmds->foundOption(OPTION_VERBOSE)) {
-            verbose = true;
+            verbose = MODE_VERBOSE;
         }
     }
 
@@ -136,24 +137,25 @@ int main (int argc, char **argv) {
     // 2) extract the sensitivity analysis from the .scn file
     DataParser * scn_parser = new DataParser(scn_file);
 
-    // nr. of levels
-    int level_depth = 0;
-    scn_parser->get_int_property_value(LEVEL_DEPTH, level_depth);
+    // nr. of tiers
+    int tier_depth = 0;
+    scn_parser->get_int_property_value(TIER_DEPTH, tier_depth);
 
-    // array of fp probability values (each value will be tested for all levels) 
+    // array of fp probability values (each value will be tested for all tiers) 
     double * fp_prob = (double *) calloc(MAX_ARRAY_SIZE, sizeof(double));
     scn_parser->get_double_property_array(FP_PROB, fp_prob);
     int fp_prob_size = get_array_size(fp_prob);
 
-    // array of o-optimistic values
-    double * o_optimistic = (double *) calloc(MAX_ARRAY_SIZE, sizeof(double));
-    scn_parser->get_double_property_array(O_OPTIMISTIC, o_optimistic);
-    int o_optimistic_size = get_array_size(o_optimistic);
+    // array of alpha values
+    double * alpha = (double *) calloc(MAX_ARRAY_SIZE, sizeof(double));
+    scn_parser->get_double_property_array(ALPHA, alpha);
+    int alpha_size = get_array_size(alpha);
 
-    // 'levels' at which origin and cache are located
-    int origin_level = 3;
-    scn_parser->get_int_property_value(ORIGIN_LEVEL, origin_level);
-    int cache_level = 2;
+    // 'tiers' at which origin and cache are located
+    int origin_tier = 3;
+    scn_parser->get_int_property_value(ORIGIN_TIER, origin_tier);
+    int cache_tier = 2;
+    scn_parser->get_int_property_value(CACHE_TIER, cache_tier);
 
     // // fp resolution mechanisms
     // int fp_resolution[2] = {PENALTY_TYPE_FEEDBACK, PENALTY_TYPE_FALLBACK};
@@ -162,18 +164,17 @@ int main (int argc, char **argv) {
     // let the games begin...
 
     // arrays which will keep the test values during the analysis
-    double * _fp_prob = (double *) calloc(level_depth, sizeof(double));
-    double * _o_optimistic = (double *) calloc(level_depth, sizeof(double));
+    double * _fp_prob = (double *) calloc(tier_depth, sizeof(double));
+    double * _alpha = (double *) calloc(tier_depth, sizeof(double));
 
     // arrays of FILE * (this can only end well... LOL)
-    FILE ** fp_prob_file = (FILE **) calloc(level_depth, sizeof(FILE *));
-    FILE ** fp_prob_outcomes_file = (FILE **) calloc(level_depth, sizeof(FILE *));
-
-    FILE ** o_optimistic_file = (FILE **) calloc(level_depth, sizeof(FILE *));
-    FILE ** o_optimistic_outcomes_file = (FILE **) calloc(level_depth, sizeof(FILE *));
+    FILE ** fp_prob_file = (FILE **) calloc(tier_depth, sizeof(FILE *));
+    FILE ** fp_prob_outcomes_file = (FILE **) calloc(tier_depth, sizeof(FILE *));
+    // FILE ** alpha_file = (FILE **) calloc(tier_depth, sizeof(FILE *));
+    // FILE ** alpha_outcomes_file = (FILE **) calloc(tier_depth, sizeof(FILE *));
 
     // open the .csv files in "a"ppend mode
-    for (int i = 0; i < level_depth; i++) {
+    for (int i = 0; i < tier_depth; i++) {
 
         fp_prob_file[i] = fopen(
             std::string(std::string(data_dir) + "/fp." + std::to_string(i + 1) + ".csv").c_str(), 
@@ -183,18 +184,25 @@ int main (int argc, char **argv) {
             std::string(std::string(data_dir) + "/fp." + std::to_string(i + 1) + ".outcomes.csv").c_str(), 
             "a");
 
-        o_optimistic_file[i] = fopen(
-            std::string(std::string(data_dir) + "/op." + std::to_string(i + 1) + ".csv").c_str(), 
-            "a");
+        // alpha_file[i] = fopen(
+        //     std::string(std::string(data_dir) + "/op." + std::to_string(i + 1) + ".csv").c_str(), 
+        //     "a");
 
-        o_optimistic_outcomes_file[i] = fopen(
-            std::string(std::string(data_dir) + "/op." + std::to_string(i + 1) + ".outcomes.csv").c_str(), 
-            "a");
+        // alpha_outcomes_file[i] = fopen(
+        //     std::string(std::string(data_dir) + "/op." + std::to_string(i + 1) + ".outcomes.csv").c_str(), 
+        //     "a");
     }
 
     double avg_latency = 0.0;
     clock_t begin, end;
     unsigned long int nr_tests = 0;
+
+    // struct for input parameters
+    RIDAnalytics::rid_analytics_inputs input_params;
+    // these input parameters won't change during the run
+    input_params.tier_depth = tier_depth;
+    input_params.cache_tier = cache_tier;
+    input_params.origin_tier = origin_tier;
 
     // keep track of execution time
     begin = clock();
@@ -211,77 +219,67 @@ int main (int argc, char **argv) {
                 for (int l = 0; l < fp_prob_size; l++) {
                     _fp_prob[3] = fp_prob[l];
 
-                    for (int a = 0; a < o_optimistic_size; a++) {
-                        _o_optimistic[0] = o_optimistic[a];
+                    for (int a = 0; a < alpha_size; a++) {
+                        _alpha[0] = alpha[a];
 
-                        for (int b = 0; b < o_optimistic_size; b++) {
-                            _o_optimistic[1] = o_optimistic[b];
+                        for (int b = 0; b < alpha_size; b++) {
+                            _alpha[1] = alpha[b];
 
-                            for (int c = 0; c < o_optimistic_size; c++) {
-                                _o_optimistic[2] = o_optimistic[c];
+                            for (int c = 0; c < alpha_size; c++) {
+                                _alpha[2] = alpha[c];
 
-                                for (int d = 0; d < o_optimistic_size; d++) {
-                                    _o_optimistic[3] = o_optimistic[d];
+                                for (int d = 0; d < alpha_size; d++) {
+                                    _alpha[3] = alpha[d];
 
                                     avg_latency = 0.0;
 
+                                    // update the model inputs
+                                    input_params.fp_prob = _fp_prob;
+                                    input_params.alpha = _alpha;
+                                    input_params.fp_resolution_tech = PENALTY_TYPE_FEEDBACK;
+
                                     RIDAnalytics::run_model(
                                         avg_latency,
-                                        _fp_prob, 
-                                        _o_optimistic, 
-                                        level_depth,
-                                        cache_level, 
-                                        origin_level,
-                                        PENALTY_TYPE_FEEDBACK,
+                                        input_params,
                                         verbose,
-                                        false,
-                                        false,
-                                        false,
-                                        NULL,
                                         NULL,
                                         std::string(data_dir));
 
                                     // write to the .csv files
-                                    for (int f = 0; f < level_depth; f++) {
+                                    for (int f = 0; f < tier_depth; f++) {
 
                                         fprintf(
                                             fp_prob_file[f], 
                                             "%-.8E,%-.8E,feedback\n", _fp_prob[f], avg_latency);
-                                        fprintf(
-                                            o_optimistic_file[f], 
-                                            "%-.8E,%-.8E,feedback\n", _o_optimistic[f], avg_latency);
+                                        // fprintf(
+                                        //     alpha_file[f], 
+                                        //     "%-.8E,%-.8E,feedback\n", _alpha[f], avg_latency);
                                     }
 
                                     avg_latency = 0.0;
+                                    // IMPORTANT: change penalty type to 
+                                    // fallback
+                                    input_params.fp_resolution_tech = PENALTY_TYPE_FALLBACK;
 
                                     RIDAnalytics::run_model(
                                         avg_latency,
-                                        _fp_prob, 
-                                        _o_optimistic, 
-                                        level_depth,
-                                        cache_level, 
-                                        origin_level,
-                                        PENALTY_TYPE_FALLBACK,
-                                        verbose,
-                                        false,
-                                        false,
-                                        true,
+                                        input_params,
+                                        (verbose | MODE_SAVEOUTCOMES),
                                         fp_prob_outcomes_file,
-                                        o_optimistic_outcomes_file,
                                         std::string(data_dir));
 
                                     // write to the .csv files
-                                    for (int f = 0; f < level_depth; f++) {
+                                    for (int f = 0; f < tier_depth; f++) {
 
                                         fprintf(
                                             fp_prob_file[f], 
                                             "%-.8E,%-.8E,fallback\n", _fp_prob[f], avg_latency);
-                                        fprintf(
-                                            o_optimistic_file[f], 
-                                            "%-.8E,%-.8E,fallback\n", _o_optimistic[f], avg_latency);
+                                        // fprintf(
+                                        //     alpha_file[f], 
+                                        //     "%-.8E,%-.8E,fallback\n", _alpha[f], avg_latency);
                                     
                                         // fflush(fp_prob_file[f]);
-                                        // fflush(o_optimistic_file[f]);
+                                        // fflush(alpha_file[f]);
                                     }
 
                                     nr_tests++;
@@ -295,12 +293,12 @@ int main (int argc, char **argv) {
     }
 
     // close files
-    for (int f = 0; f < level_depth; f++) {
+    for (int f = 0; f < tier_depth; f++) {
         fclose(fp_prob_file[f]);
         fclose(fp_prob_outcomes_file[f]);
 
-        fclose(o_optimistic_file[f]);
-        fclose(o_optimistic_outcomes_file[f]);
+        // fclose(alpha_file[f]);
+        // fclose(alpha_outcomes_file[f]);
     }
 
     end = clock();
@@ -312,11 +310,11 @@ int main (int argc, char **argv) {
     delete scn_parser;
     delete cmds;
     free(_fp_prob);
-    free(_o_optimistic);
+    free(_alpha);
     free(fp_prob_file);
     free(fp_prob_outcomes_file);
-    free(o_optimistic_file);
-    free(o_optimistic_outcomes_file);
+    // free(alpha_file);
+    // free(alpha_outcomes_file);
 
     return 0;
 }
