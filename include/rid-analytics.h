@@ -5,8 +5,8 @@
 #define MAX_REQUEST_SIZE    30
 #define MAX_TIER_DEPTH     30
 
-#define DEFAULT_O_OPTIMISTIC (double) (1.0 / 10.0)
-#define END_OF_PATH (int) -1
+#define DEFAULT_ALPHA   (double) (1.0 / 10.0)
+#define END_OF_PATH     (int) -1
 
 #define AVERAGE_LATENCY     (char *) "average_latency"
 #define CACHE_LATENCY       (char *) "cache_latency"
