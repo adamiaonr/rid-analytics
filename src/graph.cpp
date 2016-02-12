@@ -27,24 +27,32 @@ int get_node_type_int(Node * node) {
 
     switch(node->get_type()) {
 
-        case Node::I_NODE:
-            node_type_int = I_NODE_INT;
+        case Node::MHS_NODE:
+            node_type_int = MHS_NODE_INT;
             break;
         
-        case Node::C_NODE:        
-            node_type_int = C_NODE_INT;
+        case Node::MHD_NODE:        
+            node_type_int = MHD_NODE_INT;
             break;
         
-        case Node::N_NODE:        
-            node_type_int = N_NODE_INT;        
+        case Node::SFP_NODE:        
+            node_type_int = SFP_NODE_INT;
             break;
 
-        case Node::O_NODE:        
-            node_type_int = O_NODE_INT;        
+        case Node::TPO_NODE:        
+            node_type_int = TPO_NODE_INT;
+            break;
+
+        case Node::DEF_NODE:        
+            node_type_int = DEF_NODE_INT;
+            break;
+
+        case Node::ORI_NODE:        
+            node_type_int = ORI_NODE_INT;        
             break;
 
         default:
-            node_type_int = U_NODE_INT;        
+            node_type_int = UNKNOWN_INT;        
             break;
     }
 
@@ -95,7 +103,7 @@ void get_edge_str(
     // initial part of edge
     // output = NODE_CHARS[get_node_type_int(prev_node)] + std::to_string(prev_depth) + std::to_string((breadth / 1)) + " -> " 
     //     + NODE_CHARS[next_node_type_int] + std::to_string(next_depth) + std::to_string((breadth * 3 + next_node_type_int)); 
-    if (prev_node_type_int == O_NODE_INT) {
+    if (prev_node_type_int == ORI_NODE_INT) {
 
         output = NODE_CHARS[prev_node_type_int] + std::to_string(prev_depth) + std::to_string((breadth / 1)) + " -> ";
 

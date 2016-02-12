@@ -3,7 +3,7 @@
 
 #define MAX_FILENAME_SIZE   64
 #define MAX_REQUEST_SIZE    30
-#define MAX_TIER_DEPTH     30
+#define MAX_TIER_DEPTH      30
 
 #define DEFAULT_ALPHA   (double) (1.0 / 10.0)
 #define END_OF_PATH     (int) -1
@@ -34,12 +34,16 @@ class RIDAnalytics {
 
             double * fp_prob;
             double * alpha;
+            double * latencies;
+            double * penalties;
+
+            int * domains;          // tier breadth: "how many domains within each tier"
+            int * content_sources;
 
             int tier_depth;
             int cache_tier;
             int origin_tier;
             int fp_resolution_tech;
-
         };
 
         RIDAnalytics() {};

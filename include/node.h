@@ -5,18 +5,20 @@
 
 #define OUTCOME_CCACHE              (char *) "correct cache"
 #define OUTCOME_IDEST_CSERVER       (char *) "wrong dest > server"
-#define OUTCOME_DROPPED             (char *) "dropped > server"
+#define OUTCOME_DROPPED             (char *) "dropped > relay"
 
 class Node {
 
     public:
 
         enum Type {
-            C_NODE = 0x00, 
-            I_NODE = 0x01,
-            N_NODE = 0x02,
-            O_NODE = 0x04,
-            UNKNOWN = 0x08
+            MHS_NODE = 0x00, 
+            MHD_NODE = 0x01,
+            SFP_NODE = 0x02,
+            TPO_NODE = 0x04,
+            DEF_NODE = 0x08,
+            ORI_NODE = 0x10,
+            UNKNOWN = 0x20
         };
 
         Node() {
@@ -103,20 +105,26 @@ class Node {
 
             switch(this->type) {
 
-                case Node::I_NODE:
-                    snprintf(type_str, MAX_NODE_STRING_SIZE, "I");
+                case Node::MHS_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "MHS");
                     break;
-                case Node::C_NODE:
-                    snprintf(type_str, MAX_NODE_STRING_SIZE, "C");
+                case Node::MHD_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "MHD");
                     break;
-                case Node::N_NODE:
-                    snprintf(type_str, MAX_NODE_STRING_SIZE, "N");
+                case Node::SFP_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "SFP");
                     break;
-                case Node::O_NODE:
-                    snprintf(type_str, MAX_NODE_STRING_SIZE, "O");
+                case Node::TPO_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "TPO");
+                    break;
+                case Node::DEF_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "DEF");
+                    break;
+                case Node::ORI_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "ORI");
                     break;
                 default:
-                    snprintf(type_str, MAX_NODE_STRING_SIZE, "U");
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "UNK");
                     break;
             }
 
@@ -127,31 +135,37 @@ class Node {
 
             // using calloc() since node_str will be returned
             char * node_str = (char *) calloc(MAX_NODE_STRING_SIZE, sizeof(char));
-            char node_type_str[MAX_NODE_STRING_SIZE];
+            char type_str[MAX_NODE_STRING_SIZE];
 
             switch(this->type) {
 
-                case Node::I_NODE:
-                    snprintf(node_type_str, MAX_NODE_STRING_SIZE, "I_NODE");
+                case Node::MHS_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "MHS");
                     break;
-                case Node::C_NODE:
-                    snprintf(node_type_str, MAX_NODE_STRING_SIZE, "C_NODE");
+                case Node::MHD_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "MHD");
                     break;
-                case Node::N_NODE:
-                    snprintf(node_type_str, MAX_NODE_STRING_SIZE, "N_NODE");
+                case Node::SFP_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "SFP");
                     break;
-                case Node::O_NODE:
-                    snprintf(node_type_str, MAX_NODE_STRING_SIZE, "O_NODE");
+                case Node::TPO_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "TPO");
+                    break;
+                case Node::DEF_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "DEF");
+                    break;
+                case Node::ORI_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "ORI");
                     break;
                 default:
-                    snprintf(node_type_str, MAX_NODE_STRING_SIZE, "O_UNKNOWN");
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "UNK");
                     break;
             }
 
             snprintf(
                 node_str, MAX_NODE_STRING_SIZE, 
                 "[TYPE : %s ][PROB : %02.6E][LATENCY : %08.6f][MAX_TIER : %d][OUTCOME: %s]",
-                node_type_str, this->prob_val, this->latency_val, this->max_tier, this->outcome.c_str());
+                type_str, this->prob_val, this->latency_val, this->max_tier, this->outcome.c_str());
 
             return node_str;
         }
