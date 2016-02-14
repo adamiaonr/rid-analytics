@@ -3,9 +3,10 @@
 
 #define MAX_NODE_STRING_SIZE 128
 
-#define OUTCOME_CCACHE              (char *) "correct cache"
-#define OUTCOME_IDEST_CSERVER       (char *) "wrong dest > server"
-#define OUTCOME_DROPPED             (char *) "dropped > relay"
+#define OUTCOME_CCACHE              (char *) "correct dest."
+#define OUTCOME_ICACHE              (char *) "wrong dest. > orig. server"
+#define OUTCOME_RELAYED             (char *) "fp detect. > orig. server"
+#define OUTCOME_DROPPED             (char *) "dropped"
 
 class Node {
 

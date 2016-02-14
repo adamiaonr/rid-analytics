@@ -57,20 +57,50 @@ double latency_through_tier(int tier, double * latencies) {
     double penalty_candidate = 0.0;
 
     // the 'up' & 'down' part
-    for (int t = 1; t < tier; t++) {
+    for (int t = 0; t < tier; t++) {
         penalty_candidate += 2.0 * latencies[t];
     }
 
     // the 'peer' link latency part
     // FIXME: this isn't always correct but let it stay like that for now
-    penalty_candidate = latencies[tier];
+    penalty_candidate += latencies[tier];
 
     return penalty_candidate + base_latency;
 }
 
+double latency_to_content(
+    struct RIDAnalytics::rid_analytics_inputs input_params,
+    int curr_tier, 
+    int curr_node_max_tier) {
+
+    double latency_to_content = 0.0;
+    int next_tier = curr_tier;
+
+    // we may need to go up a bit to find a tier at which content is available
+    for (; next_tier < input_params.tier_depth; next_tier++) {
+
+        // content is available at this tier, so get off the cycle
+        if (input_params.content_sources[curr_node_max_tier] > 0 
+            || input_params.content_sources[next_tier] > 0) {
+
+            break;
+        }
+
+        latency_to_content += input_params.latencies[next_tier];
+    }
+
+    // we can start peering then going down...
+    for (int t = (next_tier); t >= 0; t--) {
+
+        latency_to_content += input_params.latencies[t];
+    }
+
+    return latency_to_content;
+}
+
 double latency_to_content(int * content_sources, double * latencies) {
 
-    double latency_to_content = 0.0 * latencies[0];
+    double latency_to_content = 2.0 * latencies[0];
 
     for (int l = 0; l < MAX_TIER_DEPTH; l++) {
 
@@ -86,6 +116,32 @@ double latency_to_content(int * content_sources, double * latencies) {
     }
 
     return latency_to_content;
+}
+
+double in_flight_penalty(
+    struct RIDAnalytics::rid_analytics_inputs input_params,
+    int curr_node_tier,
+    int curr_node_max_tier,
+    double prev_node_latency) {
+
+    double penalty = 0.0;
+
+    // how far are we from the network edge?
+    double to_edge = 0.0;
+    for (int i = curr_node_tier; i >= 0; i--)
+        to_edge += input_params.latencies[i];
+
+    if (input_params.fp_resolution_tech == PENALTY_TYPE_FEEDBACK) {
+
+        // ...and up to origin server!
+        penalty += prev_node_latency + latency_to_content(input_params.content_sources, input_params.latencies);
+
+    } else if (input_params.fp_resolution_tech == PENALTY_TYPE_FALLBACK) {
+
+        penalty += input_params.penalties[curr_node_max_tier] - to_edge;
+    }
+
+    return penalty;
 }
 
 void calc_penalties(struct RIDAnalytics::rid_analytics_inputs & input_params) {
@@ -164,25 +220,76 @@ void calc_penalties(struct RIDAnalytics::rid_analytics_inputs & input_params) {
 
                 amortized_penalty = 0.0;
 
-                for (int i = m; i >= m; i--) {
+                for (int i = m; i >= 0; i--) {
                     
                     // probabilities always < 1.0 please: if there are more 
                     // content sources than domains (and assuming a uniform 
                     // distribution of sources per domains), we truncate 
                     // probabilities here...
                     prob_next = min(((double) input_params.content_sources[m]) / ((double) (input_params.domains[i])), 1.0);
-                    amortized_penalty += prob_prev * (1.0 - prob_next) * latency_through_tier(m, input_params.latencies);
+                    amortized_penalty += prob_prev * (1.0 - prob_next) * latency_through_tier(i, input_params.latencies);
+
+                    printf("%f * %f = %f\n", (1.0 - prob_next), latency_through_tier(i, input_params.latencies), amortized_penalty);
 
                     prob_prev = prob_prev * prob_next;
                 }
 
                 // special operation for the minimum latency case...
                 // FIXME: not sure if totally correct
-                amortized_penalty += prob_prev * 2.0 * input_params.latencies[0];
+                amortized_penalty += prob_prev * 3.0 * input_params.latencies[0];
+
+            } else {
+
+                amortized_penalty = latency_to_content(
+                        input_params.content_sources,
+                        input_params.latencies);
             }
 
             input_params.penalties[m] = amortized_penalty;
         }
+    }
+}
+
+void run_checksum(tree<Node *> decision_tree) {
+
+    tree<Node *>::leaf_iterator leaf_itr = decision_tree.begin_leaf();
+    tree<Node *>::leaf_iterator end_leaf_itr = decision_tree.end_leaf();
+
+    printf("\n*** INTERMEDIATE CHECKSUM ***\n\n");
+
+    double avg_latency = 0.0;
+    double checksum = 0.0;
+    char * node_str = NULL;
+
+    while (leaf_itr != end_leaf_itr) {
+
+        if ((*leaf_itr)->get_prob_val() > 0.0) {
+
+            node_str = (*leaf_itr)->to_string();
+
+            printf("[DEPTH %d | @TIER %d] : %s\n", 
+                decision_tree.depth(leaf_itr), 
+                (*leaf_itr)->get_curr_tier(),
+                node_str);
+
+            free(node_str);
+
+            checksum += (*leaf_itr)->get_prob_val();
+            avg_latency += ((*leaf_itr)->get_prob_val() * (*leaf_itr)->get_latency_val());
+        }
+
+        ++leaf_itr;
+    }
+
+    printf("\n[CHECKSUM : %-.8E]\n", checksum);
+    printf("[AVG_LATENCY : %-.8E]\n", avg_latency);
+
+    // wait for user input to continue...
+    printf("\npress 'c' to continue\n");
+
+    char entered = 0;
+    while (entered != 'c') { 
+        entered = getchar(); 
     }
 }
 
@@ -194,7 +301,7 @@ void print_params(struct RIDAnalytics::rid_analytics_inputs input_params) {
     printf("\n\n[TIER]    : |");
 
     for (int i = 0; i < input_params.tier_depth; i++)
-        printf(" %-8d|", i + 1);
+        printf(" %-8d|", i);
 
     // line separating header row and table body
     printf("\n-------------");
@@ -274,7 +381,7 @@ int RIDAnalytics::run_model(
     // initialize the probability tree using begin() and add a root 
     // (dummy) node with insert(). after this, we use append_child() all the 
     // way.
-    Node * root_node = new Node(0, 0, 0, 1.0, 0.0, Node::ORI_NODE);
+    Node * root_node = new Node(0, 0, 0, 1.0, input_params.latencies[0], Node::ORI_NODE);
 
     root = decision_tree.begin();
     root = decision_tree.insert(root, root_node);
@@ -293,15 +400,16 @@ int RIDAnalytics::run_model(
 
     int curr_node_tier = 0;
     int curr_node_max_tier = 0;
-    double prev_node_prob = 0.0;
+    double prev_node_prob = 1.0;
     double prev_node_latency = 0.0;
     Node::Type prev_node_type = Node::UNKNOWN;
 
     double path_latency = 0.0;
     double penalty_latency = 0.0;
 
-    double prob_fp_here = 0.0;
-    double p = 0.0;
+    double pos_prob_local = 1.0;
+    double alpha_local = 1.0;
+    double single_fp_prob = 1.0;
 
     // start the .dot file for rendering the probability tree
     Graph * graphviz_graph = NULL;
@@ -342,8 +450,8 @@ int RIDAnalytics::run_model(
                 continue;
             }
 
-            // save the information about the node to which we will append the 
-            // C, I and N children
+            // save the information about the node to which we will append
+            // the children
             prev_node_prob = (*depth_itr)->get_prob_val();
             prev_node_latency = (*depth_itr)->get_latency_val();
             prev_node_type = (*depth_itr)->get_type();
@@ -355,303 +463,291 @@ int RIDAnalytics::run_model(
             sfp_node = new Node(curr_node_max_tier, curr_node_tier, Node::SFP_NODE);
             def_node = new Node(curr_node_max_tier, curr_node_tier, Node::DEF_NODE);
 
-            if (prev_node_type == Node::ORI_NODE || prev_node_type == Node::DEF_NODE) {
+            // for each node type, we answer 4 questions, which determine the 
+            // values associated with nodes and transitions:
+            //
+            //  Q1) what's the 'TP reality'? no TPs in the table? 1 single TP? 
+            //      n TPs? this will determine the way we handle FP 
+            //      probabilities and calculate transition probabilities between 
+            //      states
+            //  Q2) in what tier will the next node be? going up a tier? down? 
+            //      peering? remember we use 'valley free routing' in a 
+            //      hierarchy of tiers.
+            //  Q3) what's the latency a certain lookup outcome implies? this 
+            //      includes the correct calculation of penalties due to 
+            //      relaying.
+            //  Q4) what's the outcome of the sequence of decisions at the 
+            //      end of the path? e.g. is the request packet delivered 
+            //      correctly?
 
-                // Q3) which TP reality are we in ? no TPs? single TP? 
-                // multiple TPs? 
-                if (input_params.content_sources[curr_node_tier] == 0) {         // TP reality = no TPs
+            // the MHD node is a special case in our model. in terms of 
+            // latency, next tier and outcomes, it is always treated in the 
+            // same way, independently of the source state (the probabilities 
+            // are dependent on the source though...)
+            
+            // Q2) for MHD decisions, penalty latencies are always 
+            // applied. however, we can't use the penalty array directly, since 
+            // the relaying here MAY be made when the packet is in-flight (and 
+            // thus at some tier i) and not from some wrong origin server (at 
+            // tier 0).
+            mhd_node->set_latency_val(prev_node_latency +
+                in_flight_penalty(
+                    input_params,
+                    curr_node_tier,
+                    curr_node_max_tier,
+                    prev_node_latency)
+                );
+
+            // Q3) MHD decisions always end up in relaying the packet
+            // towards an origin server
+            mhd_node->set_next_tier(END_OF_PATH);
+            mhd_node->set_outcome(OUTCOME_RELAYED);
+
+            if (prev_node_type == Node::ORI_NODE || prev_node_type == Node::DEF_NODE) {     
+
+                // Q1) TP reality
+
+                // NOTE: we use 'curr_node_max_tier' as the index to determine 
+                // the 'TP reality'. why?
+                // 
+                // we cannot use 'curr_node_tier' as the index: the 
+                // content_sources array only tells us about the content 
+                // sources than become 'visible' upon the first time a packet
+                // enters into tier i, i.e. within the domains 
+                // at tier i which are closer to the source of a request. when 
+                // we're following a 'down' link, the domains at tier i we 
+                // encounter are not the same as those we encounter when going 
+                // up. nevertheless, these will inherit the presence 
+                // of TPs or FPs from upper levels.
+                if (input_params.content_sources[curr_node_max_tier] == 0) {
+
+                    // TP reality = no TPs in forwarding table
+                    // 
+                    //  NEXT STATE | HAPPENS WHEN?                      
+                    // ------------|------------------------------------
+                    //  MHS        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is same) 
+                    //  MHD        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is diff) 
+                    //  SFP        | (only 1 FP)
+                    //  DEF        | NOT (FPs light up)
 
                     // *** probabilities ***
-                    // FIXME: p is completely incorrect
-                    p = 0.001 * input_params.fp_prob[curr_node_tier];
-                    prob_fp_here = (input_params.fp_prob[curr_node_tier] - p);
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
+                    // FIXME: single_fp_prob is completely incorrect. 
+                    // FIXME: besides, taking it into account makes me think 
+                    // this particular case doesn't make any sense.
+                    single_fp_prob = 0.001 * input_params.fp_prob[curr_node_tier];
+                    pos_prob_local = (input_params.fp_prob[curr_node_tier] - single_fp_prob);
+                    mhs_node->set_prob_val(prev_node_prob * (pos_prob_local * (input_params.alpha[curr_node_tier])));
+                    mhd_node->set_prob_val(prev_node_prob * (pos_prob_local * (1.0 - input_params.alpha[curr_node_tier])));
+                    sfp_node->set_prob_val(prev_node_prob * single_fp_prob);
+                    def_node->set_prob_val(prev_node_prob * (1.0 - input_params.fp_prob[curr_node_tier]));
+                    // impossible case
                     tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(p * prev_node_prob);
-                    def_node->set_prob_val((1.0 - input_params.fp_prob[curr_node_tier]) * prev_node_prob);
 
                     // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    mhd_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    tpo_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    sfp_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    def_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);                    
+                    mhs_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);
+                    sfp_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);
+                    def_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);                    
 
-                    // *** next tier *** 
+                    // Q3) when coming from a DEF lookup state, packets will 
+                    // always be forwarded 'up' or to a 'peer' domain. packets 
+                    // can also be relayed to an origin server if the MHD state 
+                    // is reached. the rules are the following:
+
+                    //  NEXT STATE      | NEXT TIER                      
+                    // -----------------|------------------------------------
+                    //  MHD             | relayed to orig. server
+                    //  MHS, TPO, SPF   | current tier
+                    //  DEF             | current tier + 1 (or dropped)
+                    //
+                    // the above applies to all TP realities
                     mhs_node->set_next_tier(curr_node_tier);
-                    mhd_node->set_next_tier(curr_node_tier);
-                    tpo_node->set_next_tier(END_OF_PATH);
                     sfp_node->set_next_tier(curr_node_tier);
+                    tpo_node->set_next_tier(END_OF_PATH);
+                    
+                    // Q3) default route : go up a tier or (drop the packet if 
+                    // we're already at the top and no TPs exist)
+                    if (curr_node_max_tier == (input_params.tier_depth - 1)) {
 
-                    // default route : go up a tier!
-                    def_node->set_next_tier(curr_node_tier + 1);
-                    def_node->set_max_tier(curr_node_tier + 1);
+                        def_node->set_next_tier(END_OF_PATH);
+                        def_node->set_outcome(OUTCOME_DROPPED);
 
+                    } else {
+
+                        def_node->set_next_tier(curr_node_tier + 1);
+                        def_node->set_max_tier(curr_node_tier + 1);
+                    }
+
+                    // add nodes to the .dot file for graph rendering
                     if ((modes & MODE_SAVEGRAPH)) {
 
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
-                        graphviz_graph->add_node((*depth_itr), depth, sfp_node, depth + 1, breadth, p * prev_node_prob);
+                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (pos_prob_local * (input_params.alpha[curr_node_tier])));
+                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (pos_prob_local * (1.0 - input_params.alpha[curr_node_tier])));
+                        graphviz_graph->add_node((*depth_itr), depth, sfp_node, depth + 1, breadth, single_fp_prob);
                         graphviz_graph->add_node((*depth_itr), depth, def_node, depth + 1, breadth, (1.0 - input_params.fp_prob[curr_node_tier]));
 
                         Node * nodes[] = {mhs_node, mhd_node, sfp_node, def_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
 
-                } else if (input_params.content_sources[curr_node_tier] == 1) {   // TP reality = 1 TP
+                } else if (input_params.content_sources[curr_node_max_tier] > 0) {
+
+                    // TP reality = only 1 TP in forwarding table
+                    // 
+                    //  NEXT STATE | HAPPENS WHEN?                      
+                    // ------------|------------------------------------
+                    //  MHS        | (FPs light up) AND (iface is same) 
+                    //  MHD        | (FPs light up) AND (iface is diff) 
+                    //  TPO        | NOT (FPs light up)                 
 
                     // *** probabilities ***
-                    prob_fp_here = input_params.fp_prob[curr_node_tier];
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
-                    tpo_node->set_prob_val((1.0 - input_params.fp_prob[curr_node_tier]) * prev_node_prob);
+                    pos_prob_local = input_params.fp_prob[curr_node_tier];
+                    mhs_node->set_prob_val(prev_node_prob * (pos_prob_local * (input_params.alpha[curr_node_tier])));
+                    mhd_node->set_prob_val(prev_node_prob * (pos_prob_local * (1.0 - input_params.alpha[curr_node_tier])));
+                    tpo_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
+                    // impossible outcomes
                     sfp_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
                     // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    mhd_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    tpo_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    sfp_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    def_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);                    
+                    mhs_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);
+                    tpo_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);
 
                     // *** next tier *** 
                     mhs_node->set_next_tier(curr_node_tier);
-                    mhd_node->set_next_tier(curr_node_tier);
                     tpo_node->set_next_tier(curr_node_tier);
                     sfp_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
 
                     if ((modes & MODE_SAVEGRAPH)) {
                         
-                        // add nodes to the .dot file for graph rendering
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
-                        graphviz_graph->add_node((*depth_itr), depth, tpo_node, depth + 1, breadth, (1.0 - input_params.fp_prob[curr_node_tier]));
+                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (pos_prob_local * (input_params.alpha[curr_node_tier])));
+                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (pos_prob_local * (1.0 - input_params.alpha[curr_node_tier])));
+                        graphviz_graph->add_node((*depth_itr), depth, tpo_node, depth + 1, breadth, (1.0 - pos_prob_local));
 
                         Node * nodes[] = {mhs_node, mhd_node, tpo_node};
-                        graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
-                    }
-
-                } else if (input_params.content_sources[curr_node_tier] > 1) {    // TP reality = n TPs
-
-                    // *** probabilities ***
-                    mhs_node->set_prob_val(input_params.alpha[curr_node_tier] * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prev_node_prob);
-
-                    tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(0.0);
-                    def_node->set_prob_val(0.0);
-
-                    // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    mhd_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    tpo_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    sfp_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);
-                    def_node->set_latency_val(prev_node_latency + latencies[curr_node_tier]);                    
-
-                    // *** next tier *** 
-                    mhs_node->set_next_tier(curr_node_tier);
-                    mhd_node->set_next_tier(curr_node_tier);
-                    tpo_node->set_next_tier(END_OF_PATH);
-                    sfp_node->set_next_tier(END_OF_PATH);
-                    def_node->set_next_tier(END_OF_PATH);
-
-                    if ((modes & MODE_SAVEGRAPH)) {
-                        
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, input_params.alpha[curr_node_tier]);
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]));
-
-                        Node * nodes[] = {mhs_node, mhd_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
                 }
 
             } else if (prev_node_type == Node::SFP_NODE) {
 
-                // Q1) if the previous decision was SFP_NODE, we will now go 
-                // down a tier
+                // **********************
+                // *** GENERAL VALUES ***
+                // **********************
+
+                // Q2) in general, if the previous state isn't DEF, we will now 
+                // go down a tier
                 int next_node_tier = curr_node_tier - 1;
 
-                // check if the request is about to be delivered to a content 
-                // source
+                // Q2) check if the request is about to be delivered to a 
+                // content source
+                double penalty_latency_sfp = 0.0;
+                double penalty_latency_mhs = 0.0;
+
                 if (next_node_tier == END_OF_PATH) {
 
-                    prob_fp_here = input_params.fp_prob[curr_node_tier];
+                    path_latency = latencies[curr_node_tier];
+
+                    // Q1) quick-fix for the fp probability value to use in 
+                    // the probability calculations (notice that if 
+                    // next_node_tier == -1 we would have a segfault)
+                    pos_prob_local = input_params.fp_prob[curr_node_tier];
+                    alpha_local = input_params.alpha[curr_node_tier];
                     
-                    // penalty due to relaying
-                    path_latency = 0.0;
-                    penalty_latency = input_params.penalties[curr_node_max_tier];
+                    // Q3) the penalty latency of an END_OF_PATH sfp node shall 
+                    // be set according to the pre-calculated penalty
+                    penalty_latency_sfp = input_params.penalties[curr_node_max_tier];
 
-                    mhd_node->set_outcome(std::string(OUTCOME_DROPPED));
-                    sfp_node->set_outcome(std::string(OUTCOME_IDEST_CSERVER));
+                    // Q4) the outcome of END_OF_PATH sfp nodes shall ALWAYS be 
+                    // OUTCOME_ICACHE (incorrect delivery)
+                    sfp_node->set_outcome(std::string(OUTCOME_ICACHE));
+
+                    // Q3 & Q4) if TPs are involved, the latency and outcome of 
+                    // a MHS node shall ALWAYS be 0.0 and OUTCOME_CCACHE
+                    if (input_params.content_sources[curr_node_max_tier] > 0) {
+
+                        mhs_node->set_outcome(std::string(OUTCOME_CCACHE));
+                    
+                    } else {
+
+                        penalty_latency_mhs = input_params.penalties[curr_node_max_tier];
+                        mhs_node->set_outcome(std::string(OUTCOME_ICACHE));
+                    }
 
                 } else {
 
-                    prob_fp_here = input_params.fp_prob[next_node_tier];
+                    pos_prob_local = input_params.fp_prob[next_node_tier];
+                    alpha_local = input_params.alpha[next_node_tier];
 
                     // the next component of path latency will be that of 
                     // the tier below: notice that we're essentially forwarding 
                     // between hops within the same tier (in this case, 
                     // next_node_tier)
                     path_latency = latencies[next_node_tier];
-                    penalty_latency = 0.0;
                 } 
 
-                // Q3) which TP reality are we in ? no TPs? single TP? 
+                // Q1) which TP reality are we in ? no TPs? single TP? 
                 // multiple TPs? 
-                if (input_params.content_sources[curr_node_tier] == 0) {         // TP reality = no TPs
+                if (input_params.content_sources[curr_node_max_tier] == 0) {
+
+                    // TP reality = no TPs in forwarding table
+                    // 
+                    //  NEXT STATE | HAPPENS WHEN?                      
+                    // ------------|------------------------------------
+                    //  MHS        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is same) 
+                    //  MHD        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is diff) 
+                    //  SFP        | (only 1 FP)
+                    //  DEF        | NOT (FPs light up)
 
                     // *** probabilities ***
-                    // FIXME: p is completely incorrect
-                    mhs_node->set_prob_val((prob_fp_here) * input_params.alpha[curr_node_tier] * prev_node_prob);
-                    mhd_node->set_prob_val((prob_fp_here) * (1.0 - input_params.alpha[curr_node_tier]) * prev_node_prob);
-
+                    // FIXME: single_fp_prob is completely incorrect.
+                    single_fp_prob = 0.001 * input_params.fp_prob[curr_node_tier];
+                    mhs_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * alpha_local));
+                    mhd_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * (1.0 - alpha_local)));
+                    sfp_node->set_prob_val(prev_node_prob * single_fp_prob);
+                    def_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
+                    // impossible outcomes
                     tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(1.0 - prob_fp_here);
-                    def_node->set_prob_val(0.0);
 
                     // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
+                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency_mhs);
+                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency_sfp);
+                    def_node->set_latency_val(prev_node_latency  
+                                                + in_flight_penalty(
+                                                    input_params,
+                                                    curr_node_tier,
+                                                    curr_node_max_tier,
+                                                    prev_node_latency));
 
                     // *** next tier *** 
                     mhs_node->set_next_tier(next_node_tier);
-                    mhd_node->set_next_tier(next_node_tier);
-                    tpo_node->set_next_tier(END_OF_PATH);
                     sfp_node->set_next_tier(next_node_tier);
-                    def_node->set_next_tier(END_OF_PATH);
-
-                    mhs_node->set_outcome(std::string(OUTCOME_IDEST_CSERVER));
-
-                    if ((modes & MODE_SAVEGRAPH)) {
-
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (prob_fp_here) * input_params.alpha[curr_node_tier]);
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (prob_fp_here) * (1.0 - input_params.alpha[curr_node_tier]));
-                        graphviz_graph->add_node((*depth_itr), depth, sfp_node, depth + 1, breadth, 1.0 - prob_fp_here);
-
-                        Node * nodes[] = {mhs_node, mhd_node, sfp_node};
-                        graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
-                    }
-
-                } else if (input_params.content_sources[curr_node_tier] == 1) {   // TP reality = 1 TP
-
-                    // *** probabilities ***
-                    prob_fp_here = 1.0;
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
-                    tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(0.0);
-                    def_node->set_prob_val(0.0);
-
-                    // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
-
-                    // *** next tier *** 
-                    mhs_node->set_next_tier(next_node_tier);
-                    mhd_node->set_next_tier(next_node_tier);
                     tpo_node->set_next_tier(END_OF_PATH);
-                    sfp_node->set_next_tier(END_OF_PATH);
+                    // Q4) a packet which is going down and gets into a 
+                    // DEF state is dropped
                     def_node->set_next_tier(END_OF_PATH);
-
-                    mhs_node->set_outcome(std::string(OUTCOME_CCACHE));
+                    def_node->set_outcome(OUTCOME_DROPPED);
 
                     if ((modes & MODE_SAVEGRAPH)) {
-                        
-                        // add nodes to the .dot file for graph rendering
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
 
-                        Node * nodes[] = {mhs_node, mhd_node};
+                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * alpha_local));
+                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * (1.0 - alpha_local)));
+                        graphviz_graph->add_node((*depth_itr), depth, sfp_node, depth + 1, breadth, single_fp_prob);
+                        graphviz_graph->add_node((*depth_itr), depth, def_node, depth + 1, breadth, (1.0 - pos_prob_local));
+
+                        Node * nodes[] = {mhs_node, mhd_node, sfp_node, def_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
 
-                } else if (input_params.content_sources[curr_node_tier] > 1) {    // TP reality = n TPs
+                } else if (input_params.content_sources[curr_node_max_tier] > 0) {
 
-                    // *** probabilities ***
-                    prob_fp_here = 1.0;
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
-                    tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(0.0);
-                    def_node->set_prob_val(0.0);
-
-                    // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
-
-                    // *** next tier *** 
-                    mhs_node->set_next_tier(next_node_tier);
-                    mhd_node->set_next_tier(next_node_tier);
-                    tpo_node->set_next_tier(END_OF_PATH);
-                    sfp_node->set_next_tier(END_OF_PATH);
-                    def_node->set_next_tier(END_OF_PATH);
-
-                    mhs_node->set_outcome(std::string(OUTCOME_CCACHE));
-
-                    if ((modes & MODE_SAVEGRAPH)) {
-                        
-                        // add nodes to the .dot file for graph rendering
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
-
-                        Node * nodes[] = {mhs_node, mhd_node};
-                        graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
-                    }
-                }
-
-            } else if (prev_node_type == Node::TPO_NODE) {
-
-                // Q1) if the previous decision was TPO_NODE, we will now go 
-                // down a tier
-                int next_node_tier = curr_node_tier - 1;
-
-                // check if the request is about to be delivered to a content 
-                // source
-                if (next_node_tier == END_OF_PATH) {
-
-                    // penalty due to relaying
-                    path_latency = 0.0;
-                    penalty_latency = input_params.penalties[curr_node_max_tier];
-
-                    mhs_node->set_outcome(std::string(OUTCOME_CCACHE));
-                    mhd_node->set_outcome(std::string(OUTCOME_DROPPED));
-                    tpo_node->set_outcome(std::string(OUTCOME_CCACHE));
-
-                } else {
-
-                    // the next component of path latency will be that of 
-                    // the tier below: notice that we're essentially forwarding 
-                    // between hops within the same tier (in this case, 
-                    // next_node_tier)
-                    path_latency = latencies[next_node_tier];
-                    penalty_latency = 0.0;
-                } 
-
-                // Q3) which TP reality are we in ? no TPs? single TP? 
-                // multiple TPs? 
-                if (input_params.content_sources[curr_node_tier] == 0) {         // TP reality = no TPs
+                    // TP reality = only 1 TP in forwarding table
+                    // 
+                    // we define this case as impossible. by definition, this 
+                    // shouldn't happen in our system...
+                    // FIXME: this needs a bit more of thinking... in what 
+                    // case could a transition between SFP -> TPO happen? 
+                    // caching? 
 
                     // *** probabilities ***
                     mhs_node->set_prob_val(0.0);
@@ -660,12 +756,65 @@ int RIDAnalytics::run_model(
                     sfp_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
-                    // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
+                    // *** next tier *** 
+                    mhs_node->set_next_tier(END_OF_PATH);
+                    tpo_node->set_next_tier(END_OF_PATH);
+                    sfp_node->set_next_tier(END_OF_PATH);
+                    def_node->set_next_tier(END_OF_PATH);
+                }
+
+            } else if (prev_node_type == Node::TPO_NODE) {
+
+                // **********************
+                // *** GENERAL VALUES ***
+                // **********************
+
+                // Q2) in general, if the previous state isn't DEF, we will now 
+                // go down a tier
+                int next_node_tier = curr_node_tier - 1;
+
+                // Q3) for transitions from TPO to {MHS, TPO}, penalty latencies
+                // are 0.0
+                penalty_latency = 0.0;
+
+                // Q4) likewise, deliveries are always correct for {MHS, TPO} 
+                // transitions for END_OF_PATH
+                if (next_node_tier == END_OF_PATH) {
+
+                    path_latency = latencies[curr_node_tier];
+
+                    mhs_node->set_outcome(std::string(OUTCOME_CCACHE));
+                    tpo_node->set_outcome(std::string(OUTCOME_CCACHE));
+
+                    pos_prob_local = input_params.fp_prob[curr_node_tier];
+                    alpha_local = input_params.alpha[curr_node_tier];
+
+                } else {
+
+                    // the next component of path latency will be that of 
+                    // the tier below: notice that we're essentially forwarding 
+                    // between hops within the same tier (in this case, 
+                    // next_node_tier)
+                    path_latency = latencies[next_node_tier];
+
+                    pos_prob_local = input_params.fp_prob[next_node_tier];
+                    alpha_local = input_params.alpha[next_node_tier];
+                } 
+
+                // Q1) TP reality
+                if (input_params.content_sources[curr_node_max_tier] == 0) {         
+
+                    // TP reality = no TPs
+                    // if we come from TPO state, there must be at least 1 
+                    // TP in the table. therefore, transitions within the 
+                    // 'no TP' reality are impossibru
+
+                    // *** probabilities ***
+                    mhs_node->set_prob_val(0.0);
+                    mhd_node->set_prob_val(0.0);
+                    tpo_node->set_prob_val(0.0);
+                    sfp_node->set_prob_val(0.0);
+                    def_node->set_prob_val(0.0);
 
                     // *** next tier *** 
                     mhs_node->set_next_tier(END_OF_PATH);
@@ -674,95 +823,77 @@ int RIDAnalytics::run_model(
                     sfp_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
 
-                } else if (input_params.content_sources[curr_node_tier] == 1) {   // TP reality = 1 TP
+                } else if (input_params.content_sources[curr_node_max_tier] > 0) {   
+
+                    // TP reality = 1 or more TPs in forwarding table
+                    // 
+                    //  NEXT STATE | HAPPENS WHEN?                      
+                    // ------------|------------------------------------
+                    //  MHS        | (FPs light up) AND (iface is same) 
+                    //  MHD        | (FPs light up) AND (iface is diff) 
+                    //  TPO        | NOT (FPs light up)                 
 
                     // *** probabilities ***
-                    prob_fp_here = input_params.fp_prob[curr_node_tier];
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
-                    tpo_node->set_prob_val((1.0 - prob_fp_here) * prev_node_prob);
+                    // non-zero probabilities
+                    mhs_node->set_prob_val(prev_node_prob * (pos_prob_local * alpha_local));
+                    mhd_node->set_prob_val(prev_node_prob * (pos_prob_local * (1.0 - alpha_local)));
+                    tpo_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
+                    // everything else is impossible...
                     sfp_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
                     // *** latencies *** 
                     mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
                     tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
 
                     // *** next tier *** 
                     mhs_node->set_next_tier(next_node_tier);
-                    mhd_node->set_next_tier(next_node_tier);
                     tpo_node->set_next_tier(next_node_tier);
                     sfp_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
 
                     if ((modes & MODE_SAVEGRAPH)) {
                         
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, 1.0 - prob_fp_here);
+                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (pos_prob_local * alpha_local));
+                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (pos_prob_local * (1.0 - alpha_local)));
+                        graphviz_graph->add_node((*depth_itr), depth, tpo_node, depth + 1, breadth, (1.0 - pos_prob_local));
 
                         Node * nodes[] = {mhs_node, mhd_node, tpo_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
 
-                } else if (input_params.content_sources[curr_node_tier] > 1) {    // TP reality = n TPs
-
-                    // *** probabilities ***
-                    prob_fp_here = 1.0;
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
-                    tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(0.0);
-                    def_node->set_prob_val(0.0);
-
-                    // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
-
-                    // *** next tier *** 
-                    mhs_node->set_next_tier(next_node_tier);
-                    mhd_node->set_next_tier(next_node_tier);
-                    tpo_node->set_next_tier(END_OF_PATH);
-                    sfp_node->set_next_tier(END_OF_PATH);
-                    def_node->set_next_tier(END_OF_PATH);
-
-                    if ((modes & MODE_SAVEGRAPH)) {
-                        
-                        // add nodes to the .dot file for graph rendering
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
-
-                        Node * nodes[] = {mhs_node, mhd_node};
-                        graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
-                    }
                 }
 
             } else if (prev_node_type == Node::MHS_NODE) {
 
-                // Q1) if the previous decision was MHS_NODE, we will now go 
-                // down a tier
+                // Q2) in general, if the previous state isn't DEF, we will now 
+                // go down a tier
                 int next_node_tier = curr_node_tier - 1;
 
-                // check if the request is about to be delivered to a content 
-                // source
+                // Q3 & Q4) if the request is to be delivered and TPs are involved, 
+                // the delivery is correct and penalty is 0.0
                 if (next_node_tier == END_OF_PATH) {
 
-                    // penalty due to relaying
-                    path_latency = 0.0;
-                    penalty_latency = input_params.penalties[curr_node_max_tier];
+                    // penalty due to relaying: if TPs are involved, no 
+                    // latency is added and the packet is delivered correctly
+                    path_latency = latencies[curr_node_tier];
 
-                    mhs_node->set_outcome(std::string(OUTCOME_CCACHE));
-                    mhd_node->set_outcome(std::string(OUTCOME_DROPPED));
+                    if (input_params.content_sources[curr_node_max_tier] > 0) {
+
+                        penalty_latency = 0.0;
+                        mhs_node->set_outcome(std::string(OUTCOME_CCACHE));
+                        tpo_node->set_outcome(std::string(OUTCOME_CCACHE));
+
+                    } else {
+                        
+                        // ... otherwise
+                        penalty_latency = input_params.penalties[curr_node_max_tier];
+                        mhs_node->set_outcome(std::string(OUTCOME_ICACHE));
+                        sfp_node->set_outcome(std::string(OUTCOME_ICACHE));
+                    }
+
+                    pos_prob_local = input_params.fp_prob[curr_node_tier];
+                    alpha_local = input_params.alpha[curr_node_tier];
 
                 } else {
 
@@ -772,157 +903,106 @@ int RIDAnalytics::run_model(
                     // next_node_tier)
                     path_latency = latencies[next_node_tier];
                     penalty_latency = 0.0;
+
+                    pos_prob_local = input_params.fp_prob[next_node_tier];
+                    alpha_local = input_params.alpha[next_node_tier];
                 } 
 
                 // Q3) which TP reality are we in ? no TPs? single TP? 
                 // multiple TPs? 
-                if (input_params.content_sources[curr_node_tier] == 0) {         // TP reality = no TPs
+                if (input_params.content_sources[curr_node_max_tier] == 0) {
+
+                    // TP reality = no TPs in forwarding table
+                    // 
+                    //  NEXT STATE | HAPPENS WHEN?                      
+                    // ------------|------------------------------------
+                    //  MHS        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is same) 
+                    //  MHD        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is diff) 
+                    //  SFP        | (only 1 FP)
+                    //  DEF        | NOT (FPs light up)
 
                     // *** probabilities ***
-                    // FIXME: p is completely incorrect
-                    p = 0.001 * input_params.fp_prob[curr_node_tier];
-                    prob_fp_here = (input_params.fp_prob[curr_node_tier] - p);
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
+                    // FIXME: single_fp_prob is completely incorrect.
+                    single_fp_prob = 0.001 * pos_prob_local;
+                    mhs_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * alpha_local));
+                    mhd_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * (1.0 - alpha_local)));
+                    sfp_node->set_prob_val(prev_node_prob * single_fp_prob);
+                    def_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
+                    // tpos are impossible (by definition)
                     tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(0.0);
-                    def_node->set_prob_val(0.0);
 
                     // *** latencies *** 
                     mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
                     sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
+                    def_node->set_latency_val(prev_node_latency  
+                                                + in_flight_penalty(
+                                                    input_params,
+                                                    curr_node_tier,
+                                                    curr_node_max_tier,
+                                                    prev_node_latency));                    
 
                     // *** next tier *** 
                     mhs_node->set_next_tier(next_node_tier);
-                    mhd_node->set_next_tier(next_node_tier);
-                    tpo_node->set_next_tier(END_OF_PATH);
-                    sfp_node->set_next_tier(END_OF_PATH);
+                    sfp_node->set_next_tier(next_node_tier);
+                    // Q4) a packet which is going down and gets into a DEF 
+                    // state is dropped
                     def_node->set_next_tier(END_OF_PATH);
+                    def_node->set_outcome(OUTCOME_DROPPED);
+                    tpo_node->set_next_tier(END_OF_PATH);
 
                     if ((modes & MODE_SAVEGRAPH)) {
 
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
+                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * alpha_local));
+                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * (1.0 - alpha_local)));
+                        graphviz_graph->add_node((*depth_itr), depth, sfp_node, depth + 1, breadth, (single_fp_prob));
+                        graphviz_graph->add_node((*depth_itr), depth, def_node, depth + 1, breadth, (1.0 - pos_prob_local));
 
-                        Node * nodes[] = {mhs_node, mhd_node};
+                        Node * nodes[] = {mhs_node, mhd_node, sfp_node, def_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
 
-                } else if (input_params.content_sources[curr_node_tier] == 1) {   // TP reality = 1 TP
+                } else if (input_params.content_sources[curr_node_max_tier] > 0) {
+
+                    // TP reality = 1 single TP in forwarding table
+                    // 
+                    //  NEXT STATE | HAPPENS WHEN?                      
+                    // ------------|------------------------------------
+                    //  MHS        | (FPs light up) AND (iface is same) 
+                    //  MHD        | (FPs light up) AND (iface is diff) 
+                    //  TPO        | NOT (FPs light up)
 
                     // *** probabilities ***
-                    prob_fp_here = (input_params.fp_prob[curr_node_tier]);
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
-                    tpo_node->set_prob_val(0.0);
+                    mhs_node->set_prob_val(prev_node_prob * (pos_prob_local * (alpha_local)));
+                    mhd_node->set_prob_val(prev_node_prob * (pos_prob_local * (1.0 - alpha_local)));
+                    tpo_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
+                    // impossible events...
                     sfp_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
                     // *** latencies *** 
                     mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
                     tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
 
                     // *** next tier *** 
                     mhs_node->set_next_tier(next_node_tier);
-                    mhd_node->set_next_tier(next_node_tier);
-                    tpo_node->set_next_tier(END_OF_PATH);
+                    tpo_node->set_next_tier(next_node_tier);
                     sfp_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
 
                     if ((modes & MODE_SAVEGRAPH)) {
 
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
+                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (pos_prob_local * (alpha_local)));
+                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (pos_prob_local * (1.0 - alpha_local)));
+                        graphviz_graph->add_node((*depth_itr), depth, tpo_node, depth + 1, breadth, (1.0 - pos_prob_local));
 
-                        Node * nodes[] = {mhs_node, mhd_node};
-                        graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
-                    }
-
-                } else if (input_params.content_sources[curr_node_tier] > 1) {    // TP reality = n TPs
-
-                    // *** probabilities ***
-                    prob_fp_here = 1.0;
-                    mhs_node->set_prob_val((input_params.alpha[curr_node_tier] * prob_fp_here) * prev_node_prob);
-                    mhd_node->set_prob_val((1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here * prev_node_prob);
-
-                    tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(0.0);
-                    def_node->set_prob_val(0.0);
-
-                    // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
-
-                    // *** next tier *** 
-                    mhs_node->set_next_tier(next_node_tier);
-                    mhd_node->set_next_tier(next_node_tier);
-                    tpo_node->set_next_tier(END_OF_PATH);
-                    sfp_node->set_next_tier(END_OF_PATH);
-                    def_node->set_next_tier(END_OF_PATH);
-
-                    if ((modes & MODE_SAVEGRAPH)) {
-
-                        // add nodes to the .dot file for graph rendering
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-                        graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (1.0 - input_params.alpha[curr_node_tier]) * prob_fp_here);
-
-                        Node * nodes[] = {mhs_node, mhd_node};
+                        Node * nodes[] = {mhs_node, mhd_node, tpo_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
                 }
 
             } else if (prev_node_type == Node::MHD_NODE) {
 
-                // Q1) if the previous decision was MHD_NODE, we will ALWAYS 
-                // end the path
-
-                // penalty due to relaying
-                path_latency = 0.0;
-                penalty_latency = input_params.penalties[curr_node_max_tier];
-
-                mhd_node->set_outcome(std::string(OUTCOME_DROPPED));
-
-                mhs_node->set_prob_val(0.0);
-                mhd_node->set_prob_val(prev_node_prob * 1.0);
-                tpo_node->set_prob_val(0.0);
-                sfp_node->set_prob_val(0.0);
-                def_node->set_prob_val(0.0);
-
-                // *** latencies *** 
-                mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                mhd_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                tpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                def_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);                    
-
-                // *** next tier *** 
-                mhs_node->set_next_tier(END_OF_PATH);
-                mhd_node->set_next_tier(END_OF_PATH);
-                tpo_node->set_next_tier(END_OF_PATH);
-                sfp_node->set_next_tier(END_OF_PATH);
-                def_node->set_next_tier(END_OF_PATH);
-
-                if ((modes & MODE_SAVEGRAPH)) {
-
-                    // add nodes to the .dot file for graph rendering
-                    graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (input_params.alpha[curr_node_tier] * prob_fp_here));
-
-                    Node * nodes[] = {mhd_node};
-                    graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
-                }
+                // EDIT: we should never get in here...
             }
 
             // finally append the 3 children
@@ -936,6 +1016,9 @@ int RIDAnalytics::run_model(
 
             // go to the next node in the previous tier and repeat the process
             ++depth_itr;
+
+            // run a sanity check on the nodes just added...
+            run_checksum(decision_tree);
         }
 
         if (is_all_eop(decision_tree) > 0)
@@ -1020,3 +1103,4 @@ int RIDAnalytics::run_model(
 
     return 0;
 }
+

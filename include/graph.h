@@ -30,10 +30,10 @@
 #define MHS_NODE_INT 0x00
 #define MHD_NODE_INT 0x01
 #define SFP_NODE_INT 0x02
-#define TPO_NODE_INT 0x04
-#define DEF_NODE_INT 0x08
-#define ORI_NODE_INT 0x08
-#define UNKNOWN_INT 0x08
+#define TPO_NODE_INT 0x03
+#define DEF_NODE_INT 0x04
+#define ORI_NODE_INT 0x05
+#define UNK_NODE_INT 0x06
 
 #define END_OF_PATH (int) -1
 

@@ -1,7 +1,7 @@
 #include "graph.h"
 
-const char * GRAPHVIZ_COLORS[] = { "red", "green", "gray", "blue", "orange" };
-const char * NODE_CHARS[] = { "I", "C", "N", "O", "U" };
+const char * GRAPHVIZ_COLORS[] = { "red", "green", "gray", "blue", "orange", "cyan", "crimson" };
+const char * NODE_CHARS[] = { "MHS", "MHD", "SFP", "TPO", "DEF", "ORI", "UNK" };
 
 Graph::Graph(const char * filename)
 {
@@ -52,7 +52,7 @@ int get_node_type_int(Node * node) {
             break;
 
         default:
-            node_type_int = UNKNOWN_INT;        
+            node_type_int = UNK_NODE_INT;        
             break;
     }
 
