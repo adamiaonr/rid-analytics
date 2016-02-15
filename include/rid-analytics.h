@@ -41,7 +41,6 @@ class RIDAnalytics {
             int * content_sources;
 
             int tier_depth;
-            int cache_tier;
             int origin_tier;
             int fp_resolution_tech;
         };

@@ -13,9 +13,10 @@
 
 #define FP_PROB             (char *) "fp_prob"
 #define ALPHA               (char *) "alpha"
-#define ORIGIN_TIER         (char *) "origin_tier"
-#define CACHE_TIER          (char *) "cache_tier"
 #define TIER_DEPTH          (char *) "tier_depth"
+#define CONTENT_SOURCES     (char *) "content_sources"
+#define DOMAINS             (char *) "domains"
+#define LATENCIES           (char *) "latencies"
 
 using namespace std;
 using namespace CommandLineProcessing;
@@ -151,11 +152,16 @@ int main (int argc, char **argv) {
     scn_parser->get_double_property_array(ALPHA, alpha);
     int alpha_size = get_array_size(alpha);
 
-    // 'tiers' at which origin and cache are located
-    int origin_tier = 3;
-    scn_parser->get_int_property_value(ORIGIN_TIER, origin_tier);
-    int cache_tier = 2;
-    scn_parser->get_int_property_value(CACHE_TIER, cache_tier);
+    // array of latencies per tier
+    double * latencies = (double *) calloc(MAX_ARRAY_SIZE, sizeof(double));
+    scn_parser->get_double_property_array(LATENCIES, latencies);
+
+    // array of content sources...
+    int * content_sources = (int *) calloc(tier_depth, sizeof(int));
+    scn_parser->get_int_property_array(CONTENT_SOURCES, content_sources);
+    // ... and domains per tier
+    int * domains = (int *) calloc(MAX_ARRAY_SIZE, sizeof(int));
+    scn_parser->get_int_property_array(DOMAINS, domains);
 
     // // fp resolution mechanisms
     // int fp_resolution[2] = {PENALTY_TYPE_FEEDBACK, PENALTY_TYPE_FALLBACK};
@@ -170,8 +176,6 @@ int main (int argc, char **argv) {
     // arrays of FILE * (this can only end well... LOL)
     FILE ** fp_prob_file = (FILE **) calloc(tier_depth, sizeof(FILE *));
     FILE ** fp_prob_outcomes_file = (FILE **) calloc(tier_depth, sizeof(FILE *));
-    // FILE ** alpha_file = (FILE **) calloc(tier_depth, sizeof(FILE *));
-    // FILE ** alpha_outcomes_file = (FILE **) calloc(tier_depth, sizeof(FILE *));
 
     // open the .csv files in "a"ppend mode
     for (int i = 0; i < tier_depth; i++) {
@@ -183,14 +187,6 @@ int main (int argc, char **argv) {
         fp_prob_outcomes_file[i] = fopen(
             std::string(std::string(data_dir) + "/fp." + std::to_string(i + 1) + ".outcomes.csv").c_str(), 
             "a");
-
-        // alpha_file[i] = fopen(
-        //     std::string(std::string(data_dir) + "/op." + std::to_string(i + 1) + ".csv").c_str(), 
-        //     "a");
-
-        // alpha_outcomes_file[i] = fopen(
-        //     std::string(std::string(data_dir) + "/op." + std::to_string(i + 1) + ".outcomes.csv").c_str(), 
-        //     "a");
     }
 
     double avg_latency = 0.0;
@@ -201,8 +197,9 @@ int main (int argc, char **argv) {
     RIDAnalytics::rid_analytics_inputs input_params;
     // these input parameters won't change during the run
     input_params.tier_depth = tier_depth;
-    input_params.cache_tier = cache_tier;
-    input_params.origin_tier = origin_tier;
+    input_params.content_sources = content_sources;
+    input_params.domains = domains;
+    input_params.latencies = latencies;
 
     // keep track of execution time
     begin = clock();
@@ -216,8 +213,8 @@ int main (int argc, char **argv) {
             for (int k = 0; k < fp_prob_size; k++) {
                 _fp_prob[2] = fp_prob[k];
 
-                for (int l = 0; l < fp_prob_size; l++) {
-                    _fp_prob[3] = fp_prob[l];
+                // for (int l = 0; l < fp_prob_size; l++) {
+                //     _fp_prob[3] = fp_prob[l];
 
                     for (int a = 0; a < alpha_size; a++) {
                         _alpha[0] = alpha[a];
@@ -228,8 +225,8 @@ int main (int argc, char **argv) {
                             for (int c = 0; c < alpha_size; c++) {
                                 _alpha[2] = alpha[c];
 
-                                for (int d = 0; d < alpha_size; d++) {
-                                    _alpha[3] = alpha[d];
+                                // for (int d = 0; d < alpha_size; d++) {
+                                //     _alpha[3] = alpha[d];
 
                                     avg_latency = 0.0;
 
@@ -251,12 +248,10 @@ int main (int argc, char **argv) {
                                         fprintf(
                                             fp_prob_file[f], 
                                             "%-.8E,%-.8E,feedback\n", _fp_prob[f], avg_latency);
-                                        // fprintf(
-                                        //     alpha_file[f], 
-                                        //     "%-.8E,%-.8E,feedback\n", _alpha[f], avg_latency);
                                     }
 
                                     avg_latency = 0.0;
+
                                     // IMPORTANT: change penalty type to 
                                     // fallback
                                     input_params.fp_resolution_tech = PENALTY_TYPE_FALLBACK;
@@ -274,20 +269,14 @@ int main (int argc, char **argv) {
                                         fprintf(
                                             fp_prob_file[f], 
                                             "%-.8E,%-.8E,fallback\n", _fp_prob[f], avg_latency);
-                                        // fprintf(
-                                        //     alpha_file[f], 
-                                        //     "%-.8E,%-.8E,fallback\n", _alpha[f], avg_latency);
-                                    
-                                        // fflush(fp_prob_file[f]);
-                                        // fflush(alpha_file[f]);
                                     }
 
                                     nr_tests++;
-                                }
+                                //}
                             }
                         }
                     }
-                }
+                //}
             }
         }
     }

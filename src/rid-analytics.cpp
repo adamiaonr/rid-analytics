@@ -68,36 +68,6 @@ double latency_through_tier(int tier, double * latencies) {
     return penalty_candidate + base_latency;
 }
 
-double latency_to_content(
-    struct RIDAnalytics::rid_analytics_inputs input_params,
-    int curr_tier, 
-    int curr_node_max_tier) {
-
-    double latency_to_content = 0.0;
-    int next_tier = curr_tier;
-
-    // we may need to go up a bit to find a tier at which content is available
-    for (; next_tier < input_params.tier_depth; next_tier++) {
-
-        // content is available at this tier, so get off the cycle
-        if (input_params.content_sources[curr_node_max_tier] > 0 
-            || input_params.content_sources[next_tier] > 0) {
-
-            break;
-        }
-
-        latency_to_content += input_params.latencies[next_tier];
-    }
-
-    // we can start peering then going down...
-    for (int t = (next_tier); t >= 0; t--) {
-
-        latency_to_content += input_params.latencies[t];
-    }
-
-    return latency_to_content;
-}
-
 double latency_to_content(int * content_sources, double * latencies) {
 
     double latency_to_content = 2.0 * latencies[0];
@@ -120,25 +90,57 @@ double latency_to_content(int * content_sources, double * latencies) {
 
 double in_flight_penalty(
     struct RIDAnalytics::rid_analytics_inputs input_params,
+    int step,
     int curr_node_tier,
     int curr_node_max_tier,
     double prev_node_latency) {
 
     double penalty = 0.0;
 
-    // how far are we from the network edge?
-    double to_edge = 0.0;
-    for (int i = curr_node_tier; i >= 0; i--)
-        to_edge += input_params.latencies[i];
-
     if (input_params.fp_resolution_tech == PENALTY_TYPE_FEEDBACK) {
 
-        // ...and up to origin server!
-        penalty += prev_node_latency + latency_to_content(input_params.content_sources, input_params.latencies);
+        // with PENALTY_TYPE_FEEDBACK, we first go back to the source of 
+        // request...
+        penalty += prev_node_latency;
+
+        // ... and then go up to the origin server!
+        penalty += latency_to_content(input_params.content_sources, input_params.latencies);
 
     } else if (input_params.fp_resolution_tech == PENALTY_TYPE_FALLBACK) {
 
-        penalty += input_params.penalties[curr_node_max_tier] - to_edge;
+        // with PENALTY_TYPE_FALLBACK, we don't go back to the source of the 
+        // request: we immediately forward the request to the closest origin.
+
+        // we use the value calculated in 
+        // input_params.penalties[curr_node_max_tier], given however, remember 
+        // this is the average distance FROM A WRONG DESTINATION to a correct 
+        // source, given that the wrong destination has been reached via 
+        // curr_node_max_tier. if we're not at a destination but in the middle 
+        // of the way, we need to subtract something...
+
+        // ... for now we determine how far from a network edge we are and 
+        // subtract this distance from input_params.penalties[curr_node_max_tier]
+        double latency_to_closest_edge = 0.0;
+
+        for (int i = curr_node_tier; i >= 0; i--) {
+
+            latency_to_closest_edge += input_params.latencies[i];
+        }
+
+        // HACK: if this is the first time we're at curr_node_tier, and 
+        // content becomes visible at curr_node_tier, add 1 unit of 
+        // latencies[curr_node_tier] to the result...
+
+        if (input_params.content_sources[curr_node_tier] > 0 && 
+            ((step) == curr_node_tier)) {
+
+            // printf("[STEP: %d / @TIER: %d] CS: %d\n", 
+            //     step, curr_node_tier, 
+            //     input_params.content_sources[curr_node_tier]);
+            penalty += input_params.latencies[curr_node_tier];
+        }
+
+        penalty += input_params.penalties[curr_node_max_tier] - latency_to_closest_edge;
     }
 
     return penalty;
@@ -148,13 +150,12 @@ void calc_penalties(struct RIDAnalytics::rid_analytics_inputs & input_params) {
 
     input_params.penalties = (double *) calloc(input_params.tier_depth, sizeof(double));
 
-    // first tier at which content is available
-    int origin_tier = 0;
-    for (int i = 0; i < input_params.tier_depth; i++) {
+    // furthest tier at which content is available
+    for (int i = (input_params.tier_depth - 1); i >= 0; i--) {
 
         if (input_params.content_sources[i] > 0) {
             
-            origin_tier = i;
+            input_params.origin_tier = i;
             break;
         }
     }
@@ -185,7 +186,7 @@ void calc_penalties(struct RIDAnalytics::rid_analytics_inputs & input_params) {
 
             // 2) we got to the source of the request. now we move up, till 
             // a content source is visible
-            input_params.penalties[m] += latency_through_tier(origin_tier, input_params.latencies);
+            input_params.penalties[m] += latency_through_tier(input_params.origin_tier, input_params.latencies);
         }
 
     } else if (input_params.fp_resolution_tech == PENALTY_TYPE_FALLBACK) {
@@ -229,7 +230,11 @@ void calc_penalties(struct RIDAnalytics::rid_analytics_inputs & input_params) {
                     prob_next = min(((double) input_params.content_sources[m]) / ((double) (input_params.domains[i])), 1.0);
                     amortized_penalty += prob_prev * (1.0 - prob_next) * latency_through_tier(i, input_params.latencies);
 
-                    printf("%f * %f = %f\n", (1.0 - prob_next), latency_through_tier(i, input_params.latencies), amortized_penalty);
+                    // printf("penalties[%d.%d] = %f * %f = %f\n", 
+                    //     m, i,
+                    //     (1.0 - prob_next), 
+                    //     latency_through_tier(i, input_params.latencies), 
+                    //     amortized_penalty);
 
                     prob_prev = prob_prev * prob_next;
                 }
@@ -237,6 +242,12 @@ void calc_penalties(struct RIDAnalytics::rid_analytics_inputs & input_params) {
                 // special operation for the minimum latency case...
                 // FIXME: not sure if totally correct
                 amortized_penalty += prob_prev * 3.0 * input_params.latencies[0];
+
+                // printf("penalties[%d] += %f * 3.0 * %f = %f\n", 
+                //     m,
+                //     prob_prev, 
+                //     input_params.latencies[0], 
+                //     amortized_penalty);
 
             } else {
 
@@ -343,15 +354,15 @@ int RIDAnalytics::run_model(
     FILE ** outcomes_file,
     std::string data_dir) {
 
-    // latency values per tier, in multiples of some time unit.
-    double latencies[MAX_TIER_DEPTH];
-    // FIXME: just initialize everything to 1.0
-    for (int tier = 0; tier < input_params.tier_depth; tier++)
-        latencies[tier] = 1.0;
+    // // latency values per tier, in multiples of some time unit.
+    // double latencies[MAX_TIER_DEPTH];
+    // // FIXME: just initialize everything to 1.0
+    // for (int tier = 0; tier < input_params.tier_depth; tier++)
+    //     latencies[tier] = 1.0;
 
-    // point the latencies array in the input params struct to the array 
-    // just created
-    input_params.latencies = latencies;
+    // // point the latencies array in the input params struct to the array 
+    // // just created
+    // input_params.latencies = latencies;
 
     // the penalty array. our goal is to calculate the relaying 
     // penalty - PENALTY(m) - for a request, given the following conditions: 
@@ -490,13 +501,21 @@ int RIDAnalytics::run_model(
             // the relaying here MAY be made when the packet is in-flight (and 
             // thus at some tier i) and not from some wrong origin server (at 
             // tier 0).
-            mhd_node->set_latency_val(prev_node_latency +
-                in_flight_penalty(
+            double mhd_penalty = in_flight_penalty(
                     input_params,
+                    depth,
                     curr_node_tier,
                     curr_node_max_tier,
-                    prev_node_latency)
-                );
+                    prev_node_latency);
+
+            mhd_node->set_latency_val(prev_node_latency + mhd_penalty);
+
+            // printf("[@tier %d / %d] mhd_node->set_latency_val(%f + %f = %f)\n",
+            //         curr_node_tier,
+            //         curr_node_max_tier, 
+            //         prev_node_latency,
+            //         mhd_penalty, 
+            //         prev_node_latency + mhd_penalty);
 
             // Q3) MHD decisions always end up in relaying the packet
             // towards an origin server
@@ -646,7 +665,7 @@ int RIDAnalytics::run_model(
 
                 if (next_node_tier == END_OF_PATH) {
 
-                    path_latency = latencies[curr_node_tier];
+                    path_latency = input_params.latencies[curr_node_tier];
 
                     // Q1) quick-fix for the fp probability value to use in 
                     // the probability calculations (notice that if 
@@ -683,7 +702,7 @@ int RIDAnalytics::run_model(
                     // the tier below: notice that we're essentially forwarding 
                     // between hops within the same tier (in this case, 
                     // next_node_tier)
-                    path_latency = latencies[next_node_tier];
+                    path_latency = input_params.latencies[next_node_tier];
                 } 
 
                 // Q1) which TP reality are we in ? no TPs? single TP? 
@@ -715,6 +734,7 @@ int RIDAnalytics::run_model(
                     def_node->set_latency_val(prev_node_latency  
                                                 + in_flight_penalty(
                                                     input_params,
+                                                    depth,
                                                     curr_node_tier,
                                                     curr_node_max_tier,
                                                     prev_node_latency));
@@ -781,7 +801,7 @@ int RIDAnalytics::run_model(
                 // transitions for END_OF_PATH
                 if (next_node_tier == END_OF_PATH) {
 
-                    path_latency = latencies[curr_node_tier];
+                    path_latency = input_params.latencies[curr_node_tier];
 
                     mhs_node->set_outcome(std::string(OUTCOME_CCACHE));
                     tpo_node->set_outcome(std::string(OUTCOME_CCACHE));
@@ -795,7 +815,7 @@ int RIDAnalytics::run_model(
                     // the tier below: notice that we're essentially forwarding 
                     // between hops within the same tier (in this case, 
                     // next_node_tier)
-                    path_latency = latencies[next_node_tier];
+                    path_latency = input_params.latencies[next_node_tier];
 
                     pos_prob_local = input_params.fp_prob[next_node_tier];
                     alpha_local = input_params.alpha[next_node_tier];
@@ -876,7 +896,7 @@ int RIDAnalytics::run_model(
 
                     // penalty due to relaying: if TPs are involved, no 
                     // latency is added and the packet is delivered correctly
-                    path_latency = latencies[curr_node_tier];
+                    path_latency = input_params.latencies[curr_node_tier];
 
                     if (input_params.content_sources[curr_node_max_tier] > 0) {
 
@@ -901,7 +921,7 @@ int RIDAnalytics::run_model(
                     // the tier below: notice that we're essentially forwarding 
                     // between hops within the same tier (in this case, 
                     // next_node_tier)
-                    path_latency = latencies[next_node_tier];
+                    path_latency = input_params.latencies[next_node_tier];
                     penalty_latency = 0.0;
 
                     pos_prob_local = input_params.fp_prob[next_node_tier];
@@ -937,6 +957,7 @@ int RIDAnalytics::run_model(
                     def_node->set_latency_val(prev_node_latency  
                                                 + in_flight_penalty(
                                                     input_params,
+                                                    depth,
                                                     curr_node_tier,
                                                     curr_node_max_tier,
                                                     prev_node_latency));                    
@@ -1018,7 +1039,8 @@ int RIDAnalytics::run_model(
             ++depth_itr;
 
             // run a sanity check on the nodes just added...
-            run_checksum(decision_tree);
+            if ((modes & MODE_SAVEGRAPH))
+                run_checksum(decision_tree);
         }
 
         if (is_all_eop(decision_tree) > 0)
@@ -1094,7 +1116,7 @@ int RIDAnalytics::run_model(
         printf("[AVG_LATENCY : %-.8E]\n", avg_latency);
         printf("[CACHE_LATENCY : %-.8E]\n", latency_to_content(input_params.content_sources, input_params.latencies));
 
-        double origin_latency = latency_through_tier(input_params.origin_tier, latencies);
+        double origin_latency = latency_through_tier(input_params.origin_tier, input_params.latencies);
         printf("[ORIGIN_LATENCY : %-.8E]\n", origin_latency);
     }
 

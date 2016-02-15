@@ -1,6 +1,6 @@
 #include "graph.h"
 
-const char * GRAPHVIZ_COLORS[] = { "red", "green", "gray", "blue", "orange", "cyan", "crimson" };
+const char * GRAPHVIZ_COLORS[] = { "cyan", "crimson", "darkorange", "forestgreen", "dimgray", "black", "deeppink" };
 const char * NODE_CHARS[] = { "MHS", "MHD", "SFP", "TPO", "DEF", "ORI", "UNK" };
 
 Graph::Graph(const char * filename)
@@ -121,7 +121,7 @@ void get_edge_str(
 
     // appropriately format probability value
     char prob_val_str[MAX_STRING_SIZE];
-    snprintf(prob_val_str, MAX_STRING_SIZE, "%-.3E", prob_val);
+    snprintf(prob_val_str, MAX_STRING_SIZE, "%-.5E", prob_val);
     // add probability value as 'label' and 'weight'
     output += "[label =\"" + std::string(prob_val_str) + "\", weight=\"" + std::string(prob_val_str) + "\"];\n";
 

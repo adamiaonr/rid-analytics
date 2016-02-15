@@ -1,5 +1,6 @@
 fp_prob=0.000000001,0.0000001,0.00001,0.001,0.1,0.5,1.0
 alpha=0.5,0.1,0.01,0.001
-origin_tier=3
-cache_tier=0
-tier_depth=4
+domains=4,4,4
+tier_depth=3
+content_sources=0,1,1
+latencies=1.0,1.0,1.0

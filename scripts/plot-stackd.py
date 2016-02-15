@@ -25,20 +25,21 @@ def custom_ceil(x, base=5):
 def main():
 
     if len(sys.argv) < 2:
-        print "usage: python plot-stackd.py <input-file-base-name> <output-filename>.png"
+        print "usage: python plot-stackd.py <nr. of tiers> <input-file-base-name> <output-filename>.png"
         return
 
     # extract the .csv file argument
-    base_name = sys.argv[1]
+    base_name = sys.argv[2]
+    nr_tiers = int(sys.argv[1])
 
-    outcomes = ['wds', 'cc', 'ds']
+    outcomes = ['cc', 'ic', 'rlyd', 'drpd']
 
-    data = [[], [], []]
+    data = [[], [], [], []]
 
     fig = plt.figure()
-    subplot_code = 220
+    subplot_code = (2 * 100) + (2 * 10)
 
-    for n in xrange(4):
+    for n in xrange(nr_tiers):
         for i in xrange(len(outcomes)):
 
             filename = base_name + "." + str(n + 1) + ".outcomes." + outcomes[i] + ".csv"
@@ -72,19 +73,18 @@ def main():
         subplot_code += 1
         stackd = fig.add_subplot(subplot_code)
 
-        stackd.fill_between(x, 0, y_stack[0,:], facecolor='pink', alpha=.7)
-        stackd.fill_between(x, y_stack[0,:], y_stack[1,:], facecolor='lightgreen', alpha=.7)
-        stackd.fill_between(x, y_stack[1,:], y_stack[2,:], facecolor='gray')
+        stackd.fill_between(x, 0, y_stack[0,:], facecolor='lightgreen', alpha=.7)
+        stackd.fill_between(x, y_stack[0,:], y_stack[1,:], facecolor='pink', alpha=.7)
+        stackd.fill_between(x, y_stack[1,:], y_stack[2,:], facecolor='cyan', alpha=.7)
+        stackd.fill_between(x, y_stack[2,:], y_stack[3,:], facecolor='gray', alpha=.7)
 
         stackd.set_xlabel("False positive rate (@tier " + str(n + 1) + ")", fontsize=LABEL_FONT_SIZE)
         stackd.set_ylabel('Outcome (%)', fontsize=LABEL_FONT_SIZE)
         
-        a = plt.plot([], [], color='pink', linewidth=10)
-        b = plt.plot([], [], color='lightgreen', linewidth=10)
-        c = plt.plot([], [], color='gray', linewidth=10)
-
-        #if (n == 0):
-            #stackd.legend((a[0], b[0], c[0]), ('Incorrect delivery', 'Correct delivery', 'Dropped'), loc='upper left', fontsize=LEGEND_FONT_SIZE)
+        a = plt.plot([], [], color='lightgreen', linewidth=10)
+        b = plt.plot([], [], color='pink', linewidth=10)
+        c = plt.plot([], [], color='cyan', linewidth=10)
+        d = plt.plot([], [], color='gray', linewidth=10)
 
         stackd.grid(True)
         fig.tight_layout()
@@ -94,8 +94,13 @@ def main():
         stackd.set_xlim(0.000000001, 1.0)
         stackd.set_ylim(0.0, 100.0)
 
+        if (n == (nr_tiers - 1)):
+            subplot_code += 1
+            stackd = fig.add_subplot(subplot_code)
+            stackd.legend((a[0], b[0], c[0], d[0]), ('Correct dest.', 'Wrong dest.', 'Relayed', 'Dropped'), loc='lower right', fontsize=LEGEND_FONT_SIZE)
+
 #    plt.show()
-    plt.savefig(sys.argv[2], bbox_inches='tight')
+    plt.savefig(sys.argv[3], bbox_inches='tight')
 
 if __name__ == "__main__":
     main()
