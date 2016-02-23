@@ -1,0 +1,96 @@
+FEEDBACK,wrong dest. > orig. server,9.98001000E-09
+FEEDBACK,fp detect. > orig. server,9.97002999E-06
+FEEDBACK,wrong dest. > orig. server,9.99000000E-09
+FEEDBACK,dropped,8.99100000E-05
+FEEDBACK,fp detect. > orig. server,9.98001000E-02
+FEEDBACK,wrong dest. > orig. server,9.99000000E-09
+FEEDBACK,fp detect. > orig. server,9.98001000E-06
+FEEDBACK,wrong dest. > orig. server,1.00000000E-08
+FEEDBACK,dropped,9.00000000E-05
+FEEDBACK,correct dest.,9.00000000E-15
+FEEDBACK,fp detect. > orig. server,8.99100000E-12
+FEEDBACK,correct dest.,8.10000000E-11
+FEEDBACK,fp detect. > orig. server,8.99100000E-08
+FEEDBACK,correct dest.,8.10000000E-11
+FEEDBACK,fp detect. > orig. server,8.09190000E-08
+FEEDBACK,correct dest.,7.29000000E-07
+FEEDBACK,fp detect. > orig. server,8.99100000E-04
+FEEDBACK,correct dest.,8.99100000E-09
+FEEDBACK,fp detect. > orig. server,8.98200900E-06
+FEEDBACK,correct dest.,8.09190000E-05
+FEEDBACK,fp detect. > orig. server,8.98200900E-02
+FEEDBACK,correct dest.,8.09190000E-05
+FEEDBACK,fp detect. > orig. server,8.08380810E-02
+FEEDBACK,correct dest.,7.28271000E-01
+FALLBACK,wrong dest. > orig. server,9.98001000E-09
+FALLBACK,fp detect. > orig. server,9.97002999E-06
+FALLBACK,wrong dest. > orig. server,9.99000000E-09
+FALLBACK,dropped,8.99100000E-05
+FALLBACK,fp detect. > orig. server,9.98001000E-02
+FALLBACK,wrong dest. > orig. server,9.99000000E-09
+FALLBACK,fp detect. > orig. server,9.98001000E-06
+FALLBACK,wrong dest. > orig. server,1.00000000E-08
+FALLBACK,dropped,9.00000000E-05
+FALLBACK,correct dest.,9.00000000E-15
+FALLBACK,fp detect. > orig. server,8.99100000E-12
+FALLBACK,correct dest.,8.10000000E-11
+FALLBACK,fp detect. > orig. server,8.99100000E-08
+FALLBACK,correct dest.,8.10000000E-11
+FALLBACK,fp detect. > orig. server,8.09190000E-08
+FALLBACK,correct dest.,7.29000000E-07
+FALLBACK,fp detect. > orig. server,8.99100000E-04
+FALLBACK,correct dest.,8.99100000E-09
+FALLBACK,fp detect. > orig. server,8.98200900E-06
+FALLBACK,correct dest.,8.09190000E-05
+FALLBACK,fp detect. > orig. server,8.98200900E-02
+FALLBACK,correct dest.,8.09190000E-05
+FALLBACK,fp detect. > orig. server,8.08380810E-02
+FALLBACK,correct dest.,7.28271000E-01
+FEEDBACK,wrong dest. > orig. server,9.98001000E-09
+FEEDBACK,fp detect. > orig. server,9.97002999E-06
+FEEDBACK,wrong dest. > orig. server,9.99000000E-09
+FEEDBACK,dropped,8.99100000E-05
+FEEDBACK,fp detect. > orig. server,9.98001000E-02
+FEEDBACK,wrong dest. > orig. server,9.99000000E-09
+FEEDBACK,fp detect. > orig. server,9.98001000E-06
+FEEDBACK,wrong dest. > orig. server,1.00000000E-08
+FEEDBACK,dropped,9.00000000E-05
+FEEDBACK,correct dest.,9.00000000E-15
+FEEDBACK,fp detect. > orig. server,8.99100000E-12
+FEEDBACK,correct dest.,8.10000000E-11
+FEEDBACK,fp detect. > orig. server,8.99100000E-08
+FEEDBACK,correct dest.,8.10000000E-11
+FEEDBACK,fp detect. > orig. server,8.09190000E-08
+FEEDBACK,correct dest.,7.29000000E-07
+FEEDBACK,fp detect. > orig. server,8.99100000E-04
+FEEDBACK,correct dest.,8.99100000E-09
+FEEDBACK,fp detect. > orig. server,8.98200900E-06
+FEEDBACK,correct dest.,8.09190000E-05
+FEEDBACK,fp detect. > orig. server,8.98200900E-02
+FEEDBACK,correct dest.,8.09190000E-05
+FEEDBACK,fp detect. > orig. server,8.08380810E-02
+FEEDBACK,correct dest.,7.28271000E-01
+FALLBACK,wrong dest. > orig. server,9.98001000E-09
+FALLBACK,fp detect. > orig. server,9.97002999E-06
+FALLBACK,wrong dest. > orig. server,9.99000000E-09
+FALLBACK,dropped,8.99100000E-05
+FALLBACK,fp detect. > orig. server,9.98001000E-02
+FALLBACK,wrong dest. > orig. server,9.99000000E-09
+FALLBACK,fp detect. > orig. server,9.98001000E-06
+FALLBACK,wrong dest. > orig. server,1.00000000E-08
+FALLBACK,dropped,9.00000000E-05
+FALLBACK,correct dest.,9.00000000E-15
+FALLBACK,fp detect. > orig. server,8.99100000E-12
+FALLBACK,correct dest.,8.10000000E-11
+FALLBACK,fp detect. > orig. server,8.99100000E-08
+FALLBACK,correct dest.,8.10000000E-11
+FALLBACK,fp detect. > orig. server,8.09190000E-08
+FALLBACK,correct dest.,7.29000000E-07
+FALLBACK,fp detect. > orig. server,8.99100000E-04
+FALLBACK,correct dest.,8.99100000E-09
+FALLBACK,fp detect. > orig. server,8.98200900E-06
+FALLBACK,correct dest.,8.09190000E-05
+FALLBACK,fp detect. > orig. server,8.98200900E-02
+FALLBACK,correct dest.,8.09190000E-05
+FALLBACK,fp detect. > orig. server,8.08380810E-02
+FALLBACK,correct dest.,7.28271000E-01

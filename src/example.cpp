@@ -66,10 +66,10 @@ ArgvParser * create_argv_parser() {
 
     cmds->defineOptionAlternative(OPTION_VERBOSE, "v");
 
-        cmds->defineOption(
+    cmds->defineOption(
             OPTION_TITLE,
             "common title to append to output file names (e.g. <TITLE>.outcomes.csv, <TITLE>.dot, etc.)",
-            ArgvParser::NoOptionAttribute);
+            ArgvParser::OptionRequiresValue);
 
     return cmds;
 }
