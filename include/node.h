@@ -8,6 +8,8 @@
 #define OUTCOME_RELAYED             (char *) "fp detect. > orig. server"
 #define OUTCOME_DROPPED             (char *) "dropped"
 
+#include <string>
+
 class Node {
 
     public:

@@ -12,8 +12,10 @@
 #define CACHE_LATENCY       (char *) "cache_latency"
 #define ORIGIN_LATENCY      (char *) "origin_latency"
 
-#define PENALTY_TYPE_FEEDBACK   0x00
-#define PENALTY_TYPE_FALLBACK   0x01
+#define PENALTY_TYPE_FEEDBACK   (int) 0
+#define PENALTY_TYPE_FALLBACK   (int) 1
+
+#define PENALTY_TYPE_STR_SIZE   2
 
 #define MODE_VERBOSE        0x01
 #define MODE_SAVECDF        0x02
@@ -43,6 +45,9 @@ class RIDAnalytics {
             int tier_depth;
             int origin_tier;
             int fp_resolution_tech;
+
+            char * title;           // title for output files handled within 
+                                    // (e.g. probability graphs)
         };
 
         RIDAnalytics() {};
@@ -52,7 +57,9 @@ class RIDAnalytics {
             double & avg_latency,
             rid_analytics_inputs input_params,
             unsigned int modes, 
-            FILE ** outcomes_file,
+            FILE ** outcomes_files,
+            int outcomes_files_size,
+            char * title,
             std::string data_dir);
 };
 

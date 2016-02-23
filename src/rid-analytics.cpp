@@ -1,11 +1,14 @@
 #include <math.h>
 #include <cfloat>
 #include <algorithm>
+#include <string>
 
 #include "tree/tree.hh"
 #include "node.h"
 #include "graph.h"
 #include "rid-analytics.h"
+
+const char * PENALTY_TYPE_STR[] = {"FEEDBACK", "FALLBACK"};
 
 double fp_rate(double m, double n, double k, double c) {
 
@@ -352,6 +355,8 @@ int RIDAnalytics::run_model(
     struct RIDAnalytics::rid_analytics_inputs input_params,
     unsigned int modes, 
     FILE ** outcomes_file,
+    int outcomes_files_size,
+    char * title,
     std::string data_dir) {
 
     // // latency values per tier, in multiples of some time unit.
@@ -424,8 +429,12 @@ int RIDAnalytics::run_model(
 
     // start the .dot file for rendering the probability tree
     Graph * graphviz_graph = NULL;
-    if ((modes & MODE_SAVEGRAPH))
-        graphviz_graph = new Graph(std::string(data_dir + "/graphviz").c_str());
+
+    if ((modes & MODE_SAVEGRAPH)) {
+
+        graphviz_graph = new Graph(std::string(data_dir + "/" + title).c_str());        
+    }
+
 
     // depth and breadth are sort of (x, y) coordinates for nodes in a tree. 
     // these will be used to generate node names for the .dot file. the origin 
@@ -1039,7 +1048,7 @@ int RIDAnalytics::run_model(
             ++depth_itr;
 
             // run a sanity check on the nodes just added...
-            if ((modes & MODE_SAVEGRAPH))
+            if ((modes & MODE_VERBOSE))
                 run_checksum(decision_tree);
         }
 
@@ -1091,13 +1100,13 @@ int RIDAnalytics::run_model(
                 // if requested, save outcome information in files pointed 
                 // by the outcomes_file array. this will basically save lines 
                 // in the format: 
-                // [FP PROB AT TIER i], [LOOKUP OUTCOME TYPE], [OUTCOME TYPE PROBABILITY OF OCCURRENCE]
-                for (int i = 0; i < input_params.tier_depth; i++) {
+                // [FP RESOLUTION TECH], [LOOKUP OUTCOME TYPE], [OUTCOME TYPE PROBABILITY OF OCCURRENCE]
+                for (int i = 0; i < outcomes_files_size; i++) {
 
                     fprintf(
                         outcomes_file[i], 
-                        "%-.8E,%s,%-.8E\n", 
-                        input_params.fp_prob[i], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
+                        "%s,%s,%-.8E\n", 
+                        PENALTY_TYPE_STR[input_params.fp_resolution_tech], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
 
                     // fprintf(
                     //     input_params.alpha_outcomes_file[i], 

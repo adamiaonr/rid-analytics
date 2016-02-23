@@ -4,32 +4,31 @@ CC := g++
 # Special directories
 SRCDIR := src
 BUILDDIR := build
-#TARGET := rid-analytics
 TARGET_SANITY := sanity-check
-TARGET_ANALYSIS := sensitivity-analysis
+TARGET_EXAMPLE := example
 
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-OBJECTS_SANITY := $(filter-out $(BUILDDIR)/$(TARGET_ANALYSIS).o, $(OBJECTS))
-OBJECTS_ANALYSIS := $(filter-out $(BUILDDIR)/$(TARGET_SANITY).o, $(OBJECTS))
+OBJECTS_SANITY := $(filter-out $(BUILDDIR)/$(TARGET_EXAMPLE).o, $(OBJECTS))
+OBJECTS_EXAMPLE := $(filter-out $(BUILDDIR)/$(TARGET_SANITY).o, $(OBJECTS))
 
 # use -ggdb for GNU debugger and -std=c++11 for tree.hh
-CFLAGS := -g -ggdb -Wall -std=c++11
+CFLAGS := -g -ggdb -Wall -std=c++11 -stdlib=libc++
 
-LIB := -Llib -lm
+LIB := -lm
 INC := -Iinclude
 
-all: $(TARGET_SANITY) $(TARGET_ANALYSIS)
+all: $(TARGET_SANITY) $(TARGET_EXAMPLE)
 	@echo " Doing nothing..."
 
 $(TARGET_SANITY): $(OBJECTS_SANITY)
 	@echo " Linking..."
 	@echo " $(CC) $^ -o $(TARGET_SANITY) $(LIB)"; $(CC) $^ -o $(TARGET_SANITY) $(LIB)
 
-$(TARGET_ANALYSIS): $(OBJECTS_ANALYSIS)
+$(TARGET_EXAMPLE): $(OBJECTS_EXAMPLE)
 	@echo " Linking..."
-	@echo " $(CC) $^ -o $(TARGET_ANALYSIS) $(LIB)"; $(CC) $^ -o $(TARGET_ANALYSIS) $(LIB)
+	@echo " $(CC) $^ -o $(TARGET_EXAMPLE) $(LIB)"; $(CC) $^ -o $(TARGET_EXAMPLE) $(LIB)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
@@ -37,6 +36,6 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 
 clean:
 	@echo " Cleaning..."; 
-	$(RM) -r $(BUILDDIR) $(TARGET_SANITY) $(TARGET_ANALYSIS) *~
+	$(RM) -r $(BUILDDIR) $(TARGET_SANITY) $(TARGET_EXAMPLE) *~
 
 .PHONY: clean

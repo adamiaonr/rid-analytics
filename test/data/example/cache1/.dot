@@ -1,0 +1,113 @@
+digraph {
+	rankdir=LR
+
+	MHS10[label="MHS(0:0)", color=cyan];
+	ORI00 -> MHS10[label ="9.99000E-05", weight="9.99000E-05"];
+
+	MHD11[label="MHD(0:EOP)", color=crimson];
+	ORI00 -> MHD11[label ="9.98001E-02", weight="9.98001E-02"];
+
+	SFP12[label="SFP(0:0)", color=darkorange];
+	ORI00 -> SFP12[label ="1.00000E-04", weight="1.00000E-04"];
+
+	DEF14[label="DEF(0:1)", color=dimgray];
+	ORI00 -> DEF14[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS10, MHD11, SFP12, DEF14 };
+	MHS20[label="MHS(0:EOP)", color=cyan];
+	MHS10 -> MHS20[label ="9.99000E-05", weight="9.99000E-05"];
+
+	MHD21[label="MHD(0:EOP)", color=crimson];
+	MHS10 -> MHD21[label ="9.98001E-02", weight="9.98001E-02"];
+
+	SFP22[label="SFP(0:EOP)", color=darkorange];
+	MHS10 -> SFP22[label ="1.00000E-04", weight="1.00000E-04"];
+
+	DEF24[label="DEF(0:EOP)", color=dimgray];
+	MHS10 -> DEF24[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS20, MHD21, SFP22, DEF24 };
+	MHS26[label="MHS(0:EOP)", color=cyan];
+	SFP12 -> MHS26[label ="9.99000E-05", weight="9.99000E-05"];
+
+	MHD27[label="MHD(0:EOP)", color=crimson];
+	SFP12 -> MHD27[label ="9.98001E-02", weight="9.98001E-02"];
+
+	SFP28[label="SFP(0:EOP)", color=darkorange];
+	SFP12 -> SFP28[label ="1.00000E-04", weight="1.00000E-04"];
+
+	DEF210[label="DEF(0:EOP)", color=dimgray];
+	SFP12 -> DEF210[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS26, MHD27, SFP28, DEF210 };
+	MHS212[label="MHS(1:1)", color=cyan];
+	DEF14 -> MHS212[label ="1.00000E-06", weight="1.00000E-06"];
+
+	MHD213[label="MHD(1:EOP)", color=crimson];
+	DEF14 -> MHD213[label ="9.99000E-04", weight="9.99000E-04"];
+
+	TPO215[label="TPO(1:1)", color=forestgreen];
+	DEF14 -> TPO215[label ="9.99000E-01", weight="9.99000E-01"];
+
+	{rank = same; MHS212, MHD213, TPO215 };
+	MHS330[label="MHS(1:0)", color=cyan];
+	MHS212 -> MHS330[label ="1.00000E-04", weight="1.00000E-04"];
+
+	MHD331[label="MHD(1:EOP)", color=crimson];
+	MHS212 -> MHD331[label ="9.99000E-02", weight="9.99000E-02"];
+
+	TPO333[label="TPO(1:0)", color=forestgreen];
+	MHS212 -> TPO333[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS330, MHD331, TPO333 };
+	MHS339[label="MHS(1:0)", color=cyan];
+	TPO215 -> MHS339[label ="1.00000E-04", weight="1.00000E-04"];
+
+	MHD340[label="MHD(1:EOP)", color=crimson];
+	TPO215 -> MHD340[label ="9.99000E-02", weight="9.99000E-02"];
+
+	TPO342[label="TPO(1:0)", color=forestgreen];
+	TPO215 -> TPO342[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS339, MHD340, TPO342 };
+	MHS40[label="MHS(0:EOP)", color=cyan];
+	MHS330 -> MHS40[label ="1.00000E-04", weight="1.00000E-04"];
+
+	MHD41[label="MHD(0:EOP)", color=crimson];
+	MHS330 -> MHD41[label ="9.99000E-02", weight="9.99000E-02"];
+
+	TPO43[label="TPO(0:EOP)", color=forestgreen];
+	MHS330 -> TPO43[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS40, MHD41, TPO43 };
+	MHS49[label="MHS(0:EOP)", color=cyan];
+	TPO333 -> MHS49[label ="1.00000E-04", weight="1.00000E-04"];
+
+	MHD410[label="MHD(0:EOP)", color=crimson];
+	TPO333 -> MHD410[label ="9.99000E-02", weight="9.99000E-02"];
+
+	TPO412[label="TPO(0:EOP)", color=forestgreen];
+	TPO333 -> TPO412[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS49, MHD410, TPO412 };
+	MHS415[label="MHS(0:EOP)", color=cyan];
+	MHS339 -> MHS415[label ="1.00000E-04", weight="1.00000E-04"];
+
+	MHD416[label="MHD(0:EOP)", color=crimson];
+	MHS339 -> MHD416[label ="9.99000E-02", weight="9.99000E-02"];
+
+	TPO418[label="TPO(0:EOP)", color=forestgreen];
+	MHS339 -> TPO418[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS415, MHD416, TPO418 };
+	MHS424[label="MHS(0:EOP)", color=cyan];
+	TPO342 -> MHS424[label ="1.00000E-04", weight="1.00000E-04"];
+
+	MHD425[label="MHD(0:EOP)", color=crimson];
+	TPO342 -> MHD425[label ="9.99000E-02", weight="9.99000E-02"];
+
+	TPO427[label="TPO(0:EOP)", color=forestgreen];
+	TPO342 -> TPO427[label ="9.00000E-01", weight="9.00000E-01"];
+
+	{rank = same; MHS424, MHD425, TPO427 };
+}

@@ -33,6 +33,8 @@ int main (int argc, char **argv) {
         input_params,
         (MODE_VERBOSE | MODE_SAVEGRAPH),
         NULL,
+        0,
+        (char *) "sanity-check",
         std::string(data_dir));
 
     return 0;

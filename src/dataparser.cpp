@@ -1,5 +1,7 @@
 #include "dataparser.h"
 
+#include <iostream>
+
 DataParser::DataParser(const char * dat_filename)
 {
     this->dat_filename = std::string(dat_filename);

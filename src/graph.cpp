@@ -1,5 +1,7 @@
 #include "graph.h"
 
+#include <string>
+
 const char * GRAPHVIZ_COLORS[] = { "cyan", "crimson", "darkorange", "forestgreen", "dimgray", "black", "deeppink" };
 const char * NODE_CHARS[] = { "MHS", "MHD", "SFP", "TPO", "DEF", "ORI", "UNK" };
 
