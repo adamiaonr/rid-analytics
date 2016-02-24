@@ -118,3 +118,4 @@ Here's how you roughly read it:
 	* `MHD`: Lookup yields multiple matches, pointing to the **D** interface. A FP is detected mid-way. The packet is immediately relayed.
 	* `DEF`: Lookup cannot find a positive entry in the RID table, either FALSE or TRUE. Packet is either sent to the tier above OR dropped (if we're already at the top tier). 
 * `<outcome>(<curr. level>:EOP)`: Similar to the above, but in this case, the packet reaches reaches the end of its life as an RID packet ('**E**nd **O**f **P**ath'). This can happen if the packet is delivered to a correct/incorrect destination, or if it is relayed upon the occurrence of an `MHD` lookup outcome at some router.
+* Each edge has the associated probability of jumping between 2 lookup particular outcomes.
