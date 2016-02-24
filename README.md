@@ -7,8 +7,9 @@ Tool to perform simple analytical evaluations on a network using RIDs (i.e. Bloo
 <a name="sec:usage"></a>
 
 Test rid-analytics quickly by running a simple example (tested on OS X El Capitan 10.11.2, 
-Darwin Kernel Version 15.2.0). hopefully, the complaints from the command line will be enough to 
-tell you if you need to install anything :P
+Darwin Kernel Version 15.2.0). 
+
+Hopefully, the complaints from the command line will be enough to tell you if you need to install anything :P
 
 ## Example scenario
 <a name="subsec:scn"></a>
@@ -63,7 +64,7 @@ After running `run-example` you should have some .png and pdf files on `test/gra
 
 ![](https://www.dropbox.com/s/p0hlgk5jot1ipzc/stackd.cache.3.png?raw=1)
 
-This chart shows the relative frequency (in %) of each possible outcome on the network shown above, for the {0,0,1} cache configuration (i.e. a request has to go up to tier 3 to get to the content). The x axis shows all possible FP and ALPHA combinations. 
+This chart shows the relative frequency (in %) of each possible outcome on the network shown above, for the {0,0,1} cache configuration (i.e. a request has to go up to tier 3 to get to the content, at C<sub>3</sub>). The x axis shows all possible FP & ALPHA combinations. 
 
 By the way, the possible outcomes are:
 
@@ -71,7 +72,7 @@ By the way, the possible outcomes are:
 * **Incorrect:** Request is delivered to an incorrect destination (due to the occurrence FPs). In this case, this never happens.
 * **Feedback/Fallback:** Request is relayed to the origin server (which in this case coincides with C<sub>3</sub>). There are two strategies for relays:
 	* **Feedback:** Say that a FP is detected at router in t2. The request is sent back to the source, which then sends it towards C<sub>3</sub>.
-	* **Fallback:** If a FP is detected at a router, it is immediately sent towards C<sub>3</sub> and not sent back to the requester. This results in lower latencies (see ).
+	* **Fallback:** If a FP is detected at a router, it is immediately sent towards C<sub>3</sub> and not sent back to the requester. This results in lower latencies (more on latencies [here](#subsubsec:avg-lat)).
 * **Dropped:** If a router doesn't know what to do with a request, it simply drops the packet.
 
 ### Avg. Latencies
@@ -79,7 +80,7 @@ By the way, the possible outcomes are:
 
 ![](https://www.dropbox.com/s/auxh8j6p11fnela/bar.cache.2.png?raw=1)
 
-This one shows how avg. latencies vary for each FP & ALPHA combination. This is for the case in which both C<sub>2</sub> and C<sub>3</sub> can correctly serve the request. Therefore, the minimum latency is 5 hops (green line): 2 hops to get up to t2, 1 hop to peer to another domain in t2, 3 hops down to C<sub>2</sub>. The origin server is considered to be at C<sub>3</sub>: by the same reasoning, its latency can be easily derived to be 7 hops (red line). Obviously, the 'feedback' (pink) relaying method takes more time than 'fallback' (light green).
+This one shows how avg. latencies vary for each FP & ALPHA combination. This is for the case in which both C<sub>2</sub> and C<sub>3</sub> can correctly serve the request. Therefore, the minimum latency is 5 hops (green line): 2 hops to get up to t2, 1 hop to peer to another domain in t2, 2 more hops down to C<sub>2</sub>. The origin server is considered to be at C<sub>3</sub>: by the same reasoning, its latency can be easily derived to be 7 hops (red line). Obviously, the 'feedback' (pink) relaying method takes more time than 'fallback' (light green).
 
 **How do we calculate this avg. value?** Each outcome can happen with a certain probability. Our model calculates the probability for each possible outcome, given a particular <FP per tier, ALPHA per tier, cache distance> configuration (editable via `.scn` files in `test/configs/example/`. Also, each one of these outcomes will have an associated latency (in nr. of hops). All we have to do in the end is:
 
@@ -110,12 +111,13 @@ This will yield the following DAG:
 
 Here's how you roughly read it:
 
-* `ORI00`: Root of the DAG, the initial outcome (i.e. 'the request is issued by R<sub>1</sub>').
-* `<outcome>(<curr. level>:<to level>)`: A possible router lookup outcome (intermediate). An RID router can experience the following lookup outcomes when looking up an RID in its forwarding engine:
+* Each node in the DAG corresponds to a particular **lookup outcome**, i.e. the outcome of an RID lookup at some router lying in one of the possible paths of an RID packet. An RID lookup can yield the following outcomes:
 	* `TPO`: Lookup **O**nly returns TRUE postive entries. The packet is correctly forwarded.
 	* `SFP`: Lookup yields a **S**ingle match, and it's a FALSE positive. The packet is incorrectly forwarded.
-	* `MHS`: Lookup yields multiple matches (or **H**its), all pointing to the **S**ame interface. This could include both TRUE and FALSE positives. If there are TRUE positives in the table, the packet is correctly forwarded; if not, the packet is incorrectly forwarded.
-	* `MHD`: Lookup yields multiple matches, pointing to the **D** interface. A FP is detected mid-way. The packet is immediately relayed.
-	* `DEF`: Lookup cannot find a positive entry in the RID table, either FALSE or TRUE. Packet is either sent to the tier above OR dropped (if we're already at the top tier). 
+	* `MHS`: Lookup yields **M**ultiple matches (or **H**its), all pointing to the **S**ame interface. This could include both TRUE and FALSE positives. If there are TRUE positives in the table, the packet is correctly forwarded; if not, the packet is incorrectly forwarded.
+	* `MHD`: Lookup yields multiple matches, pointing to **D**ifferent interface. A FP is detected mid-way. The packet is immediately relayed.
+	* `DEF`: Lookup cannot find a positive entry in the RID table, either FALSE or TRUE. Packet is either sent to the tier above OR dropped (if we're already at the top tier).
+* `ORI00`: Root of the DAG, the initial outcome (i.e. 'the request is issued by R<sub>1</sub>').
+* `<outcome>(<curr. level>:<to level>)`: A possible router lookup outcome (intermediate). 
 * `<outcome>(<curr. level>:EOP)`: Similar to the above, but in this case, the packet reaches reaches the end of its life as an RID packet ('**E**nd **O**f **P**ath'). This can happen if the packet is delivered to a correct/incorrect destination, or if it is relayed upon the occurrence of an `MHD` lookup outcome at some router.
-* Each edge has the associated probability of jumping between 2 lookup particular outcomes.
+* Each edge has the associated probability of jumping between 2 particular lookup outcomes.
