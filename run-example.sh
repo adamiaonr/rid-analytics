@@ -1,5 +1,19 @@
 #!/bin/bash
 
+parameter_change () {
+
+    key=$1
+    value=$2
+    filename=$3
+
+    echo $key
+    echo $value
+    echo $filename
+
+    # let's make this complex and use sed to change the value of key 'in-place'
+    sed -i '' "s/^$1.*$/$1$2/" "$3"
+}
+
 usage () {
     echo "usage: bash run-example.sh --config-dir <path-to-config-dir> --data-dir <path-to-data-dir> --graph-dir <path-to-graph-dir>"
     echo "       bash run-example.sh --clean --config-dir <path-to-config-dir> --data-dir <path-to-data-dir> --graph-dir <path-to-graph-dir>"
@@ -7,6 +21,7 @@ usage () {
     echo "  --data-dir <path-to-config-dir>             - path to data dir (to dump .csv and .dot files)"
     echo "  --graph-dir <path-to-graph-dir>             - path to graph dir (to save .pdf and .png files)"
     echo "  --clean                                     - just run make clean, erase all data/charts and get out"
+    echo "  --quick-change <parameter> <value>          - quickly change one of the test parameters. e.g. '--quick-change ha 0.5,0.5,0.5' changes the value of every 'alpha=' parameter on xfp.ha.scn files. optional and may be used multiple times."
     echo "  --help                                      - prints this menu"
 }
 
@@ -16,12 +31,22 @@ if [[ $# -eq 0 ]]; then
     exit
 fi
 
+# save home dir (i.e. where run-example.sh is being called)
 HOME_DIR=$(pwd)
+
+# input parameter placeholders
 CONFIG_DIR=""
 DATA_DIR=""
-SCRIPT_DIR="scripts"
 GRAPH_DIR=""
+SCRIPT_DIR="scripts"
+
+# we don't clean by default (obviously)
 CLEAN=0
+
+# placeholders for quick parameter changes
+PARAMETER_CHANGE=0
+PARAMETER_KEYS=()
+PARAMETER_VALUES=()
 
 while [[ "$1" != "" ]]; do
     
@@ -35,6 +60,12 @@ while [[ "$1" != "" ]]; do
                                         ;;
         --graph-dir )                   shift
                                         GRAPH_DIR=$1
+                                        ;;
+        --quick-change )                PARAMETER_CHANGE=1
+                                        shift
+                                        PARAMETER_KEYS+=("$1")
+                                        shift
+                                        PARAMETER_VALUES+=("$1")
                                         ;;
         --clean )                       CLEAN=1
                                         ;;
@@ -50,6 +81,28 @@ done
 
 declare -a fps=("hfp" "lfp" "ifp" "dfp")
 declare -a alphas=("ha" "la")
+
+i=0
+if [ $PARAMETER_CHANGE -eq 1 ]
+then
+    for key in "${PARAMETER_KEYS[@]}"
+    do
+        for alpha in "${alphas[@]}"
+        do
+            if [ $alpha = $key ]
+            then
+                for fp in "${fps[@]}"
+                do
+                    # call parameter change of <fp>.<alpha>.scn
+                    parameter_change "alpha=" ${PARAMETER_VALUES[$i]} $CONFIG_DIR/$fp.$alpha.scn
+
+                done
+            fi
+        done
+
+        i=$((i + 1))
+    done
+fi
 
 # get the possible cache values by first checking the tier depth on some
 # .scn file (e.g. hfp.ha.scn)
