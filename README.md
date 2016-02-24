@@ -9,18 +9,18 @@ tell you if you need to install anything :P
 
 ## Example scenario
 
-We will be testing the scenario depicted [here](https://www.dropbox.com/s/v2vcngxt2t1gurc/example.png?dl=0):
+We will be testing the scenario depicted [here (slide 7)](https://www.dropbox.com/s/l466xf54fm50ax3/2016-02-14.pdf?dl=0):
 
 * 3 tiers
-* 4^(4-t) domains per tier. The lowest tier, i.e. that which is closest to endpoints (content requesters and producers) has t = 1.
+* 4<sup>(4-t)</sup> domains per tier. The lowest tier, i.e. that which is closest to endpoints (content requesters and producers) has t = 1.
 * We consider 4 FP rate distributions per tier:
-	* H(igh) FP: All tiers 10^-1
-	* L(ow) FP: All tiers 10^-6
-	* I(ncreasing) FP (from t 0 to 3): {10^-6, 10^-3, 10^-1}
-	* D(ecreasing) FP: {10^-1, 10^-3, 10^-6}
+	* H(igh) FP: All tiers 10<sup>-1</sup>
+	* L(ow) FP: All tiers 10<sup>-6</sup>
+	* I(ncreasing) FP (from t 0 to 3): {10<sup>-6</sup>, 10<sup>-3</sup>, 10<sup>-1</sup>}
+	* D(ecreasing) FP: {10<sup>-1</sup>, 10<sup>-3</sup>, 10<sup>-6</sup>}
 * 2 ALPHA distributions per tier:
-	* H(igh)A: 10^-1
-	* L(ow)A: 10^-3
+	* H(igh)A: 10<sup>-1</sup>
+	* L(ow)A: 10<sup>-3</sup>
 * 3 cases for cache locations {# of content sources @t1,@t2,@t3}: 
 	* {1,1,1}
 	* {0,1,1} 
