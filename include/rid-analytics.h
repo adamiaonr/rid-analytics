@@ -44,6 +44,7 @@ class RIDAnalytics {
 
             int tier_depth;
             int origin_tier;
+            int cache_tier;
             int fp_resolution_tech;
 
             char * title;           // title for output files handled within 

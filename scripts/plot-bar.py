@@ -10,13 +10,19 @@ import sys
 import os
 import numpy as np
 import collections
+from collections import defaultdict
 import math
+from pylab import plot, show, savefig, xlim, figure, \
+                hold, ylim, legend, boxplot, setp, axes
 
-LABEL_FONT_SIZE=16
-LEGEND_FONT_SIZE=13
+LABEL_FONT_SIZE=10
+LEGEND_FONT_SIZE=10
 
-CACHE_LATENCY="cache_latency"
-ORIGIN_LATENCY="origin_latency"
+BAR_WIDTH=0.35
+
+outcomes = ['cc', 'ic', 'rlyd', 'drpd']
+penalty_types = ['Feedback', 'Fallback']
+
 
 def custom_ceil(x, base=5):
 #    return int(base * math.ceil(float(x)/base))
@@ -24,79 +30,95 @@ def custom_ceil(x, base=5):
 
 def main():
 
-    if len(sys.argv) < 3:
-        print "usage: python plotbar.py <input-data-filename>.csv <output-filename>.png"
+    if len(sys.argv) < 2:
+        print "usage: python plot-bar.py <input-file-dir> <output-file-dir>"
         return
 
     # extract the .csv file argument
-    data_file = sys.argv[1]
+    input_file_dir = sys.argv[1]
 
-    if not os.path.isfile(data_file):
-        print "ERROR: argument " + data_file + " doesn't exist. abort."
-        return
+    # misc variables
+    colors = ['pink', 'lightgreen']
+    colors_index = 0
+    bar_shift = -BAR_WIDTH
+    y_max = 0
 
-    # extract the .csv file components into a list of tuples which will contain 
-    # the values <latency, probability, decision_type>, converting strings to
-    # floats
-    f = open(data_file, 'rb')
-
-    avg_latency_data_list = []
-
-    # we will draw 2 vertical lines for reference: latency to cache and origin 
-    # server
-    cache_latency = 0.0
-    origin_latency = 0.0
-
-    for line in f.readlines():
-        
-        splitted = line.split(",")
-
-        # extract the avg, cache and origin server latencies, if the specifiers 
-        # appear
-        if  splitted[0] == CACHE_LATENCY:
-            cache_latency = float(splitted[1])
-        elif splitted[0] == ORIGIN_LATENCY:
-            origin_latency = float(splitted[1])
-        else:
-            # the average latencies for each of the scenarios
-            avg_latency_data_list.append((str(splitted[0]), float(splitted[1])))
-
-    # let's plot the damn thing then...
     fig = plt.figure()
-    bar_plot = fig.add_subplot(111)
+    subplot_code = (2 * 100) + (2 * 10)
+    subplot_code += 1
+    bar = fig.add_subplot(subplot_code)
 
-    tick_labels = [ seq[0] for seq in avg_latency_data_list ]
-    #legend_labels = [ seq[2] for seq in avg_latency_data_list ]
-    y = [ seq[1] for seq in avg_latency_data_list ]
+    for penalty in penalty_types:
 
-    bar_plot.grid(True)
+        filename = input_file_dir + "/latencies." + penalty.lower() + ".csv"
 
-    y_max = custom_ceil(max(y)) + 1.0
-    y_min = 0.0
+        if not os.path.isfile(filename):
+            print "ERROR: " + filename + " doesn't exist. abort."
+            return
 
-    # plot cache latency line
-    cache_latency_line = bar_plot.axhline(y=cache_latency, c='g', ls='--', linewidth=2.0)
-    # plot origin server latency
-    origin_latency_line = bar_plot.axhline(y=origin_latency, c='r', ls='--', linewidth=2.0)    
+        # open the file for a particular outcome & penalty combination
+        f = open(filename, 'rb')
 
-    ind = np.arange(len(tick_labels))
-    width = 0.35
-    avg_latencies = bar_plot.bar(ind, y, width, color='c')
+        # extract data from it
+        _data = []
 
-    bar_plot.set_xlabel('Scenarios', fontsize=LABEL_FONT_SIZE)
-    bar_plot.set_ylabel('Latency (hops)', fontsize=LABEL_FONT_SIZE)
-    bar_plot.set_ylim(y_min, y_max)
+        for line in f.readlines():
+            line_splitted = line.split(",")        
+            _data.append((str(line_splitted[0]).upper(), float(line_splitted[2])))
 
-    bar_plot.set_xticks(ind + (width / 2.0))
-    bar_plot.set_xticklabels(tick_labels)
-#    bar_plot.set_yticks(np.arange(y_min, y_max + 1.0, 1.0))
+        data = defaultdict(list)
+        for k, v in _data:
+            data[k].append(v)
 
-    bar_plot.legend((avg_latencies[0], cache_latency_line, origin_latency_line), ('avg. latency', 'cache latency', 'orig. latency'), loc='upper right', fontsize=LEGEND_FONT_SIZE)
+        # we now have an ordered dict of key-value pairs
+        d = collections.OrderedDict(sorted(data.items()))
 
-#    plt.show()
-    plt.savefig(sys.argv[2], bbox_inches='tight')
+        x = d.keys()
+        _x = np.arange(0.0, len(x))
+
+        # extract the y values as a list (format of OrderedDict not suitable 
+        # for bar plot)
+        y = []
+        for v in d.values():
+            y.append(v[0])
+
+        if max(y) > y_max:
+            y_max = max(y)
+
+        bar.grid(True)
+
+        avg_latencies = bar.bar(_x + bar_shift, y, BAR_WIDTH, color=colors[colors_index])
+
+        # update bar shift (change signal)
+        bar_shift = 0
+        colors_index += 1
+
+        bar.set_xlabel("<FP Rate>.<Alpha> pairs", fontsize=LABEL_FONT_SIZE)
+        bar.set_ylabel('Avg. Latency (nr. of hops)', fontsize=LABEL_FONT_SIZE)
+
+        # x axis is the most complicated
+        bar.set_xlim(min(_x) - 1, max(_x) + 1)
+        bar.set_xticks(_x)
+        bar.set_xticklabels(x)
+        x_labels = bar.get_xticklabels()
+        plt.setp(x_labels, rotation=90, fontsize=LABEL_FONT_SIZE)
+
+    a = plt.plot([], [], color='pink', linewidth=10)
+    b = plt.plot([], [], color='lightgreen', linewidth=10)
+
+    # plot cache & origin latency lines
+    c = bar.axhline(y=((int(input_file_dir[-1:]) * 2) + 1), c='g', ls='--', linewidth=2.0)
+    d = bar.axhline(y=((3 * 2) + 1), c='r', ls='--', linewidth=2.0)
+
+    # set y axis limits after drawing the rest of the graph
+    bar.set_ylim(0, math.ceil(1.1 * y_max))
+    bar.set_yticks(np.arange(0.0, math.ceil(1.1 * y_max) + 1))
+
+    # legend
+    bar.legend((a[0], b[0], c, d), ('Feedback', 'Fallback', 'To cache', 'To origin'), loc='lower right', fontsize=LEGEND_FONT_SIZE)
+
+    # save figure as bar.cache.<dist-of-cache>.png in the graph dir folder
+    plt.savefig(sys.argv[2] + "/bar.cache." + input_file_dir[-1:] + ".png", bbox_inches='tight')
 
 if __name__ == "__main__":
     main()
- 
-

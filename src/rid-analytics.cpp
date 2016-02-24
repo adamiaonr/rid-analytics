@@ -8,7 +8,7 @@
 #include "graph.h"
 #include "rid-analytics.h"
 
-const char * PENALTY_TYPE_STR[] = {"FEEDBACK", "FALLBACK"};
+const char * PENALTY_TYPE_STR[] = {"feedback", "fallback"};
 
 double fp_rate(double m, double n, double k, double c) {
 
@@ -104,10 +104,11 @@ double in_flight_penalty(
 
         // with PENALTY_TYPE_FEEDBACK, we first go back to the source of 
         // request...
-        penalty += prev_node_latency;
+        penalty = prev_node_latency;
 
         // ... and then go up to the origin server!
-        penalty += latency_to_content(input_params.content_sources, input_params.latencies);
+        //penalty += latency_to_content(input_params.content_sources, input_params.latencies);
+        penalty += latency_through_tier(input_params.origin_tier, input_params.latencies);
 
     } else if (input_params.fp_resolution_tech == PENALTY_TYPE_FALLBACK) {
 
@@ -115,9 +116,9 @@ double in_flight_penalty(
         // request: we immediately forward the request to the closest origin.
 
         // we use the value calculated in 
-        // input_params.penalties[curr_node_max_tier], given however, remember 
+        // input_params.penalties[curr_node_max_tier]. however, remember 
         // this is the average distance FROM A WRONG DESTINATION to a correct 
-        // source, given that the wrong destination has been reached via 
+        // source, GIVEN THAT the wrong destination has been reached via 
         // curr_node_max_tier. if we're not at a destination but in the middle 
         // of the way, we need to subtract something...
 
@@ -159,6 +160,16 @@ void calc_penalties(struct RIDAnalytics::rid_analytics_inputs & input_params) {
         if (input_params.content_sources[i] > 0) {
             
             input_params.origin_tier = i;
+            break;
+        }
+    }
+
+    // get cache tier
+    for (int i = 0; i < input_params.tier_depth; i++) {
+
+        if (input_params.content_sources[i] > 0) {
+
+            input_params.cache_tier = i;
             break;
         }
     }
@@ -264,12 +275,17 @@ void calc_penalties(struct RIDAnalytics::rid_analytics_inputs & input_params) {
     }
 }
 
-void run_checksum(tree<Node *> decision_tree) {
+void run_checksum(
+    tree<Node *> decision_tree, 
+    struct RIDAnalytics::rid_analytics_inputs input_params) {
 
     tree<Node *>::leaf_iterator leaf_itr = decision_tree.begin_leaf();
     tree<Node *>::leaf_iterator end_leaf_itr = decision_tree.end_leaf();
 
-    printf("\n*** INTERMEDIATE CHECKSUM ***\n\n");
+    printf("\n*** INTERMEDIATE CHECKSUM (%s | %s | %d.%d) ***\n\n", 
+        input_params.title, 
+        PENALTY_TYPE_STR[input_params.fp_resolution_tech],
+        input_params.cache_tier, input_params.origin_tier);
 
     double avg_latency = 0.0;
     double checksum = 0.0;
@@ -1049,7 +1065,7 @@ int RIDAnalytics::run_model(
 
             // run a sanity check on the nodes just added...
             if ((modes & MODE_VERBOSE))
-                run_checksum(decision_tree);
+                run_checksum(decision_tree, input_params);
         }
 
         if (is_all_eop(decision_tree) > 0)
@@ -1105,8 +1121,11 @@ int RIDAnalytics::run_model(
 
                     fprintf(
                         outcomes_file[i], 
-                        "%s,%s,%-.8E\n", 
-                        PENALTY_TYPE_STR[input_params.fp_resolution_tech], (*leaf_itr)->get_outcome().c_str(), (*leaf_itr)->get_prob_val());
+                        "%s,%s,%s,%-.8E\n", 
+                        input_params.title,
+                        PENALTY_TYPE_STR[input_params.fp_resolution_tech],  
+                        (*leaf_itr)->get_outcome().c_str(), 
+                        (*leaf_itr)->get_prob_val());
 
                     // fprintf(
                     //     input_params.alpha_outcomes_file[i], 

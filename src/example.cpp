@@ -13,14 +13,17 @@
 #define OPTION_DATA_DIR     (char *) "data-dir"
 #define OPTION_VERBOSE      (char *) "verbose"
 #define OPTION_TITLE        (char *) "test-title"
+#define OPTION_CACHE_TIER   (char *) "cache-tier"
 
 // output data in csv format for now
 #define OUTPUT_FILE_EXT     (char *) "csv"
 
-#define ALPHA_MAX           (double) 0.5
+#define ALPHA_MAX           (double) 0.1
 #define ALPHA_MIN           (double) 0.001
 #define ALPHA_VALUES_SIZE   (int) 2
 const double ALPHA_VALUES[] = {ALPHA_MIN, ALPHA_MAX};
+
+const int _CONTENT_SOURCES[] = {1, 1, 1};
 
 #define PENALTY_TYPE_SIZE           2
 
@@ -71,6 +74,11 @@ ArgvParser * create_argv_parser() {
             "common title to append to output file names (e.g. <TITLE>.outcomes.csv, <TITLE>.dot, etc.)",
             ArgvParser::OptionRequiresValue);
 
+        cmds->defineOption(
+            OPTION_CACHE_TIER,
+            "first tier number at which content becomes visible.",
+            ArgvParser::OptionRequiresValue);
+
     return cmds;
 }
 
@@ -100,6 +108,9 @@ int main (int argc, char **argv) {
     char data_dir[MAX_ARRAY_SIZE];
     // string for output title (e.g. for .dot, .csv & other files)
     char title[MAX_ARRAY_SIZE];
+    // cache location define as input argument
+    char cache_tier_str[MAX_ARRAY_SIZE];
+    int cache_tier = 0;
     // keeps track of verbose mode
     unsigned int verbose = 0;
 
@@ -161,9 +172,21 @@ int main (int argc, char **argv) {
             return -1;
         }
 
-        if (cmds->foundOption(OPTION_VERBOSE)) {
+        if (cmds->foundOption(OPTION_CACHE_TIER)) {
 
-            printf("\nwtf?\n");
+            strncpy(cache_tier_str, (char *) cmds->optionValue(OPTION_CACHE_TIER).c_str(), MAX_ARRAY_SIZE);
+            cache_tier = atoi(cache_tier_str);
+        
+        } else {
+
+            fprintf(stderr, "no title specified for output files. use "\
+                "option -h for help.\n");
+
+            delete cmds;
+            return -1;
+        }
+
+        if (cmds->foundOption(OPTION_VERBOSE)) {
 
             verbose = MODE_VERBOSE;
         }
@@ -196,7 +219,8 @@ int main (int argc, char **argv) {
 
     // array of content sources per tier
     int * content_sources = (int *) calloc(tier_depth, sizeof(int));
-    scn_parser->get_int_property_array(CONTENT_SOURCES, content_sources);
+    for (int i = (tier_depth - 1); (i + 1) > cache_tier; i--)
+        content_sources[i] = _CONTENT_SOURCES[i];
 
     // ... and domains per tier
     int * domains = (int *) calloc(tier_depth, sizeof(int));
@@ -211,11 +235,11 @@ int main (int argc, char **argv) {
 
     // open the output .csv files in "a"ppend mode
     latencies_files[0] = fopen(
-        std::string(std::string(data_dir) + "/" + title + ".latencies." + OUTPUT_FILE_EXT).c_str(), 
+        std::string(std::string(data_dir) + "/latencies." + OUTPUT_FILE_EXT).c_str(), 
         "a");
 
     outcomes_files[0] = fopen(
-        std::string(std::string(data_dir) + "/" + title + ".outcomes." + OUTPUT_FILE_EXT).c_str(), 
+        std::string(std::string(data_dir) + "/outcomes." + OUTPUT_FILE_EXT).c_str(), 
         "a");
 
     double avg_latency = 0.0;
@@ -255,7 +279,7 @@ int main (int argc, char **argv) {
     // write to the .csv files
     fprintf(
         latencies_files[0], 
-        "%-.8E,%s,feedback\n", avg_latency, title);
+        "%s,feedback,%-.8E\n", title, avg_latency);
 
     // RUN #2 : FALLBACK penalty type
     avg_latency = 0.0;
@@ -273,7 +297,7 @@ int main (int argc, char **argv) {
     // write to the .csv files
     fprintf(
         latencies_files[0], 
-        "%-.8E,%s,feedback\n", avg_latency, title);
+        "%s,fallback,%-.8E\n", title, avg_latency);
 
     nr_tests++;
 
