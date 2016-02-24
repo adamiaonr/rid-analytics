@@ -9,10 +9,18 @@ tell you if you need to install anything :P
 
 ## Example scenario
 
-We will be testing the scenario depicted [here (slide 7)](https://www.dropbox.com/s/l466xf54fm50ax3/2016-02-14.pdf?dl=0):
+We will be testing the scenario depicted below
+
+![](https://www.dropbox.com/s/v2vcngxt2t1gurc/example.png?raw=1)
+
+Here we consider a requester R<sub>1</sub> requesting name N from the network. Content reachable via name N can be stored by producers C<sub>1,2 or 3</sub> at different points in the network.
+
+The network is hierarchically organized in tiers. Endpoints (e.g. R<sub>1</sub> and C<sub>1,2 or 3</sub>) connect to the network via the lowest tier (t=1). The request is first looked up in routers @t1. If no positive matches happen (either false or true), the request is sent up to tier 2 and so on.
+
+We now provide a few more characteristics for our scenario:
 
 * 3 tiers
-* 4<sup>(4-t)</sup> domains per tier. The lowest tier, i.e. that which is closest to endpoints (content requesters and producers) has t = 1.
+* 4<sup>(4-t)</sup> domains per tier
 * We consider 4 FP rate distributions per tier:
 	* H(igh) FP: All tiers 10<sup>-1</sup>
 	* L(ow) FP: All tiers 10<sup>-6</sup>
