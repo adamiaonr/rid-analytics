@@ -106,7 +106,7 @@ E.g. to do so for the case of high FP rates (`hfp`) and low ALPHA (`la`), you ha
 
 This will yield the following DAG:
 
-![](https://www.dropbox.com/s/85aqi1cgp4f43zr/hfp.la.cache.2.pdf?raw=1)
+![](https://www.dropbox.com/s/d33ck2jsn7jumfr/hfp.la.cache.2.png?raw=1)
 
 Here's how you roughly read it:
 
