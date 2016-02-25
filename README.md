@@ -1,18 +1,18 @@
-<a name="sec:intro"></a>
 # rid-analytics
+<a name="sec:intro"></a>
 
 Tool to perform simple analytical evaluations on a network using RIDs (i.e. Bloom Filters) for packet forwarding.
 
-<a name="sec:usage"></a>
 # Usage
+<a name="sec:usage"></a>
 
 Test rid-analytics quickly by running a simple example (tested on OS X El Capitan 10.11.2, 
 Darwin Kernel Version 15.2.0). 
 
 Hopefully, the complaints from the command line will be informative enough to tell you if you need to install anything :P
 
-<a name="subsec:scn"></a>
 ## Example scenario
+<a name="subsec:scn"></a>
 
 We will be testing the scenario depicted below
 
@@ -39,8 +39,8 @@ A few more characteristics for our scenario:
 	* {0,1,1} 
 	* {0,0,1}	
 
-<a name="subsec:run"></a>
 ## Running the example
+<a name="subsec:run"></a>
 
 Open Terminal and run the following list of commands:
 
@@ -54,13 +54,13 @@ Open Terminal and run the following list of commands:
 
 `$ bash run-example.sh --config-dir test/configs/example --data-dir test/data/example --graph-dir test/graphs/example`
 
-<a name="subsec:output"></a>
 ## Output
+<a name="subsec:output"></a>
 
 After running `run-example.sh` you should have some .png and pdf files on `test/graphs/example/`. Look below for a description.
 
-<a name="subsubsec:outcomes"></a>
 ### Outcomes
+<a name="subsubsec:outcomes"></a>
 
 ![](https://www.dropbox.com/s/p0hlgk5jot1ipzc/stackd.cache.3.png?raw=1)
 
@@ -76,8 +76,8 @@ By the way, the possible outcomes are:
 	* **Fallback:** If a FP is detected at a router, it is immediately sent towards C<sub>3</sub> and not sent back to the requester. This results in lower latencies (more on latencies [here](#subsubsec:avg-lat)).
 * **Dropped:** If a router doesn't know what to do with a request, it simply drops the packet.
 
-<a name="subsubsec:avg-lat"></a>
 ### Avg. Latencies
+<a name="subsubsec:avg-lat"></a>
 
 ![](https://www.dropbox.com/s/auxh8j6p11fnela/bar.cache.2.png?raw=1)
 
@@ -93,8 +93,8 @@ $\text{avg. latency}=\sum^{\forall O_i} P_i\,L_i$
 * $P_i$: Probability of $O_i$ happening. $\sum^{\forall i} P_i = 1$.
 * $L_i$: Latency for outcome $O_i$ (in nr. of hops).
 
-<a name="subsubsec:prob-dag"></a>
 ### Probability DAGs
+<a name="subsubsec:prob-dag"></a>
 
 You can visualize what the possible outcomes are, along with their associated probabilities, in the form of a probability Directed Acyclic Graph (DAG). We use a tool called [Graphviz](http://www.graphviz.org/) for that. E.g. to do so for the case of high FP rates (`hfp`) and low ALPHA (`la`), you have to run:
 
@@ -117,9 +117,9 @@ Here's how you roughly read it:
 	* `MHS`: Lookup yields **M**ultiple matches (or **H**its), all pointing to the **S**ame interface. This could include both TRUE and FALSE positives. If there are TRUE positives in the RID table, the packet is forwarded towards a correct destination (notice how the FPs and TPs all point to the same interface); if not, the packet is incorrectly forwarded.
 	* `MHD`: Lookup yields multiple matches, pointing to **D**ifferent interface. A FP is detected mid-way. The packet is immediately relayed (using either the 'Feedback' or 'Fallback' methods).
 	* `DEF`: Lookup cannot find a positive entry in the RID table, either FALSE or TRUE. Packet is either sent to the tier above OR dropped (if we're already at the top tier).
-* `ORI(0:0)`: The succession of lookup outcomes starts with a single initial outcome, i.e. 'the request is issued by R<sub>1</sub>'.
+* `ORI(0:0)`: The succession of lookup results starts with a single initial result, i.e. 'the request is issued by R<sub>1</sub>'.
 * `<result>(<curr. tier>:<to tier>)`: A possible router lookup resul (`result`), which makes an RID packet jump from `curr. tier` to `to tier`. E.g. 
 	* `DEF(0:1)` corresponds to a `DEF` lookup result occurring at tier 1, which sends the packet up to tier 2. 
 	* `TPO(1:1)` corresponds to a `TPO` lookup result, which results in having the packet forwarded between 2 peering domains at tier 2.
-* `<result>(<curr. tier>:EOP)`: Similar to the above, but in this case, the packet reaches reaches the end of its life as an RID packet ('**E**nd **O**f **P**ath'). This can happen if the packet is delivered to a correct/incorrect destination, or if it is relayed upon the occurrence of an `MHD` lookup outcome at some router.
+* `<result>(<curr. tier>:EOP)`: Similar to the above, but in this case, the packet reaches reaches the end of its life as an RID packet ('**E**nd **O**f **P**ath'). This can happen if the packet is delivered to a correct/incorrect destination, or if it is relayed upon the occurrence of an `MHD` lookup result at some router.
 * The value of each edge is the associated probability of jumping between 2 particular lookup results, between successive routers in a path. To calculate the probability of a final outcome, we follow a path in the DAG from `ORI(0:0)` to the leaf node (marked with `EOP`), and multiply the probability values in the edges.
