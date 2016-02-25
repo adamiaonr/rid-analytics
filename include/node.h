@@ -17,7 +17,7 @@ class Node {
         enum Type {
             MHS_NODE = 0x00, 
             MHD_NODE = 0x01,
-            SFP_NODE = 0x02,
+            FPO_NODE = 0x02,
             TPO_NODE = 0x04,
             DEF_NODE = 0x08,
             ORI_NODE = 0x10,
@@ -114,8 +114,8 @@ class Node {
                 case Node::MHD_NODE:
                     snprintf(type_str, MAX_NODE_STRING_SIZE, "MHD");
                     break;
-                case Node::SFP_NODE:
-                    snprintf(type_str, MAX_NODE_STRING_SIZE, "SFP");
+                case Node::FPO_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "FPO");
                     break;
                 case Node::TPO_NODE:
                     snprintf(type_str, MAX_NODE_STRING_SIZE, "TPO");
@@ -148,8 +148,8 @@ class Node {
                 case Node::MHD_NODE:
                     snprintf(type_str, MAX_NODE_STRING_SIZE, "MHD");
                     break;
-                case Node::SFP_NODE:
-                    snprintf(type_str, MAX_NODE_STRING_SIZE, "SFP");
+                case Node::FPO_NODE:
+                    snprintf(type_str, MAX_NODE_STRING_SIZE, "FPO");
                     break;
                 case Node::TPO_NODE:
                     snprintf(type_str, MAX_NODE_STRING_SIZE, "TPO");

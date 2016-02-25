@@ -426,7 +426,7 @@ int RIDAnalytics::run_model(
 
     Node * mhs_node = NULL;
     Node * mhd_node = NULL;
-    Node * sfp_node = NULL;
+    Node * fpo_node = NULL;
     Node * tpo_node = NULL;
     Node * def_node = NULL;
 
@@ -496,7 +496,7 @@ int RIDAnalytics::run_model(
             mhs_node = new Node(curr_node_max_tier, curr_node_tier, Node::MHS_NODE);
             mhd_node = new Node(curr_node_max_tier, curr_node_tier, Node::MHD_NODE);
             tpo_node = new Node(curr_node_max_tier, curr_node_tier, Node::TPO_NODE);
-            sfp_node = new Node(curr_node_max_tier, curr_node_tier, Node::SFP_NODE);
+            fpo_node = new Node(curr_node_max_tier, curr_node_tier, Node::FPO_NODE);
             def_node = new Node(curr_node_max_tier, curr_node_tier, Node::DEF_NODE);
 
             // for each node type, we answer 4 questions, which determine the 
@@ -568,28 +568,49 @@ int RIDAnalytics::run_model(
                     // TP reality = no TPs in forwarding table
                     // 
                     //  NEXT STATE | HAPPENS WHEN?                      
-                    // ------------|------------------------------------
-                    //  MHS        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is same) 
-                    //  MHD        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is diff) 
-                    //  SFP        | (only 1 FP)
+                    // ------------|------------------------------------ 
+                    //  MHD        | (FPs light up) AND (iface is diff) 
+                    //  FPO        | (FPs light up) AND (iface is same)
+                    //  MHS        | Never
                     //  DEF        | NOT (FPs light up)
 
                     // *** probabilities ***
-                    // FIXME: single_fp_prob is completely incorrect. 
-                    // FIXME: besides, taking it into account makes me think 
+
+                    // FIXME #1: single_fp_prob is incorrect. 
+                    // FIXME #1: besides, taking it into account makes me think 
                     // this particular case doesn't make any sense.
-                    single_fp_prob = 0.001 * input_params.fp_prob[curr_node_tier];
+                    
+                    // FIXME #2: ok, i've decided to only consider the case of 
+                    // only having FPs and not necessarily a single one. this 
+                    // makes sense: what we want to check is the fact that 
+                    // we only have FPs to choose from which will forcefully 
+                    // lead us in the wrong direction.
+
+                    // why is this good? well, it frees me from having to calc
+                    // the SFP probability which is a pain to do without 
+                    // access to |F\R| and table sizes.
+                    //single_fp_prob = 0.001 * input_params.fp_prob[curr_node_tier];
+                    single_fp_prob = 0.0;
                     pos_prob_local = (input_params.fp_prob[curr_node_tier] - single_fp_prob);
-                    mhs_node->set_prob_val(prev_node_prob * (pos_prob_local * (input_params.alpha[curr_node_tier])));
+                    //mhs_node->set_prob_val(prev_node_prob * (pos_prob_local * (input_params.alpha[curr_node_tier])));
                     mhd_node->set_prob_val(prev_node_prob * (pos_prob_local * (1.0 - input_params.alpha[curr_node_tier])));
-                    sfp_node->set_prob_val(prev_node_prob * single_fp_prob);
+                    
+                    // FIXME #2: i basically replace the probability of an FPO 
+                    // outcome with that of a MHS: again, if we have different 
+                    // interfaces, we detect (at least) one FP, and thus relay 
+                    // the packet
+                    //fpo_node->set_prob_val(prev_node_prob * single_fp_prob);
+                    fpo_node->set_prob_val(prev_node_prob * (pos_prob_local * (input_params.alpha[curr_node_tier])));
                     def_node->set_prob_val(prev_node_prob * (1.0 - input_params.fp_prob[curr_node_tier]));
-                    // impossible case
+
+                    // IMPOSSIBLE CASES
                     tpo_node->set_prob_val(0.0);
+                    mhs_node->set_prob_val(0.0);
 
                     // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);
-                    sfp_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);
+
+                    //mhs_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);
+                    fpo_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);
                     def_node->set_latency_val(prev_node_latency + input_params.latencies[curr_node_tier]);                    
 
                     // Q3) when coming from a DEF lookup state, packets will 
@@ -600,12 +621,15 @@ int RIDAnalytics::run_model(
                     //  NEXT STATE      | NEXT TIER                      
                     // -----------------|------------------------------------
                     //  MHD             | relayed to orig. server
-                    //  MHS, TPO, SPF   | current tier
+                    //  MHS, TPO, FPO   | current tier
                     //  DEF             | current tier + 1 (or dropped)
                     //
                     // the above applies to all TP realities
-                    mhs_node->set_next_tier(curr_node_tier);
-                    sfp_node->set_next_tier(curr_node_tier);
+
+                    // FIXME #2: MHS changes to END_OF_PATH
+                    //mhs_node->set_next_tier(curr_node_tier);
+                    mhs_node->set_next_tier(END_OF_PATH);
+                    fpo_node->set_next_tier(curr_node_tier);
                     tpo_node->set_next_tier(END_OF_PATH);
                     
                     // Q3) default route : go up a tier or (drop the packet if 
@@ -624,12 +648,13 @@ int RIDAnalytics::run_model(
                     // add nodes to the .dot file for graph rendering
                     if ((modes & MODE_SAVEGRAPH)) {
 
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (pos_prob_local * (input_params.alpha[curr_node_tier])));
+                        //graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, (pos_prob_local * (input_params.alpha[curr_node_tier])));
                         graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, (pos_prob_local * (1.0 - input_params.alpha[curr_node_tier])));
-                        graphviz_graph->add_node((*depth_itr), depth, sfp_node, depth + 1, breadth, single_fp_prob);
+                        graphviz_graph->add_node((*depth_itr), depth, fpo_node, depth + 1, breadth, (pos_prob_local * (input_params.alpha[curr_node_tier])));
                         graphviz_graph->add_node((*depth_itr), depth, def_node, depth + 1, breadth, (1.0 - input_params.fp_prob[curr_node_tier]));
 
-                        Node * nodes[] = {mhs_node, mhd_node, sfp_node, def_node};
+                        //Node * nodes[] = {mhs_node, mhd_node, fpo_node, def_node};
+                        Node * nodes[] = {mhd_node, fpo_node, def_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
 
@@ -648,8 +673,8 @@ int RIDAnalytics::run_model(
                     mhs_node->set_prob_val(prev_node_prob * (pos_prob_local * (input_params.alpha[curr_node_tier])));
                     mhd_node->set_prob_val(prev_node_prob * (pos_prob_local * (1.0 - input_params.alpha[curr_node_tier])));
                     tpo_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
-                    // impossible outcomes
-                    sfp_node->set_prob_val(0.0);
+                    // IMPOSSIBLE CASES
+                    fpo_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
                     // *** latencies *** 
@@ -659,7 +684,7 @@ int RIDAnalytics::run_model(
                     // *** next tier *** 
                     mhs_node->set_next_tier(curr_node_tier);
                     tpo_node->set_next_tier(curr_node_tier);
-                    sfp_node->set_next_tier(END_OF_PATH);
+                    fpo_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
 
                     if ((modes & MODE_SAVEGRAPH)) {
@@ -673,7 +698,7 @@ int RIDAnalytics::run_model(
                     }
                 }
 
-            } else if (prev_node_type == Node::SFP_NODE) {
+            } else if (prev_node_type == Node::FPO_NODE) {
 
                 // **********************
                 // *** GENERAL VALUES ***
@@ -685,7 +710,7 @@ int RIDAnalytics::run_model(
 
                 // Q2) check if the request is about to be delivered to a 
                 // content source
-                double penalty_latency_sfp = 0.0;
+                double penalty_latency_fpo = 0.0;
                 double penalty_latency_mhs = 0.0;
 
                 if (next_node_tier == END_OF_PATH) {
@@ -698,13 +723,13 @@ int RIDAnalytics::run_model(
                     pos_prob_local = input_params.fp_prob[curr_node_tier];
                     alpha_local = input_params.alpha[curr_node_tier];
                     
-                    // Q3) the penalty latency of an END_OF_PATH sfp node shall 
+                    // Q3) the penalty latency of an END_OF_PATH fpo node shall 
                     // be set according to the pre-calculated penalty
-                    penalty_latency_sfp = input_params.penalties[curr_node_max_tier];
+                    penalty_latency_fpo = input_params.penalties[curr_node_max_tier];
 
-                    // Q4) the outcome of END_OF_PATH sfp nodes shall ALWAYS be 
+                    // Q4) the outcome of END_OF_PATH fpo nodes shall ALWAYS be 
                     // OUTCOME_ICACHE (incorrect delivery)
-                    sfp_node->set_outcome(std::string(OUTCOME_ICACHE));
+                    fpo_node->set_outcome(std::string(OUTCOME_ICACHE));
 
                     // Q3 & Q4) if TPs are involved, the latency and outcome of 
                     // a MHS node shall ALWAYS be 0.0 and OUTCOME_CCACHE
@@ -740,22 +765,28 @@ int RIDAnalytics::run_model(
                     // ------------|------------------------------------
                     //  MHS        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is same) 
                     //  MHD        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is diff) 
-                    //  SFP        | (only 1 FP)
+                    //  FPO        | (only 1 FP)
                     //  DEF        | NOT (FPs light up)
 
                     // *** probabilities ***
-                    // FIXME: single_fp_prob is completely incorrect.
-                    single_fp_prob = 0.001 * input_params.fp_prob[curr_node_tier];
-                    mhs_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * alpha_local));
+
+                    // FIXME #2 (see above)
+                    //single_fp_prob = 0.001 * input_params.fp_prob[curr_node_tier];
+                    single_fp_prob = 0.0;
+                    //mhs_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * alpha_local));
                     mhd_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * (1.0 - alpha_local)));
-                    sfp_node->set_prob_val(prev_node_prob * single_fp_prob);
+                    fpo_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * alpha_local));
                     def_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
-                    // impossible outcomes
+
+                    // IMPOSSIBLE CASES
                     tpo_node->set_prob_val(0.0);
+                    mhs_node->set_prob_val(0.0);
 
                     // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency_mhs);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency_sfp);
+
+
+                    //mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency_mhs);
+                    fpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency_fpo);
                     def_node->set_latency_val(prev_node_latency  
                                                 + in_flight_penalty(
                                                     input_params,
@@ -765,9 +796,11 @@ int RIDAnalytics::run_model(
                                                     prev_node_latency));
 
                     // *** next tier *** 
-                    mhs_node->set_next_tier(next_node_tier);
-                    sfp_node->set_next_tier(next_node_tier);
+
+                    mhs_node->set_next_tier(END_OF_PATH);
+                    fpo_node->set_next_tier(next_node_tier);
                     tpo_node->set_next_tier(END_OF_PATH);
+
                     // Q4) a packet which is going down and gets into a 
                     // DEF state is dropped
                     def_node->set_next_tier(END_OF_PATH);
@@ -775,36 +808,38 @@ int RIDAnalytics::run_model(
 
                     if ((modes & MODE_SAVEGRAPH)) {
 
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * alpha_local));
+                        //graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * alpha_local));
                         graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * (1.0 - alpha_local)));
-                        graphviz_graph->add_node((*depth_itr), depth, sfp_node, depth + 1, breadth, single_fp_prob);
+                        graphviz_graph->add_node((*depth_itr), depth, fpo_node, depth + 1, breadth, (pos_prob_local * (alpha_local)));
                         graphviz_graph->add_node((*depth_itr), depth, def_node, depth + 1, breadth, (1.0 - pos_prob_local));
 
-                        Node * nodes[] = {mhs_node, mhd_node, sfp_node, def_node};
+                        //Node * nodes[] = {mhs_node, mhd_node, fpo_node, def_node};
+                        Node * nodes[] = {mhd_node, fpo_node, def_node};                        
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
 
                 } else if (input_params.content_sources[curr_node_max_tier] > 0) {
 
-                    // TP reality = only 1 TP in forwarding table
+                    // TP reality = 1 or more TPs in RID table
                     // 
-                    // we define this case as impossible. by definition, this 
-                    // shouldn't happen in our system...
+                    // this is impossible by definition. if there are TPs we 
+                    // cannot only have FPs.
+                    //
                     // FIXME: this needs a bit more of thinking... in what 
-                    // case could a transition between SFP -> TPO happen? 
+                    // case could a transition between FPO -> TPO happen? 
                     // caching? 
 
                     // *** probabilities ***
                     mhs_node->set_prob_val(0.0);
                     mhd_node->set_prob_val(0.0);
                     tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(0.0);
+                    fpo_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
                     // *** next tier *** 
                     mhs_node->set_next_tier(END_OF_PATH);
                     tpo_node->set_next_tier(END_OF_PATH);
-                    sfp_node->set_next_tier(END_OF_PATH);
+                    fpo_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
                 }
 
@@ -858,14 +893,14 @@ int RIDAnalytics::run_model(
                     mhs_node->set_prob_val(0.0);
                     mhd_node->set_prob_val(0.0);
                     tpo_node->set_prob_val(0.0);
-                    sfp_node->set_prob_val(0.0);
+                    fpo_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
                     // *** next tier *** 
                     mhs_node->set_next_tier(END_OF_PATH);
                     mhd_node->set_next_tier(END_OF_PATH);
                     tpo_node->set_next_tier(END_OF_PATH);
-                    sfp_node->set_next_tier(END_OF_PATH);
+                    fpo_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
 
                 } else if (input_params.content_sources[curr_node_max_tier] > 0) {   
@@ -884,7 +919,7 @@ int RIDAnalytics::run_model(
                     mhd_node->set_prob_val(prev_node_prob * (pos_prob_local * (1.0 - alpha_local)));
                     tpo_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
                     // everything else is impossible...
-                    sfp_node->set_prob_val(0.0);
+                    fpo_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
                     // *** latencies *** 
@@ -894,7 +929,7 @@ int RIDAnalytics::run_model(
                     // *** next tier *** 
                     mhs_node->set_next_tier(next_node_tier);
                     tpo_node->set_next_tier(next_node_tier);
-                    sfp_node->set_next_tier(END_OF_PATH);
+                    fpo_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
 
                     if ((modes & MODE_SAVEGRAPH)) {
@@ -934,7 +969,7 @@ int RIDAnalytics::run_model(
                         // ... otherwise
                         penalty_latency = input_params.penalties[curr_node_max_tier];
                         mhs_node->set_outcome(std::string(OUTCOME_ICACHE));
-                        sfp_node->set_outcome(std::string(OUTCOME_ICACHE));
+                        fpo_node->set_outcome(std::string(OUTCOME_ICACHE));
                     }
 
                     pos_prob_local = input_params.fp_prob[curr_node_tier];
@@ -957,28 +992,39 @@ int RIDAnalytics::run_model(
                 // multiple TPs? 
                 if (input_params.content_sources[curr_node_max_tier] == 0) {
 
+                    // FIXME #3: this should be impossible. if 
+                    // we now consider MHS as being composed by both TPs and 
+                    // FPs (non-exclusively), it is somewhat impossible to 
+                    // get to this state. this corresponds to the case where 
+                    // we previously had TPs in the table and then suddenly 
+                    // they disappear... 
+
                     // TP reality = no TPs in forwarding table
                     // 
                     //  NEXT STATE | HAPPENS WHEN?                      
                     // ------------|------------------------------------
-                    //  MHS        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is same) 
-                    //  MHD        | ((FPs light up) AND (NOT (only 1 FP))) AND (iface is diff) 
-                    //  SFP        | (only 1 FP)
+                    //  FPO        | (FPs light up) AND (iface is same) 
+                    //  MHD        | (FPs light up) AND (iface is diff) 
+                    //  MHS        | Never
                     //  DEF        | NOT (FPs light up)
 
                     // *** probabilities ***
-                    // FIXME: single_fp_prob is completely incorrect.
-                    single_fp_prob = 0.001 * pos_prob_local;
-                    mhs_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * alpha_local));
+
+                    // FIXME #2: (see above)
+                    //single_fp_prob = 0.001 * pos_prob_local;
+                    single_fp_prob = 0.0;
+                    //mhs_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * alpha_local));
                     mhd_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * (1.0 - alpha_local)));
-                    sfp_node->set_prob_val(prev_node_prob * single_fp_prob);
+                    fpo_node->set_prob_val(prev_node_prob * ((pos_prob_local - single_fp_prob) * alpha_local));
                     def_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
                     // tpos are impossible (by definition)
                     tpo_node->set_prob_val(0.0);
+                    mhs_node->set_prob_val(0.0);
 
                     // *** latencies *** 
-                    mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
-                    sfp_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
+
+                    //mhs_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
+                    fpo_node->set_latency_val(prev_node_latency + path_latency + penalty_latency);
                     def_node->set_latency_val(prev_node_latency  
                                                 + in_flight_penalty(
                                                     input_params,
@@ -988,8 +1034,10 @@ int RIDAnalytics::run_model(
                                                     prev_node_latency));                    
 
                     // *** next tier *** 
-                    mhs_node->set_next_tier(next_node_tier);
-                    sfp_node->set_next_tier(next_node_tier);
+
+                    //mhs_node->set_next_tier(next_node_tier);
+                    mhs_node->set_next_tier(END_OF_PATH);
+                    fpo_node->set_next_tier(next_node_tier);
                     // Q4) a packet which is going down and gets into a DEF 
                     // state is dropped
                     def_node->set_next_tier(END_OF_PATH);
@@ -998,12 +1046,13 @@ int RIDAnalytics::run_model(
 
                     if ((modes & MODE_SAVEGRAPH)) {
 
-                        graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * alpha_local));
+                        //graphviz_graph->add_node((*depth_itr), depth, mhs_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * alpha_local));
                         graphviz_graph->add_node((*depth_itr), depth, mhd_node, depth + 1, breadth, ((pos_prob_local - single_fp_prob) * (1.0 - alpha_local)));
-                        graphviz_graph->add_node((*depth_itr), depth, sfp_node, depth + 1, breadth, (single_fp_prob));
+                        graphviz_graph->add_node((*depth_itr), depth, fpo_node, depth + 1, breadth, (pos_prob_local * (alpha_local)));
                         graphviz_graph->add_node((*depth_itr), depth, def_node, depth + 1, breadth, (1.0 - pos_prob_local));
 
-                        Node * nodes[] = {mhs_node, mhd_node, sfp_node, def_node};
+                        //Node * nodes[] = {mhs_node, mhd_node, fpo_node, def_node};
+                        Node * nodes[] = {mhd_node, fpo_node, def_node};
                         graphviz_graph->align_nodes(nodes, sizeof(nodes) / sizeof(Node *));
                     }
 
@@ -1022,7 +1071,7 @@ int RIDAnalytics::run_model(
                     mhd_node->set_prob_val(prev_node_prob * (pos_prob_local * (1.0 - alpha_local)));
                     tpo_node->set_prob_val(prev_node_prob * (1.0 - pos_prob_local));
                     // impossible events...
-                    sfp_node->set_prob_val(0.0);
+                    fpo_node->set_prob_val(0.0);
                     def_node->set_prob_val(0.0);
 
                     // *** latencies *** 
@@ -1032,7 +1081,7 @@ int RIDAnalytics::run_model(
                     // *** next tier *** 
                     mhs_node->set_next_tier(next_node_tier);
                     tpo_node->set_next_tier(next_node_tier);
-                    sfp_node->set_next_tier(END_OF_PATH);
+                    fpo_node->set_next_tier(END_OF_PATH);
                     def_node->set_next_tier(END_OF_PATH);
 
                     if ((modes & MODE_SAVEGRAPH)) {
@@ -1054,7 +1103,7 @@ int RIDAnalytics::run_model(
             // finally append the 3 children
             decision_tree.append_child(depth_itr, mhs_node);
             decision_tree.append_child(depth_itr, mhd_node);
-            decision_tree.append_child(depth_itr, sfp_node);
+            decision_tree.append_child(depth_itr, fpo_node);
             decision_tree.append_child(depth_itr, tpo_node);
             decision_tree.append_child(depth_itr, def_node);
 

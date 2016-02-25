@@ -3,7 +3,7 @@
 #include <string>
 
 const char * GRAPHVIZ_COLORS[] = { "cyan", "crimson", "darkorange", "forestgreen", "dimgray", "black", "deeppink" };
-const char * NODE_CHARS[] = { "MHS", "MHD", "SFP", "TPO", "DEF", "ORI", "UNK" };
+const char * NODE_CHARS[] = { "MHS", "MHD", "FPO", "TPO", "DEF", "ORI", "UNK" };
 
 Graph::Graph(const char * filename)
 {
@@ -37,8 +37,8 @@ int get_node_type_int(Node * node) {
             node_type_int = MHD_NODE_INT;
             break;
         
-        case Node::SFP_NODE:        
-            node_type_int = SFP_NODE_INT;
+        case Node::FPO_NODE:        
+            node_type_int = FPO_NODE_INT;
             break;
 
         case Node::TPO_NODE:        

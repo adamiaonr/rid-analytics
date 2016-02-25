@@ -29,7 +29,7 @@
 
 #define MHS_NODE_INT 0x00
 #define MHD_NODE_INT 0x01
-#define SFP_NODE_INT 0x02
+#define FPO_NODE_INT 0x02
 #define TPO_NODE_INT 0x03
 #define DEF_NODE_INT 0x04
 #define ORI_NODE_INT 0x05
