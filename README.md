@@ -1,18 +1,18 @@
-# rid-analytics
 <a name="sec:intro"></a>
+# rid-analytics
 
 Tool to perform simple analytical evaluations on a network using RIDs (i.e. Bloom Filters) for packet forwarding.
 
-# Usage
 <a name="sec:usage"></a>
+# Usage
 
 Test rid-analytics quickly by running a simple example (tested on OS X El Capitan 10.11.2, 
 Darwin Kernel Version 15.2.0). 
 
 Hopefully, the complaints from the command line will be informative enough to tell you if you need to install anything :P
 
-## Example scenario
 <a name="subsec:scn"></a>
+## Example scenario
 
 We will be testing the scenario depicted below
 
@@ -39,8 +39,8 @@ A few more characteristics for our scenario:
 	* {0,1,1} 
 	* {0,0,1}	
 
-## Running the example
 <a name="subsec:run"></a>
+## Running the example
 
 Open Terminal and run the following list of commands:
 
@@ -54,13 +54,13 @@ Open Terminal and run the following list of commands:
 
 `$ bash run-example.sh --config-dir test/configs/example --data-dir test/data/example --graph-dir test/graphs/example`
 
-## Output
 <a name="subsec:output"></a>
+## Output
 
 After running `run-example.sh` you should have some .png and pdf files on `test/graphs/example/`. Look below for a description.
 
-### Outcomes
 <a name="subsubsec:outcomes"></a>
+### Outcomes
 
 ![](https://www.dropbox.com/s/p0hlgk5jot1ipzc/stackd.cache.3.png?raw=1)
 
@@ -76,8 +76,8 @@ By the way, the possible outcomes are:
 	* **Fallback:** If a FP is detected at a router, it is immediately sent towards C<sub>3</sub> and not sent back to the requester. This results in lower latencies (more on latencies [here](#subsubsec:avg-lat)).
 * **Dropped:** If a router doesn't know what to do with a request, it simply drops the packet.
 
-### Avg. Latencies
 <a name="subsubsec:avg-lat"></a>
+### Avg. Latencies
 
 ![](https://www.dropbox.com/s/auxh8j6p11fnela/bar.cache.2.png?raw=1)
 
@@ -93,8 +93,8 @@ $\text{avg. latency}=\sum^{\forall O_i} P_i\,L_i$
 * $P_i$: Probability of $O_i$ happening. $\sum^{\forall i} P_i = 1$.
 * $L_i$: Latency for outcome $O_i$ (in nr. of hops).
 
-### Probability DAGs
 <a name="subsubsec:prob-dag"></a>
+### Probability DAGs
 
 You can visualize what the possible outcomes are, along with their associated probabilities, in the form of a probability Directed Acyclic Graph (DAG). We use a tool called [Graphviz](http://www.graphviz.org/) for that. E.g. to do so for the case of high FP rates (`hfp`) and low ALPHA (`la`), you have to run:
 
