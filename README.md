@@ -106,7 +106,7 @@ You can visualize what the possible outcomes are, along with their associated pr
 
 This will yield the following DAG:
 
-![](https://www.dropbox.com/s/d33ck2jsn7jumfr/hfp.la.cache.2.png?raw=1)
+![](https://www.dropbox.com/s/ryxuiu4e5ah8j9u/hfp.la.cache.2.png??raw=1)
 
 Here's how you roughly read it:
 
