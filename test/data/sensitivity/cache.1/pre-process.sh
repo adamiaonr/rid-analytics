@@ -1,176 +1,90 @@
 #!/bin/bash
 
-# just to make sure everything's ok
-echo "1.00000000E-09,correct dest.,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-07,correct dest.,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-05,correct dest.,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-03,correct dest.,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-01,correct dest.,0.00000000E+00" >> fp.1.outcomes.csv
-echo "5.00000000E-01,correct dest.,0.00000000E+00" >> fp.1.outcomes.csv
-#echo "7.50000000E-01,correct dest.,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E+00,correct dest.,0.00000000E+00" >> fp.1.outcomes.csv
+usage () {
+    # echo "usage: ./pre-process --scn-file <path-to-scn-file>"
+    # echo "  --scn-file <path-to-scn-file>               - path to (some) .scn file"
+    echo "usage: ./pre-process --scn-file <path-to-scn-file>"
+    echo "  --scn-file <path-to-scn-file>               - path to .scn file"
+    echo "  --help                                      - prints this menu"
+}
 
-echo "1.00000000E-09,fp detect. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-07,fp detect. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-05,fp detect. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-03,fp detect. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "5.00000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-#echo "7.50000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E+00,fp detect. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
+if [[ $# -eq 0 ]]; then
+    echo "ERROR: no arguments supplied"
+    usage
+    exit
+fi
 
-echo "1.00000000E-09,dropped,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-07,dropped,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-05,dropped,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-03,dropped,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-01,dropped,0.00000000E+00" >> fp.1.outcomes.csv
-echo "5.00000000E-01,dropped,0.00000000E+00" >> fp.1.outcomes.csv
-#echo "7.50000000E-01,dropped,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E+00,dropped,0.00000000E+00" >> fp.1.outcomes.csv
+SCN_FILE=""
+GRAPH_CASE="NULL"
 
-echo "1.00000000E-09,wrong dest. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-07,wrong dest. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-05,wrong dest. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-03,wrong dest. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "5.00000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-#echo "7.50000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
-echo "1.00000000E+00,wrong dest. > orig. server,0.00000000E+00" >> fp.1.outcomes.csv
+while [[ "$1" != "" ]]; do
+    
+    case $1 in
 
-echo "1.00000000E-09,correct dest.,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-07,correct dest.,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-05,correct dest.,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-03,correct dest.,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-01,correct dest.,0.00000000E+00" >> fp.2.outcomes.csv
-echo "5.00000000E-01,correct dest.,0.00000000E+00" >> fp.2.outcomes.csv
-#echo "7.50000000E-01,correct dest.,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E+00,correct dest.,0.00000000E+00" >> fp.2.outcomes.csv
+        --scn-file )                    shift
+                                        SCN_FILE=$1
+                                        ;;
+        --help )                        usage
+                                        exit
+                                        ;;
+        * )                             usage
+                                        exit
+        esac
+        shift
 
-echo "1.00000000E-09,fp detect. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-07,fp detect. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-05,fp detect. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-03,fp detect. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "5.00000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-#echo "7.50000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E+00,fp detect. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
+done
 
-echo "1.00000000E-09,dropped,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-07,dropped,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-05,dropped,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-03,dropped,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-01,dropped,0.00000000E+00" >> fp.2.outcomes.csv
-echo "5.00000000E-01,dropped,0.00000000E+00" >> fp.2.outcomes.csv
-#echo "7.50000000E-01,dropped,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E+00,dropped,0.00000000E+00" >> fp.2.outcomes.csv
+# get the possible cache values by first checking the tier depth on some
+# .scn file (e.g. hfp.ha.scn)
+tier_depth=$(cat $SCN_FILE | grep "tier_depth")
+# ... and isolate it using sed to get rid of the 
+# 'tier_depth=' part
+tier_depth=$(echo $tier_depth | sed -e 's#.*=\(\)#\1#')
 
-echo "1.00000000E-09,wrong dest. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-07,wrong dest. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-05,wrong dest. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-03,wrong dest. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "5.00000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-#echo "7.50000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
-echo "1.00000000E+00,wrong dest. > orig. server,0.00000000E+00" >> fp.2.outcomes.csv
+# insert a dummy line for each possible outcome (essential for the stack'd 
+# graph) and <fp@>,<a@> pair
 
-echo "1.00000000E-09,correct dest.,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-07,correct dest.,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-05,correct dest.,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-03,correct dest.,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-01,correct dest.,0.00000000E+00" >> fp.3.outcomes.csv
-echo "5.00000000E-01,correct dest.,0.00000000E+00" >> fp.3.outcomes.csv
-#echo "7.50000000E-01,correct dest.,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E+00,correct dest.,0.00000000E+00" >> fp.3.outcomes.csv
+# get the possible fp probability values
+fp_probs_str=$(cat $SCN_FILE | grep "fp_prob")
+# ... and isolate the fp probabilities using (1) sed to get rid of the 
+# 'fp_prob=' part
+fp_probs_str=$(echo $fp_probs_str | sed -e 's#.*=\(\)#\1#')
+# ... and the IFS (internal field separator) to separate each value into a 
+# field (we save the old value of IFS in OFS, and restore it later)
+OFS=$IFS
+IFS=',' read -r -a fp_probs <<< "$fp_probs_str"
 
-echo "1.00000000E-09,fp detect. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-07,fp detect. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-05,fp detect. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-03,fp detect. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "5.00000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-#echo "7.50000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E+00,fp detect. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
+# do the same with alphas
+alphas_str=$(cat $SCN_FILE | grep "alpha")
+alphas_str=$(echo $alphas_str | sed -e 's#.*=\(\)#\1#')
+IFS=',' read -r -a alphas <<< "$alphas_str"
 
-echo "1.00000000E-09,dropped,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-07,dropped,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-05,dropped,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-03,dropped,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-01,dropped,0.00000000E+00" >> fp.3.outcomes.csv
-echo "5.00000000E-01,dropped,0.00000000E+00" >> fp.3.outcomes.csv
-#echo "7.50000000E-01,dropped,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E+00,dropped,0.00000000E+00" >> fp.3.outcomes.csv
+IFS=$OFS
 
-echo "1.00000000E-09,wrong dest. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-07,wrong dest. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-05,wrong dest. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-03,wrong dest. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "5.00000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-#echo "7.50000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
-echo "1.00000000E+00,wrong dest. > orig. server,0.00000000E+00" >> fp.3.outcomes.csv
+declare -a penalties=("feedback" "fallback")
+declare -a outcomes=("correct dest." "fp detect. > orig. server" "dropped" "wrong dest. > orig. server")
 
-# echo "1.00000000E-09,correct dest.,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-07,correct dest.,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-05,correct dest.,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-03,correct dest.,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-01,correct dest.,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "5.00000000E-01,correct dest.,0.00000000E+00" >> fp.4.outcomes.csv
-# #echo "7.50000000E-01,correct dest.,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E+00,correct dest.,0.00000000E+00" >> fp.4.outcomes.csv
+for fp_prob in "${fp_probs[@]}"
+do
+    for alpha in "${alphas[@]}"
+    do  
+        for outcome in "${outcomes[@]}"
+        do
+            for penalty in "${penalties[@]}"
+            do
+                
+                # add dummy values to outcomes file for each outcome, in order 
+                # to make it balanced for the stack'd chart
+                i=$((tier_depth))
+                while [ $i -gt 0 ]
+                do
+                    echo "$((i - 1)),$fp_prob,$((i - 1)),$alpha,$penalty,$outcome,0.00000000E+00" >> outcomes.csv
+                    i=$((i - 1))
+                done
+                
+            done
+        done
+    done
+done
 
-# echo "1.00000000E-09,fp detect. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-07,fp detect. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-05,fp detect. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-03,fp detect. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "5.00000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# #echo "7.50000000E-01,fp detect. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E+00,fp detect. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-
-# echo "1.00000000E-09,dropped,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-07,dropped,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-05,dropped,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-03,dropped,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-01,dropped,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "5.00000000E-01,dropped,0.00000000E+00" >> fp.4.outcomes.csv
-# #echo "7.50000000E-01,dropped,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E+00,dropped,0.00000000E+00" >> fp.4.outcomes.csv
-
-# echo "1.00000000E-09,wrong dest. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-07,wrong dest. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-05,wrong dest. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-03,wrong dest. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "5.00000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# #echo "7.50000000E-01,wrong dest. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-# echo "1.00000000E+00,wrong dest. > orig. server,0.00000000E+00" >> fp.4.outcomes.csv
-
-cat fp.1.outcomes.csv | grep "dropped" > fp.1.outcomes.drpd.csv
-cat fp.2.outcomes.csv | grep "dropped" > fp.2.outcomes.drpd.csv
-cat fp.3.outcomes.csv | grep "dropped" > fp.3.outcomes.drpd.csv
-#cat fp.4.outcomes.csv | grep "dropped" > fp.4.outcomes.drpd.csv
-
-cat fp.1.outcomes.csv | grep "fp detect. > orig. server" > fp.1.outcomes.rlyd.csv
-cat fp.2.outcomes.csv | grep "fp detect. > orig. server" > fp.2.outcomes.rlyd.csv
-cat fp.3.outcomes.csv | grep "fp detect. > orig. server" > fp.3.outcomes.rlyd.csv
-#cat fp.4.outcomes.csv | grep "fp detect. > orig. server" > fp.4.outcomes.rlyd.csv
-
-cat fp.1.outcomes.csv | grep "correct dest." > fp.1.outcomes.cc.csv
-cat fp.2.outcomes.csv | grep "correct dest." > fp.2.outcomes.cc.csv
-cat fp.3.outcomes.csv | grep "correct dest." > fp.3.outcomes.cc.csv
-#cat fp.4.outcomes.csv | grep "correct dest." > fp.4.outcomes.cc.csv
-
-cat fp.1.outcomes.csv | grep "wrong dest. > orig. server" > fp.1.outcomes.ic.csv
-cat fp.2.outcomes.csv | grep "wrong dest. > orig. server" > fp.2.outcomes.ic.csv
-cat fp.3.outcomes.csv | grep "wrong dest. > orig. server" > fp.3.outcomes.ic.csv
-#cat fp.4.outcomes.csv | grep "wrong dest. > orig. server" > fp.4.outcomes.ic.csv
-
-cat fp.1.csv | grep "fallback" > fp.1.fallback.csv
-cat fp.2.csv | grep "fallback" > fp.2.fallback.csv
-cat fp.3.csv | grep "fallback" > fp.3.fallback.csv
-#cat fp.4.csv | grep "fallback" > fp.4.fallback.csv
-
-cat fp.1.csv | grep "feedback" > fp.1.feedback.csv
-cat fp.2.csv | grep "feedback" > fp.2.feedback.csv
-cat fp.3.csv | grep "feedback" > fp.3.feedback.csv
-#cat fp.4.csv | grep "feedback" > fp.4.feedback.csv
+exit

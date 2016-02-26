@@ -42,7 +42,7 @@ ArgvParser * create_argv_parser() {
     ArgvParser * cmds = new ArgvParser();
 
     cmds->setIntroductoryDescription("\n\nrid-analytics v0.1"\
-        "\n\n *** RID-ANALYTICS EXAMPLE ***"\
+        "\n\n *** RID-ANALYTICS SENSITIVITY ANALYSIS ***"\
         "\n\nrun simple analytical "\
         "evaluations on networks which use RIDs (basically Bloom Filters) for packet "\
         "forwarding. it computes probabilities of different outcomes and avg. latencies, "\
@@ -198,26 +198,29 @@ int main (int argc, char **argv) {
         return -1;
     }
 
-    // 2) extract the sensitivity analysis from the .scn file
+    // extract the sensitivity analysis from the .scn file
     DataParser * scn_parser = new DataParser(scn_file);
 
     // nr. of tiers
     int tier_depth = 0;
     scn_parser->get_int_property_value(TIER_DEPTH, tier_depth);
 
-    // fp probabilities per tier 
-    double * fp_prob = (double *) calloc(tier_depth, sizeof(double));
+    // array of fp probabilities to test
+    double * fp_prob = (double *) calloc(MAX_ARRAY_SIZE, sizeof(double));
     scn_parser->get_double_property_array(FP_PROB, fp_prob);
+    int fp_prob_size = get_array_size(fp_prob);
 
-    // alpha per tier
-    double * alpha = (double *) calloc(tier_depth, sizeof(double));
+    // array of alphas to test
+    double * alpha = (double *) calloc(MAX_ARRAY_SIZE, sizeof(double));
     scn_parser->get_double_property_array(ALPHA, alpha);
+    int alpha_size = get_array_size(alpha);
 
     // array of latencies per tier
     double * latencies = (double *) calloc(tier_depth, sizeof(double));
     scn_parser->get_double_property_array(LATENCIES, latencies);
 
-    // array of content sources per tier
+    // array of content sources per tier (this is calculated from the 
+    // cache_tier input arg)
     int * content_sources = (int *) calloc(tier_depth, sizeof(int));
     for (int i = (tier_depth - 1); (i + 1) > cache_tier; i--)
         content_sources[i] = _CONTENT_SOURCES[i];
@@ -227,6 +230,10 @@ int main (int argc, char **argv) {
     scn_parser->get_int_property_array(DOMAINS, domains);
 
     // let the games begin...
+
+    // arrays which will keep the test values during the analysis
+    double * _fp_prob = (double *) calloc(tier_depth, sizeof(double));
+    double * _alpha = (double *) calloc(tier_depth, sizeof(double));
 
     // arrays of FILE * are the best interface for the job, even if only 1 FILE * 
     // is used. btw, the interfaces are defined in rid-analytics.h.
@@ -255,51 +262,88 @@ int main (int argc, char **argv) {
     input_params.domains = domains;
     input_params.latencies = latencies;
     input_params.title = title;
-    input_params.fp_prob = fp_prob;
-    input_params.alpha = alpha;
 
     // keep track of execution time
     begin = clock();
 
-    // for the value returned by run_model()
-    avg_latency = 0.0;
+    // dumb but fast... don't judge!
+    for (int i = 0; i < fp_prob_size; i++) {
+        _fp_prob[0] = fp_prob[i];
 
-    // RUN #1 : FEEDBACK penalty type
-    input_params.fp_resolution_tech = PENALTY_TYPE_FEEDBACK;
+        for (int j = 0; j < fp_prob_size; j++) {
+            _fp_prob[1] = fp_prob[j];
 
-    RIDAnalytics::run_model(
-        avg_latency,
-        input_params,
-        (verbose | MODE_SAVEOUTCOMES),
-        outcomes_files,
-        1,
-        title,
-        std::string(data_dir));
+            for (int k = 0; k < fp_prob_size; k++) {
+                _fp_prob[2] = fp_prob[k];
 
-    // write to the .csv files
-    fprintf(
-        latencies_files[0], 
-        "%s,feedback,%-.8E\n", title, avg_latency);
+                // update the fp_prob input param
+                input_params.fp_prob = _fp_prob;
 
-    // RUN #2 : FALLBACK penalty type
-    avg_latency = 0.0;
-    input_params.fp_resolution_tech = PENALTY_TYPE_FALLBACK;
+                for (int a = 0; a < alpha_size; a++) {
+                    _alpha[0] = alpha[a];
 
-    RIDAnalytics::run_model(
-        avg_latency,
-        input_params,
-        (verbose | MODE_SAVEGRAPH | MODE_SAVEOUTCOMES),
-        outcomes_files,
-        1,
-        title,
-        std::string(data_dir));
+                    for (int b = 0; b < alpha_size; b++) {
+                        _alpha[1] = alpha[b];
 
-    // write to the .csv files
-    fprintf(
-        latencies_files[0], 
-        "%s,fallback,%-.8E\n", title, avg_latency);
+                        for (int c = 0; c < alpha_size; c++) {
+                            _alpha[2] = alpha[c];
 
-    nr_tests++;
+                            // update the alpha input param
+                            input_params.alpha = _alpha;
+
+                            // for the value returned by run_model()
+                            avg_latency = 0.0;
+
+                            // RUN #1 : FEEDBACK penalty type
+                            input_params.fp_resolution_tech = PENALTY_TYPE_FEEDBACK;
+
+                            RIDAnalytics::run_model(
+                                avg_latency,
+                                input_params,
+                                (verbose | MODE_SAVEOUTCOMES),
+                                outcomes_files,
+                                1,
+                                title,
+                                std::string(data_dir));
+
+                            // write to the .csv files, for each _fp_prob[tier]
+                            // value
+                            // format should be:
+                            // [fp@<_fp_tier>][_fp_prob[<_fp_tier>]][a@<_alpha_tier>][_alpha[_alpha_tier]][title][penalty_type][avg_latency]
+                            for (int t = 0; t < tier_depth; t++) {
+
+                                fprintf(
+                                    latencies_files[0], 
+                                    "%d,%-.8E,%d,%-.8E,feedback,%-.8E\n", t, _fp_prob[t], t, _alpha[t], avg_latency);
+                            }
+
+                            // RUN #2 : FALLBACK penalty type
+                            avg_latency = 0.0;
+                            input_params.fp_resolution_tech = PENALTY_TYPE_FALLBACK;
+
+                            RIDAnalytics::run_model(
+                                avg_latency,
+                                input_params,
+                                (verbose | MODE_SAVEGRAPH | MODE_SAVEOUTCOMES),
+                                outcomes_files,
+                                1,
+                                title,
+                                std::string(data_dir));
+
+                            for (int t = 0; t < tier_depth; t++) {
+
+                                fprintf(
+                                    latencies_files[0], 
+                                    "%d,%-.8E,%d,%-.8E,fallback,%-.8E\n", t, _fp_prob[t], t, _alpha[t], avg_latency);
+                            }
+
+                            nr_tests++;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // close files
     fclose(latencies_files[0]);
@@ -316,6 +360,8 @@ int main (int argc, char **argv) {
     
     free(fp_prob);
     free(alpha);
+    free(_fp_prob);
+    free(_alpha);
     free(latencies);
     free(content_sources);
     free(domains);

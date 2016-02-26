@@ -451,7 +451,6 @@ int RIDAnalytics::run_model(
         graphviz_graph = new Graph(std::string(data_dir + "/" + title).c_str());        
     }
 
-
     // depth and breadth are sort of (x, y) coordinates for nodes in a tree. 
     // these will be used to generate node names for the .dot file. the origin 
     // of the tree has coordinates (0, 0).
@@ -1165,16 +1164,20 @@ int RIDAnalytics::run_model(
                 // if requested, save outcome information in files pointed 
                 // by the outcomes_file array. this will basically save lines 
                 // in the format: 
-                // [FP RESOLUTION TECH], [LOOKUP OUTCOME TYPE], [OUTCOME TYPE PROBABILITY OF OCCURRENCE]
+                // [fp@<_fp_tier>],[_fp_prob[<_fp_tier>]],[a@<_alpha_tier>],[_alpha[_alpha_tier]],[penalty_type],[FP RESOLUTION TECH],[LOOKUP OUTCOME TYPE],[OUTCOME TYPE PROBABILITY OF OCCURRENCE]
                 for (int i = 0; i < outcomes_files_size; i++) {
 
-                    fprintf(
-                        outcomes_file[i], 
-                        "%s,%s,%s,%-.8E\n", 
-                        input_params.title,
-                        PENALTY_TYPE_STR[input_params.fp_resolution_tech],  
-                        (*leaf_itr)->get_outcome().c_str(), 
-                        (*leaf_itr)->get_prob_val());
+                    for (int t = 0; t < input_params.tier_depth; t++) {
+
+                        fprintf(
+                            outcomes_file[i], 
+                            "%d,%-.8E,%d,%-.8E,%s,%s,%-.8E\n", 
+                            t, input_params.fp_prob[t],
+                            t, input_params.alpha[t],
+                            PENALTY_TYPE_STR[input_params.fp_resolution_tech],  
+                            (*leaf_itr)->get_outcome().c_str(), 
+                            (*leaf_itr)->get_prob_val());
+                    }
 
                     // fprintf(
                     //     input_params.alpha_outcomes_file[i], 
