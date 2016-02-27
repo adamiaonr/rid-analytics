@@ -911,7 +911,13 @@ int RIDAnalytics::run_model(
                     // ------------|------------------------------------
                     //  MHS        | (FPs light up) AND (iface is same) 
                     //  MHD        | (FPs light up) AND (iface is diff) 
-                    //  TPO        | NOT (FPs light up)                 
+                    //  TPO        | NOT (FPs light up)  
+
+                    // FIXME #4 : prs alerted me about a very serious issue... 
+                    // i must also account for the situation in which multiple 
+                    // TPs point to diff. interfaces. effectively, the router 
+                    // will detect this as a FP detection, so the next state 
+                    // must be MHD               
 
                     // *** probabilities ***
                     // non-zero probabilities
