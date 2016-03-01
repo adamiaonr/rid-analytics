@@ -139,7 +139,7 @@ def main():
             a = plt.plot([], [], color='lightgreen', linewidth=10)
             b = plt.plot([], [], color='pink', linewidth=10)
             c = plt.plot([], [], color='cyan', linewidth=10)
-            d = plt.plot([], [], color='gray', linewidth=10)
+#            d = plt.plot([], [], color='gray', linewidth=10)
 
             stackd.grid(True)
             fig.tight_layout()
@@ -159,7 +159,8 @@ def main():
             # fig.suptitle(penalty_types[i].title())
 
             # legend
-            stackd.legend((a[0], b[0], c[0], d[0]), ('Correct', 'Incorrect', penalty_types[i].title(), 'Dropped'), loc='lower left', fontsize=LEGEND_FONT_SIZE)
+#            stackd.legend((a[0], b[0], c[0], d[0]), ('Correct', 'Incorrect', penalty_types[i].title(), 'Dropped'), loc='lower left', fontsize=LEGEND_FONT_SIZE)
+            stackd.legend((a[0], b[0], c[0]), ('Correct', 'Incorrect', penalty_types[i].title()), loc='upper left', fontsize=LEGEND_FONT_SIZE)
 
         plt.savefig(sys.argv[4] + "/stackd." + x_param_str + "." + penalty_types[i] + ".cache." + input_file_dir[-1:] + ".png", bbox_inches='tight')
 
