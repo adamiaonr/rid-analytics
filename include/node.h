@@ -44,11 +44,13 @@ class Node {
             this->type = type;
         }
 
-        Node(int max_tier, int curr_tier, Node::Type type) {
+        Node(int max_tier, int curr_tier, int hops, Node::Type type) {
 
             this->curr_tier = curr_tier;
             this->next_tier = 0;
             this->max_tier = max_tier;
+            this->hops = hops;
+
             this->prob_val = 0.0;
             this->latency_val = 0.0;
             this->type = type;
@@ -69,6 +71,8 @@ class Node {
             this->curr_tier = curr_tier;
             this->next_tier = next_tier;
             this->max_tier = max_tier;
+            this->hops = 1;
+
             this->prob_val = prob_val;
             this->latency_val = latency_val;
             this->type = type;
@@ -79,6 +83,7 @@ class Node {
         void set_curr_tier(int curr_tier) { this->curr_tier = curr_tier; }
         void set_next_tier(int next_tier) { this->next_tier = next_tier; }
         void set_max_tier(int max_tier) { this->max_tier = max_tier; }
+        void set_hops(int hops) { this->hops = hops; }
         void set_prob_val(double prob_val) { this->prob_val = prob_val; }
         void set_latency_val(double latency_val) { this->latency_val = latency_val; }
         void set_type(Node::Type type) { this->type = type; }
@@ -88,6 +93,7 @@ class Node {
         int get_curr_tier() const { return this->curr_tier; }
         int get_next_tier() const { return this->next_tier; }
         int get_max_tier() const { return this->max_tier; }
+        int get_hops() const { return this->hops; }
 
         double get_prob_val() const { return this->prob_val; }
         double get_latency_val() const { return this->latency_val; }
@@ -178,6 +184,7 @@ class Node {
         int curr_tier;
         int next_tier;
         int max_tier;
+        int hops;
         double prob_val;
         double latency_val;
         Node::Type type;

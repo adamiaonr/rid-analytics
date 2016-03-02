@@ -432,6 +432,7 @@ int RIDAnalytics::run_model(
     int curr_node_max_tier = 0;
     double prev_node_prob = 1.0;
     double prev_node_latency = 0.0;
+    int prev_node_hops = 0;
     Node::Type prev_node_type = Node::UNKNOWN;
 
     double path_latency = 0.0;
@@ -488,13 +489,14 @@ int RIDAnalytics::run_model(
             prev_node_prob = (*depth_itr)->get_prob_val();
             prev_node_latency = (*depth_itr)->get_latency_val();
             prev_node_type = (*depth_itr)->get_type();
+            prev_node_hops = (*depth_itr)->get_hops();
 
             // create the children Node objects, specifying the diff types
-            mhs_node = new Node(curr_node_max_tier, curr_node_tier, Node::MHS_NODE);
-            mhd_node = new Node(curr_node_max_tier, curr_node_tier, Node::MHD_NODE);
-            tpo_node = new Node(curr_node_max_tier, curr_node_tier, Node::TPO_NODE);
-            fpo_node = new Node(curr_node_max_tier, curr_node_tier, Node::FPO_NODE);
-            def_node = new Node(curr_node_max_tier, curr_node_tier, Node::DEF_NODE);
+            mhs_node = new Node(curr_node_max_tier, curr_node_tier, prev_node_hops + 1, Node::MHS_NODE);
+            mhd_node = new Node(curr_node_max_tier, curr_node_tier, prev_node_hops + 1, Node::MHD_NODE);
+            tpo_node = new Node(curr_node_max_tier, curr_node_tier, prev_node_hops + 1, Node::TPO_NODE);
+            fpo_node = new Node(curr_node_max_tier, curr_node_tier, prev_node_hops + 1, Node::FPO_NODE);
+            def_node = new Node(curr_node_max_tier, curr_node_tier, prev_node_hops + 1, Node::DEF_NODE);
 
             // for each node type, we answer 4 questions, which determine the 
             // values associated with nodes and transitions:
@@ -640,7 +642,15 @@ int RIDAnalytics::run_model(
                     if (curr_node_max_tier == (input_params.tier_depth - 1)) {
 
                         def_node->set_next_tier(END_OF_PATH);
-                        def_node->set_outcome(OUTCOME_DROPPED);
+                        def_node->set_outcome(OUTCOME_RELAYED);
+
+                        def_node->set_latency_val(prev_node_latency  
+                            + in_flight_penalty(
+                                input_params,
+                                depth,
+                                curr_node_tier,
+                                curr_node_max_tier,
+                                prev_node_latency));
 
                     } else {
 
@@ -1193,17 +1203,19 @@ int RIDAnalytics::run_model(
                 // [fp@<_fp_tier>],[_fp_prob[<_fp_tier>]],[a@<_alpha_tier>],[_alpha[_alpha_tier]],[penalty_type],[FP RESOLUTION TECH],[LOOKUP OUTCOME TYPE],[OUTCOME TYPE PROBABILITY OF OCCURRENCE]
                 for (int i = 0; i < outcomes_files_size; i++) {
 
-                    for (int t = 0; t < input_params.tier_depth; t++) {
+                    //for (int t = 0; t < input_params.tier_depth; t++) {
 
                         fprintf(
                             outcomes_file[i], 
-                            "%d,%-.8E,%d,%-.8E,%s,%s,%-.8E\n", 
-                            t, input_params.fp_prob[t],
-                            t, input_params.alpha[t],
-                            PENALTY_TYPE_STR[input_params.fp_resolution_tech],  
+                            "%-.8E,%-.8E,%s,%d,%s,%-.8E,%d\n", 
+                            input_params.fp_prob[0],
+                            input_params.alpha[0],
+                            PENALTY_TYPE_STR[input_params.fp_resolution_tech],
+                            (*leaf_itr)->get_hops(),  
                             (*leaf_itr)->get_outcome().c_str(), 
-                            (*leaf_itr)->get_prob_val());
-                    }
+                            (*leaf_itr)->get_prob_val(),
+                            (*leaf_itr)->get_max_tier());
+                    //}
 
                     // fprintf(
                     //     input_params.alpha_outcomes_file[i], 
@@ -1231,4 +1243,16 @@ int RIDAnalytics::run_model(
 
     return 0;
 }
+
+// 1st : a model that explains the path a request is gonna take, no TP info only model what the router does
+// 2nd : separate the state that simulator keeps and reality
+
+// state of what the router can see
+// in downward path no caches (no incentives)
+// routing policies to try? e.g. control path length
+// pick descriptive name for alpha
+// 'fallback' : 2 types separate terms for permanent fallbakcs and temporary
+// how to deal with FPs? include control plane information to 
+// document how the real network works
+// real world version of rids i'm implementing here
 

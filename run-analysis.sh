@@ -36,6 +36,7 @@ HOME_DIR=$(pwd)
 
 # input parameter placeholders
 SCN_FILE=""
+SCN_FILE_ALT="test/configs/sensitivity/sensitivity.dist.scn"
 DATA_DIR=""
 GRAPH_DIR=""
 SCRIPT_DIR="scripts"
@@ -146,21 +147,33 @@ do
     # run the chart scripts for it
     cd $SCRIPT_DIR
 
-    python plot-stackd.py fprob $tier_depth ../$DATA_DIR/cache.$i ../$GRAPH_DIR
-    python plot-stackd.py alpha $tier_depth ../$DATA_DIR/cache.$i ../$GRAPH_DIR
+    python plot-outcome-vs-alpha.py ../$SCN_FILE ../$DATA_DIR/cache.$i ../$GRAPH_DIR
+    python plot-outcome-vs-tier.py ../$SCN_FILE_ALT ../$DATA_DIR/cache.$i ../$GRAPH_DIR
+    python plot-outcome-vs-hop.py ../$SCN_FILE_ALT ../$DATA_DIR/cache.$i ../$GRAPH_DIR
+    # python plot-stackd.py fprob $tier_depth ../$DATA_DIR/cache.$i ../$GRAPH_DIR
+    # python plot-stackd.py alpha $tier_depth ../$DATA_DIR/cache.$i ../$GRAPH_DIR
 
-    python plot-box.py fprob $tier_depth ../$DATA_DIR/cache.$i ../$GRAPH_DIR
-    python plot-box.py alpha $tier_depth ../$DATA_DIR/cache.$i ../$GRAPH_DIR
+    # python plot-box.py fprob $tier_depth ../$DATA_DIR/cache.$i ../$GRAPH_DIR
+    # python plot-box.py alpha $tier_depth ../$DATA_DIR/cache.$i ../$GRAPH_DIR
     cd $HOME_DIR
 
-    # # open the .png
-    open $GRAPH_DIR/stackd.fprob.fallback.cache.$i.png
-    open $GRAPH_DIR/stackd.alpha.fallback.cache.$i.png
-    open $GRAPH_DIR/box.fprob.cache.$i.png
-    open $GRAPH_DIR/box.fprob.cache.$i.png
+    # open the .png
+    open $GRAPH_DIR/outcome-vs-alpha.fallback.cache.$i.png
+    open $GRAPH_DIR/outcome-vs-tier.fallback.cache.$i.png
+    open $GRAPH_DIR/outcome-vs-hop.fallback.cache.$i.png
+    # open $GRAPH_DIR/stackd.fprob.fallback.cache.$i.png
+    # open $GRAPH_DIR/stackd.alpha.fallback.cache.$i.png
+    # open $GRAPH_DIR/box.fprob.cache.$i.png
+    # open $GRAPH_DIR/box.fprob.cache.$i.png
 
     i=$((i - 1))
 
 done
+
+cd $SCRIPT_DIR
+python plot-outcome-vs-dist.py ../$SCN_FILE_ALT ../$DATA_DIR ../$GRAPH_DIR
+cd $HOME_DIR
+
+open $GRAPH_DIR/outcome-vs-dist.fallback.png
 
 exit

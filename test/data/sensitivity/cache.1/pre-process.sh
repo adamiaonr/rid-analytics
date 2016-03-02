@@ -78,7 +78,7 @@ do
                 i=$((tier_depth))
                 while [ $i -gt 0 ]
                 do
-                    echo "$((i - 1)),$fp_prob,$((i - 1)),$alpha,$penalty,$outcome,0.00000000E+00" >> outcomes.csv
+                    echo "$fp_prob,$alpha,$penalty,$((i)),$outcome,0.00000000E+00,$((i - 1))" >> outcomes.csv
                     i=$((i - 1))
                 done
                 

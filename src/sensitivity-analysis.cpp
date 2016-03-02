@@ -23,7 +23,7 @@
 #define ALPHA_VALUES_SIZE   (int) 2
 const double ALPHA_VALUES[] = {ALPHA_MIN, ALPHA_MAX};
 
-const int _CONTENT_SOURCES[] = {1, 1, 1};
+const int _CONTENT_SOURCES[] = {1, 1, 1, 1};
 
 #define PENALTY_TYPE_SIZE           2
 
@@ -266,82 +266,75 @@ int main (int argc, char **argv) {
     // keep track of execution time
     begin = clock();
 
-    // dumb but fast... don't judge!
+    // the idea now is to have all tiers with the same value (both _fp_prob and 
+    // alpha)
     for (int i = 0; i < fp_prob_size; i++) {
-        _fp_prob[0] = fp_prob[i];
 
-        for (int j = 0; j < fp_prob_size; j++) {
-            _fp_prob[1] = fp_prob[j];
+        for (int j = 0; j < tier_depth; j++) {
 
-            for (int k = 0; k < fp_prob_size; k++) {
-                _fp_prob[2] = fp_prob[k];
+            _fp_prob[j] = fp_prob[i];
+        }
 
-                // update the fp_prob input param
-                input_params.fp_prob = _fp_prob;
+        // update the fp_prob input param
+        input_params.fp_prob = _fp_prob;
 
-                for (int a = 0; a < alpha_size; a++) {
-                    _alpha[0] = alpha[a];
+        for (int k = 0; k < alpha_size; k++) {
 
-                    for (int b = 0; b < alpha_size; b++) {
-                        _alpha[1] = alpha[b];
+            for (int m = 0; m < tier_depth; m++) {
 
-                        for (int c = 0; c < alpha_size; c++) {
-                            _alpha[2] = alpha[c];
-
-                            // update the alpha input param
-                            input_params.alpha = _alpha;
-
-                            // for the value returned by run_model()
-                            avg_latency = 0.0;
-
-                            // RUN #1 : FEEDBACK penalty type
-                            input_params.fp_resolution_tech = PENALTY_TYPE_FEEDBACK;
-
-                            RIDAnalytics::run_model(
-                                avg_latency,
-                                input_params,
-                                (verbose | MODE_SAVEOUTCOMES),
-                                outcomes_files,
-                                1,
-                                title,
-                                std::string(data_dir));
-
-                            // write to the .csv files, for each _fp_prob[tier]
-                            // value
-                            // format should be:
-                            // [fp@<_fp_tier>][_fp_prob[<_fp_tier>]][a@<_alpha_tier>][_alpha[_alpha_tier]][title][penalty_type][avg_latency]
-                            for (int t = 0; t < tier_depth; t++) {
-
-                                fprintf(
-                                    latencies_files[0], 
-                                    "%d,%-.8E,%d,%-.8E,feedback,%-.8E\n", t, _fp_prob[t], t, _alpha[t], avg_latency);
-                            }
-
-                            // RUN #2 : FALLBACK penalty type
-                            avg_latency = 0.0;
-                            input_params.fp_resolution_tech = PENALTY_TYPE_FALLBACK;
-
-                            RIDAnalytics::run_model(
-                                avg_latency,
-                                input_params,
-                                (verbose | MODE_SAVEGRAPH | MODE_SAVEOUTCOMES),
-                                outcomes_files,
-                                1,
-                                title,
-                                std::string(data_dir));
-
-                            for (int t = 0; t < tier_depth; t++) {
-
-                                fprintf(
-                                    latencies_files[0], 
-                                    "%d,%-.8E,%d,%-.8E,fallback,%-.8E\n", t, _fp_prob[t], t, _alpha[t], avg_latency);
-                            }
-
-                            nr_tests++;
-                        }
-                    }
-                }
+                _alpha[m] = alpha[k];                
             }
+
+            // update the alpha input param
+            input_params.alpha = _alpha;
+
+            // for the value returned by run_model()
+            avg_latency = 0.0;
+
+            // RUN #1 : FEEDBACK penalty type
+            input_params.fp_resolution_tech = PENALTY_TYPE_FEEDBACK;
+
+            RIDAnalytics::run_model(
+                avg_latency,
+                input_params,
+                (verbose | MODE_SAVEOUTCOMES),
+                outcomes_files,
+                1,
+                title,
+                std::string(data_dir));
+
+            // write to the .csv files, for each _fp_prob[tier]
+            // value
+            // format should be:
+            // [fp@<_fp_tier>][_fp_prob[<_fp_tier>]][a@<_alpha_tier>][_alpha[_alpha_tier]][title][penalty_type][avg_latency]
+            for (int t = 0; t < tier_depth; t++) {
+
+                fprintf(
+                    latencies_files[0], 
+                    "%-.8E,%-.8E,feedback,%-.8E\n", _fp_prob[t], _alpha[t], avg_latency);
+            }
+
+            // RUN #2 : FALLBACK penalty type
+            avg_latency = 0.0;
+            input_params.fp_resolution_tech = PENALTY_TYPE_FALLBACK;
+
+            RIDAnalytics::run_model(
+                avg_latency,
+                input_params,
+                (verbose | MODE_SAVEGRAPH | MODE_SAVEOUTCOMES),
+                outcomes_files,
+                1,
+                title,
+                std::string(data_dir));
+
+            for (int t = 0; t < tier_depth; t++) {
+
+                fprintf(
+                    latencies_files[0], 
+                    "%-.8E,%-.8E,fallback,%-.8E\n", _fp_prob[t], _alpha[t], avg_latency);
+            }
+
+            nr_tests++;
         }
     }
 
