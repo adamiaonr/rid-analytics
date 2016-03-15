@@ -1243,16 +1243,3 @@ int RIDAnalytics::run_model(
 
     return 0;
 }
-
-// 1st : a model that explains the path a request is gonna take, no TP info only model what the router does
-// 2nd : separate the state that simulator keeps and reality
-
-// state of what the router can see
-// in downward path no caches (no incentives)
-// routing policies to try? e.g. control path length
-// pick descriptive name for alpha
-// 'fallback' : 2 types separate terms for permanent fallbakcs and temporary
-// how to deal with FPs? include control plane information to 
-// document how the real network works
-// real world version of rids i'm implementing here
-

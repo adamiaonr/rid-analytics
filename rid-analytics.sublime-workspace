@@ -4,40 +4,352 @@
 		"selected_items":
 		[
 			[
-				"MODE",
-				"MODE_VERBOSE"
+				"pro",
+				"prob"
+			],
+			[
+				"max",
+				"max_hops"
+			],
+			[
+				"prev_node_",
+				"prev_node_hops"
+			],
+			[
+				"sta",
+				"stackd"
+			],
+			[
+				"x",
+				"x_labels_str"
+			],
+			[
+				"ar",
+				"arange"
+			],
+			[
+				"p",
+				"pink"
+			],
+			[
+				"li",
+				"lightgreen"
+			],
+			[
+				"out",
+				"outcomes"
+			],
+			[
+				"fi",
+				"fig_line"
+			],
+			[
+				"fig",
+				"figure"
+			],
+			[
+				"pl",
+				"plt"
+			],
+			[
+				"y",
+				"y_stack"
+			],
+			[
+				"in",
+				"index"
+			],
+			[
+				"fo",
+				"fontsize"
+			],
+			[
+				"x_",
+				"x_labels_str"
+			],
+			[
+				"_x",
+				"_x_10"
+			],
+			[
+				"ou",
+				"outcomes_file_name"
+			],
+			[
+				"sc",
+				"scn_file"
+			],
+			[
+				"x_p",
+				"x_param_str"
+			],
+			[
+				"outc",
+				"outcome"
+			],
+			[
+				"spl",
+				"splitted"
+			],
+			[
+				"sp",
+				"splitted"
+			],
+			[
+				"line",
+				"line_splitted"
+			],
+			[
+				"a",
+				"alpha"
+			],
+			[
+				"ti",
+				"tier_depth"
+			],
+			[
+				"al",
+				"alpha_size"
+			],
+			[
+				"OU",
+				"OUTCOME_RELAYED"
+			],
+			[
+				"single",
+				"single"
+			],
+			[
+				"cac",
+				"cache_latency"
+			],
+			[
+				"f",
+				"float"
+			],
+			[
+				"origin",
+				"origin_latency"
+			],
+			[
+				"b",
+				"box"
+			],
+			[
+				"oue",
+				"outcomes"
+			],
+			[
+				"pe",
+				"penalty_types"
+			],
+			[
+				"pen",
+				"penalty_types"
+			],
+			[
+				"S",
+				"SCN_FILE"
+			],
+			[
+				"scn",
+				"scn-file"
 			],
 			[
 				"fp",
-				"fp_prob	(rid-analytics.cpp)"
+				"fp_prob"
 			],
 			[
-				"fp_res",
-				"fp_resolution_tech	(rid-analytics.cpp)"
+				"get",
+				"get_array_size"
+			],
+			[
+				"sing",
+				"single_fp_prob"
+			],
+			[
+				"sin",
+				"single_fp_prob"
+			],
+			[
+				"v",
+				"value"
+			],
+			[
+				"PA",
+				"PARAMETER_VALUES"
+			],
+			[
+				"sh",
+				"shift"
+			],
+			[
+				"qu",
+				"quick-change"
+			],
+			[
+				"run",
+				"run-example"
+			],
+			[
+				"graph",
+				"graph-dir"
+			],
+			[
+				"grap",
+				"graph-dir"
+			],
+			[
+				"late",
+				"latency_through_tier"
+			],
+			[
+				"cont",
+				"content_sources"
 			],
 			[
 				"or",
 				"origin_tier"
 			],
 			[
+				"F",
+				"Fallback"
+			],
+			[
+				"col",
+				"colors_index"
+			],
+			[
+				"colo",
+				"colors"
+			],
+			[
+				"set",
+				"set_ylim"
+			],
+			[
+				"set_xl",
+				"set_xlim"
+			],
+			[
+				"ba",
+				"bar"
+			],
+			[
+				"bar",
+				"bar_shift"
+			],
+			[
+				"pr",
+				"print"
+			],
+			[
+				"key",
+				"keys"
+			],
+			[
+				"k",
+				"keys"
+			],
+			[
+				"pena",
+				"penalty"
+			],
+			[
+				"G",
+				"GRAPH_CASE"
+			],
+			[
+				"GR",
+				"GRAPH_DIR"
+			],
+			[
+				"alp",
+				"alpha"
+			],
+			[
+				"cach",
+				"cache_tier_str"
+			],
+			[
+				"co",
+				"const"
+			],
+			[
+				"cache",
+				"cache_loc"
+			],
+			[
+				"CAC",
+				"OPTION_CACHE_LOC"
+			],
+			[
+				"OP",
+				"OPTION_CACHE_LOC"
+			],
+			[
+				"o",
+				"outcome"
+			],
+			[
+				"fp_pr",
+				"fp_prob"
+			],
+			[
+				"fp_p",
+				"fp_prob_str"
+			],
+			[
+				"MO",
+				"MODE_VERBOSE"
+			],
+			[
+				"M",
+				"MAX_ARRAY_SIZE"
+			],
+			[
+				"da",
+				"dat_filename"
+			],
+			[
+				"str",
+				"string"
+			],
+			[
+				"PEN",
+				"PENALTY_TYPE_STR"
+			],
+			[
+				"con",
+				"content_sources"
+			],
+			[
+				"lat",
+				"latencies"
+			],
+			[
+				"AL",
+				"ALPHA"
+			],
+			[
+				"inpu",
+				"input_params"
+			],
+			[
+				"ALP",
+				"ALPHA_VALUES_SIZE"
+			],
+			[
+				"tier",
+				"tier_depth"
+			],
+			[
 				"tie",
 				"tier_depth"
 			],
 			[
-				"inp",
-				"input_params"
-			],
-			[
-				"cac",
-				"cache_tier"
-			],
-			[
-				"MP",
-				"MODE_SAVEGRAPH"
-			],
-			[
-				"MOD",
-				"MODE_SAVEGRAPH	(rid-analytics.h)"
+				"OPTIO",
+				"OPTION_TITLE"
 			],
 			[
 				"is_",
@@ -58,10 +370,6 @@
 			[
 				"nex",
 				"next_node_prob"
-			],
-			[
-				"get",
-				"get_next_level"
 			],
 			[
 				"size",
@@ -104,10 +412,6 @@
 				"std::to_string"
 			],
 			[
-				"set",
-				"set_curr_level"
-			],
-			[
 				"next_no",
 				"next_node_prob"
 			],
@@ -130,10 +434,6 @@
 			[
 				"re",
 				"return"
-			],
-			[
-				"str",
-				"string	(graph.h)"
 			],
 			[
 				"edge",
@@ -188,14 +488,6 @@
 				"include"
 			],
 			[
-				"graph",
-				"graphviz"
-			],
-			[
-				"GR",
-				"GRAPHVIZ_COLORS	(graph.cpp)"
-			],
-			[
 				"node_type",
 				"node_type_int"
 			],
@@ -212,16 +504,8 @@
 				"terminate	(graph.h)"
 			],
 			[
-				"in",
-				"init"
-			],
-			[
 				"edg",
 				"edge_str"
-			],
-			[
-				"pro",
-				"prob_val_str"
 			],
 			[
 				"MAX_S",
@@ -230,332 +514,40 @@
 			[
 				"node",
 				"node_varname_str"
-			],
-			[
-				"out",
-				"output"
-			],
-			[
-				"node_",
-				"node_varname_str"
-			],
-			[
-				"new",
-				"new_level"
-			],
-			[
-				"I_",
-				"I_NODE_INT	(graph.h)"
-			],
-			[
-				"prev",
-				"prev_level"
-			],
-			[
-				"gra",
-				"graph_filestream"
-			],
-			[
-				"prob",
-				"prob_val	(node.h)"
-			],
-			[
-				"type",
-				"type_str"
-			],
-			[
-				"file",
-				"filename"
-			],
-			[
-				"chec",
-				"checksum"
-			],
-			[
-				"pen",
-				"penalty_latency"
-			],
-			[
-				"print",
-				"printf	printf …"
-			],
-			[
-				"back",
-				"background"
-			],
-			[
-				"adam",
-				"adamiaonr	(Makefile)"
-			],
-			[
-				"dec",
-				"decision"
-			],
-			[
-				"decisio",
-				"decision"
-			],
-			[
-				"def",
-				"define"
-			],
-			[
-				"dou",
-				"double"
-			],
-			[
-				"I",
-				"I_NODE"
-			],
-			[
-				"lea",
-				"leaf_itr"
-			],
-			[
-				"pena",
-				"penalties"
-			],
-			[
-				"penal",
-				"penalties"
-			],
-			[
-				"poss",
-				"possible_source_slots"
-			],
-			[
-				"cand",
-				"candidate_penalties"
-			],
-			[
-				"content",
-				"content_source_dist"
-			],
-			[
-				"comple",
-				"complement_dist"
-			],
-			[
-				"CONT",
-				"CONTENT_SOURCES_DIST"
-			],
-			[
-				"distr",
-				"distributions"
-			],
-			[
-				"get_d",
-				"get_double_property_array"
-			],
-			[
-				"complement_",
-				"complement_dist"
-			],
-			[
-				"COM",
-				"COMPLEMENT_DIST"
-			],
-			[
-				"gets",
-				"get_string_property_array	(dataparser.h)"
-			],
-			[
-				"string",
-				"string_array"
-			],
-			[
-				"doub",
-				"double_array"
-			],
-			[
-				"double",
-				"double_value	(scn_parser.cpp)"
-			],
-			[
-				"int_",
-				"int_value	(scn_parser.cpp)"
-			],
-			[
-				"cl",
-				"close"
-			],
-			[
-				"scn_",
-				"scn_filename"
-			],
-			[
-				"cont",
-				"continue	(rid-analytics.cpp)"
-			],
-			[
-				"sc",
-				"scn_filename"
-			],
-			[
-				"S",
-				"SCNParser	(scn_parser.h)"
-			],
-			[
-				"i",
-				"i_node"
-			],
-			[
-				"pe",
-				"penalty_latency"
-			],
-			[
-				"max",
-				"max_level"
-			],
-			[
-				"base",
-				"base_latency"
-			],
-			[
-				"leve",
-				"level_depth"
-			],
-			[
-				"curr",
-				"curr_node_max_level"
-			],
-			[
-				"se",
-				"set_level"
-			],
-			[
-				"hand",
-				"handle_decision"
-			],
-			[
-				"Node",
-				"Node::O_NODE"
-			],
-			[
-				"UN",
-				"UNKNOWN"
-			],
-			[
-				"pre",
-				"prev_node_type"
-			],
-			[
-				"n",
-				"n_node"
-			],
-			[
-				"prev_p",
-				"prev_node_prob_val"
-			],
-			[
-				"LEA",
-				"LEAF_LEVEL"
-			],
-			[
-				"prev_node_",
-				"prev_node_level"
-			],
-			[
-				"N_",
-				"N_NODE	(node.h)"
-			],
-			[
-				"prev_n",
-				"prev_node_level"
-			],
-			[
-				"root",
-				"root_node"
-			],
-			[
-				"appe",
-				"append_child"
-			],
-			[
-				"content_",
-				"content_sources_dist"
-			],
-			[
-				"late",
-				"latencies"
-			],
-			[
-				"exp",
-				"exponent"
-			],
-			[
-				"request_",
-				"request_size"
-			],
-			[
-				"com",
-				"complement"
-			],
-			[
-				"MA",
-				"MAX_LEVEL_DEPTH"
-			],
-			[
-				"level_",
-				"level_depth"
-			],
-			[
-				"IN",
-				"INTERNAL	(node.h)"
-			],
-			[
-				"lat",
-				"latency_val"
-			],
-			[
-				"probab",
-				"probability"
-			],
-			[
-				"co",
-				"configuring"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "src/rid-analytics.cpp",
+			"file": "README.md",
 			"settings":
 			{
-				"buffer_size": 24749,
+				"buffer_size": 8360,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "test/configs/sample.scn",
+			"file": "test/configs/sensitivity/sensitivity.dist.scn",
 			"settings":
 			{
-				"buffer_size": 120,
+				"buffer_size": 111,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "test/data/sensitivity/cache.1/pre-process.sh",
+			"file": "test/configs/sensitivity/sensitivity.scn",
 			"settings":
 			{
-				"buffer_size": 9440,
+				"buffer_size": 142,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "include/rid-analytics.h",
+			"file": "scripts/plot-box.py",
 			"settings":
 			{
-				"buffer_size": 1230,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/sensitivity-analysis.cpp",
-			"settings":
-			{
-				"buffer_size": 10965,
+				"buffer_size": 5138,
 				"line_ending": "Unix"
 			}
 		},
@@ -563,28 +555,15 @@
 			"file": "include/node.h",
 			"settings":
 			{
-				"buffer_size": 5703,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/graph.cpp",
-			"settings":
-			{
-				"buffer_size": 5050,
+				"buffer_size": 6560,
 				"line_ending": "Unix"
 			}
 		}
 	],
 	"build_system": "",
-	"build_system_choices":
-	[
-	],
-	"build_varint": "",
 	"command_palette":
 	{
 		"height": 392.0,
-		"last_filter": "",
 		"selected_items":
 		[
 			[
@@ -608,13 +587,7 @@
 	},
 	"console":
 	{
-		"height": 122.0,
-		"history":
-		[
-			"import urllib.request,os,hashlib; h = '2915d1851351e5ee549c20394736b442' + '8bc59f460fa1548d1514676163dafc88'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)",
-			"import urllib2,os,hashlib; h = '2915d1851351e5ee549c20394736b442' + '8bc59f460fa1548d1514676163dafc88'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); os.makedirs( ipp ) if not os.path.exists(ipp) else None; urllib2.install_opener( urllib2.build_opener( urllib2.ProxyHandler()) ); by = urllib2.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); open( os.path.join( ipp, pf), 'wb' ).write(by) if dh == h else None; print('Error validating download (got %s instead of %s), please try manual install' % (dh, h) if dh != h else 'Please restart Sublime Text to finish installation')",
-			"import urllib.request,os,hashlib; h = '7183a2d3e96f11eeadd761d777e62404' + 'e330c659d4bb41d3bdf022e94cab3cd0'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
-		]
+		"height": 122.0
 	},
 	"distraction_free":
 	{
@@ -625,21 +598,65 @@
 		"side_bar_visible": false,
 		"status_bar_visible": false
 	},
-	"expanded_folders":
-	[
-		"/home/adamiaonr/Workbench/rid-analytics",
-		"/home/adamiaonr/Workbench/rid-analytics/include"
-	],
 	"file_history":
 	[
-		"/home/adamiaonr/Workbench/rid-analytics/src/sanity-check.cpp",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/include/SA.h",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/src/SA.cpp",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/src/CVRP.cpp",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/src/CWS.cpp",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/src/vrp.cpp",
-		"/home/adamiaonr/Workbench/rid-analytics/scripts/plot-scatter-op.py",
-		"/home/adamiaonr/Workbench/rid-analytics/scripts/plot-scatter-fp.py",
+		"/Users/adamiaonr/workbench/rid-analytics/src/sensitivity-analysis.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-bar.py",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.3/pre-process.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-stackd.py",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-alpha.py",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-dist.py",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-tier.py",
+		"/Users/adamiaonr/workbench/rid-analytics/src/rid-analytics.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/Makefile",
+		"/Users/adamiaonr/workbench/rid-analytics/run-analysis.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-hop.py",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-box.py",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.dist.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/src/help.bak",
+		"/Users/adamiaonr/workbench/sandbox/n-roots.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/include/node.h",
+		"/Users/adamiaonr/workbench/rid-analytics/include/graph.h",
+		"/Users/adamiaonr/workbench/rid-analytics/src/graph.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.2/pre-process.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.1/pre-process.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/example/cache.1/pre-process.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.3/outcomes.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/src/example.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/run-example.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/include/rid-analytics.h",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/dfp.ha.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/hfp.ha.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/ifp.ha.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/lfp.ha.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/dfp.la.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/example/cache.1/outcomes.fallback.drpd.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/run_example.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/example/cache.1/latencies.feedback.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/hfp.la.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/ifp.la.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/lfp.la.scn",
+		"/Users/adamiaonr/workbench/latent_variable/alsa/scripts/upload-latency.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/ifp.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/example/cache.1/run_example.sh",
+		"/Users/adamiaonr/workbench/latent_variable/alsa/scripts/dependencyfinder.sh",
+		"/Users/adamiaonr/workbench/latent_variable/cyanogenmod/upload-n-build",
+		"/Users/adamiaonr/workbench/rid-analytics/include/tree/tree.hh",
+		"/Users/adamiaonr/workbench/rid-analytics/src/dataparser.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/example/cache1/dfp.ha.outcomes.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/src/sanity-check.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/present/dfp.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/present/ifp.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/include/tree/tree_util.hh",
+		"/Users/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/awesome-cv.cls",
+		"/Users/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/education.tex",
+		"/Users/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/coursework.tex",
+		"/Users/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/experience.tex",
+		"/Users/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/research-statement/cover-letter.txt",
+		"/Users/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/adamiaonr-cv.tex",
+		"/Users/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/honors.tex",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-scatter-fp.py",
 		"/home/adamiaonr/Workbench/rid-analytics/rid-analytics.sublime-project",
 		"/home/adamiaonr/Workbench/papers/rids/rids.tex",
 		"/home/adamiaonr/Workbench/papers/rids/introduction.tex",
@@ -710,56 +727,7 @@
 		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/Makefile",
 		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/adamiaonr-cv.tex",
 		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/education.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/publications.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/experience.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/projects.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/coursework.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/honors.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/awesome-cv.cls",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/skills.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/writing.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/presentation.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/extracurricular.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/fancy-cv/Makefile",
-		"/home/adamiaonr/Downloads/google.braggin",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/Makefile",
-		"/home/adamiaonr/Workbench/sandbox/tree/tree-3.1/doc/treefig.pdf",
-		"/home/adamiaonr/Workbench/papers/rids/code/paper.m",
-		"/home/adamiaonr/Workbench/xia/xia-core/api/rid/include/rid.h",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/include/CWS.h",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/include/CVRP.h",
-		"/home/adamiaonr/Workbench/rid-analytics/include/data-parser.h",
-		"/home/adamiaonr/Workbench/rid-analytics/src/data-parser.cpp",
-		"/home/adamiaonr/Workbench/rid-analytics/src/scn_parser.cpp",
-		"/home/adamiaonr/Workbench/rid-analytics/include/scn_parser.h",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/src/DatasetParser.cpp",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/include/DatasetParser.h",
-		"/home/adamiaonr/Workbench/rid-analytics/test/configs/data/25.dat",
-		"/home/adamiaonr/Workbench/rid-analytics/test/configs/data/20.dat",
-		"/home/adamiaonr/Workbench/rid-analytics/test/configs/data/15.dat",
-		"/home/adamiaonr/Workbench/rid-analytics/test/configs/data/10.dat",
-		"/home/adamiaonr/Workbench/rid-analytics/test/configs/data/5.dat",
-		"/home/adamiaonr/Downloads/20.mat",
-		"/home/adamiaonr/Workbench/xia/xia-core/api/rid/src/rid.c",
-		"/home/adamiaonr/Workbench/sandbox/tree/tree-3.1/src/test2.cc",
-		"/home/adamiaonr/Workbench/sandbox/tree/tree-3.1/src/test1.cc",
-		"/home/adamiaonr/Workbench/sandbox/tree/tree-3.1/src/test_tree.cc",
-		"/home/adamiaonr/Workbench/xia/xia-core/click/elements/xia/xiaridroutetable.hh",
-		"/home/adamiaonr/Workbench/sandbox/tree/tree-3.1/Makefile",
-		"/home/adamiaonr/Workbench/sandbox/tree/tree-3.1/src/simple tree.hpp",
-		"/home/adamiaonr/Workbench/rid-analytics/lib/argvparser/argvparser.cpp",
-		"/home/adamiaonr/Workbench/papers/hotnets-2015/preamble.tex",
-		"/home/adamiaonr/Workbench/rid-analytics/include/tree/tree_util.hh",
-		"/home/adamiaonr/Downloads/quora.question",
-		"/home/adamiaonr/Workbench/papers/hotnets-2015/evaluation.tex",
-		"/home/adamiaonr/Workbench/papers/hotnets-2015/hotnets15.tex",
-		"/home/adamiaonr/Workbench/xia/xia-core/click/elements/xia/xiaridroutetable.cc",
-		"/home/adamiaonr/Workbench/xia/xia-core/click-2.0.1/lib/element.cc",
-		"/home/adamiaonr/Workbench/xia/xia-core/click/lib/router.cc",
-		"/home/adamiaonr/Workbench/xia/xia-core/click/include/click/router.hh",
-		"/home/adamiaonr/Workbench/xia/xia-core/click-2.0.1/include/click/element.hh",
-		"/home/adamiaonr/Workbench/xia/xia-core/click/include/click/xiaridpatricia.hh",
-		"/home/adamiaonr/Workbench/xia/xia-core/click-2.0.1/lib/handlercall.cc"
+		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/publications.tex"
 	],
 	"find":
 	{
@@ -767,7 +735,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 93.0,
+		"height": 0.0,
 		"where_history":
 		[
 			"/home/adamiaonr/Workbench/zeromq-4.0.4/src",
@@ -779,40 +747,82 @@
 		"case_sensitive": true,
 		"find_history":
 		[
-			"cache_tier",
+			"line",
+			"stackd",
+			"plt.figure()",
+			"cyan",
+			"pow",
+			"))))\n",
+			"0",
+			"OUTCOME_DR",
+			"line_splitted",
+			" + x_param",
+			"OUTCOME_DROPPED",
+			"mhd_node->set_latency_val",
+			"OUTCOME_DROPPED",
+			"OUTCOME_DR",
+			"FIXME #3",
+			"*** next tier ***",
+			"*** probabilities ***",
+			"// *** latencies *** ",
+			"// *** LATENCIES *** ",
+			"BAR_WIDTH",
+			"y_max",
+			"title",
+			"outcomes_str",
+			"csv",
+			"a",
+			"do",
+			"alpha",
+			"alpha_str",
+			"GRAPH_DIR",
+			"CONFIG",
+			"run-example",
+			"get_arr",
+			"_EXAMPLE",
 			"o_optimistic",
-			"fp_prob",
+			"graphviz_graph->add_node((*depth_itr), depth, fpo_node",
+			"graphviz_graph->add_node((*depth_itr), depth, mhs_node",
+			"OUTCOME_ICACHE",
+			"add_node((*depth_itr), depth, fpo_node",
+			"add_node((*depth_itr), depth, fpo_node, depth + 1, breadth, single_fp_prob)",
+			"curr_node_max",
+			"FPO",
+			"impossible outcomes",
+			"impossible cases",
+			"SPF",
+			"SFP",
+			"sfp",
+			"SFP",
+			"...",
+			"tight",
+			"penalties[",
 			"origin_tier",
-			"tier_depth",
-			"level",
-			"LEVEL",
-			"level",
-			"LEVEL",
-			"level",
-			"cooling_rate",
-			"struct",
-			"struc",
-			"st",
-			"O_OPTIMISTIC",
-			"nr_tests",
-			"o-optimistic",
-			"LEVEL",
-			"o_optimistic",
-			"level",
-			"o_optimistic_outcomes_file",
-			"data_dir",
-			"save_outcomes",
-			"save_graph",
-			"save_cdf",
+			"run_checksum",
+			"INTER",
+			"i",
+			"=\"\"\n",
+			"alphas",
+			"OPTION_CACHE_LOC",
+			"\")\nOPTION_CACHE_LOC",
+			"\")\n",
+			"grep",
+			"run_checksum",
+			"checksum",
+			"MODE_VERBOSE",
 			"verbose",
-			"LEVEL",
-			"level",
-			"lvl",
-			"level_depth",
-			"save_outcomes",
-			"FP_RATE_TYPE_PRMT",
-			"feedback",
-			"base_name",
+			"[1]",
+			"outcomes_file",
+			"outcomes_files",
+			"PENALTY_TYPE_STR",
+			"scn_file",
+			"_PENALTY_TYPE_STR",
+			"PENALTY_TYPE_STR",
+			"_PENALTY_TYPE_STR",
+			"std::to_string",
+			"outcomes_file",
+			"graphviz",
+			"_ANALYSIS",
 			"is_all_eop",
 			"tree<Node *>",
 			"o_optimistic",
@@ -864,49 +874,7 @@
 			"		",
 			"	-#",
 			"	",
-			"prev_node",
-			"c_optimistic",
-			"c-optimistic",
-			"CMU",
-			"publ",
-			"	",
-			"cvskills",
-			"FhP AICOS",
-			"email",
-			"stackoverflowid",
-			"mobiile",
-			"ifistart",
-			"mobile",
-			"homepage",
-			"github",
-			"bfseries",
-			"sectionstyle",
-			"red",
-			"continue",
-			"is_valid",
-			"{",
-			"data_filename",
-			"hops",
-			"-#",
-			"SUM",
-			"COMPLEMENT_DIST",
-			"CONTENT_SOURCES_DIST",
-			"CONPLEMENT_DIST",
-			"latencies",
-			"data-parser",
-			"scn_parser",
-			"scn_filename",
-			"SCNParser",
-			"SCN_PARSER_HH",
-			"DATA_PARSER_HH",
-			"int_value",
-			"fin.",
-			"	",
-			"fin.",
-			"close",
-			"_node.",
-			"min",
-			"prev_node_level"
+			"prev_node"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -914,25 +882,27 @@
 		"regex": false,
 		"replace_history":
 		[
-			"input_params.cache_tier",
+			"splitted",
+			"",
+			"*** NEXT TIER ***",
+			"*** PROBABILITIES *** ",
+			"// *** PROBABILITIES *** ",
+			"// *** LATENCIES *** ",
+			"// *** latencies *** ",
+			"outcomes",
+			"run-analysis",
+			"_SENSITIVITY",
 			"alpha",
-			"input_params.o_optimistic",
-			"input_params.fp_prob",
-			"input_params.origin_tier",
-			"input_params.tier_depth",
-			"TIER",
-			"tier",
-			"TIER",
-			"tier",
-			"ALPHA",
-			"alpha",
-			"TIER",
-			"alpha",
-			"tier",
-			"TIER",
-			"tier",
-			"tier_depth",
-			"base_filename",
+			"//graphviz_graph->add_node((*depth_itr), depth, mhs_node",
+			"add_node((*depth_itr), depth, fpo_node, depth + 1, breadth, (pos_prob_local * (input_params.alpha[curr_node_tier])))",
+			"IMPOSSIBLE CASES",
+			"FPO",
+			"fpo",
+			"FPO",
+			"OPTION_CACHE_TIER",
+			"[0]",
+			"to_string",
+			"_EXAMPLE",
 			"align_nodes(graphviz_graph, ",
 			"align_nodes(graph_viz, ",
 			"get_next_level",
@@ -1039,9 +1009,7 @@
 			", ",
 			"\\n",
 			"//snd_pcm_stream_lock_irq(substream)",
-			"//snd_pcm_stream_unlock_irq(substream)",
-			"//snd_pcm_stream_lock_irq(substream)",
-			"SND_SOC_DAPM_CLASS_PCM"
+			"//snd_pcm_stream_unlock_irq(substream)"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1052,55 +1020,51 @@
 	"groups":
 	[
 		{
-			"selected": 6,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "src/rid-analytics.cpp",
-					"semi_transient": false,
+					"file": "README.md",
 					"settings":
 					{
-						"buffer_size": 24749,
+						"buffer_size": 8360,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								12841,
-								12841
+								1230,
+								1230
 							]
 						],
 						"settings":
 						{
 							"spell_check": true,
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
+							"syntax": "Packages/Markdown/Markdown.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 5689.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 6,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "test/configs/sample.scn",
-					"semi_transient": false,
+					"file": "test/configs/sensitivity/sensitivity.dist.scn",
 					"settings":
 					{
-						"buffer_size": 120,
+						"buffer_size": 111,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								107,
-								107
+								26,
+								26
 							]
 						],
 						"settings":
@@ -1111,112 +1075,76 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
 					"type": "text"
 				},
 				{
 					"buffer": 2,
-					"file": "test/data/sensitivity/cache.1/pre-process.sh",
-					"semi_transient": false,
+					"file": "test/configs/sensitivity/sensitivity.scn",
 					"settings":
 					{
-						"buffer_size": 9440,
+						"buffer_size": 142,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								9440,
-								9440
+								35,
+								35
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage"
+							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 1428.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
 					"type": "text"
 				},
 				{
 					"buffer": 3,
-					"file": "include/rid-analytics.h",
-					"semi_transient": false,
+					"file": "scripts/plot-box.py",
 					"settings":
 					{
-						"buffer_size": 1230,
+						"buffer_size": 5138,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								168,
-								168
+								4603,
+								4607
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/C++/C++.tmLanguage",
+							"syntax": "Packages/Python/Python.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 1857.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
 					"type": "text"
 				},
 				{
 					"buffer": 4,
-					"file": "src/sensitivity-analysis.cpp",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 10965,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								9219,
-								9219
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 2451.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
 					"file": "include/node.h",
-					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5703,
+						"buffer_size": 6560,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								5152,
-								5152
+								2037,
+								2037
 							]
 						],
 						"settings":
@@ -1226,40 +1154,9 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 612.0,
+						"translation.y": 523.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "src/graph.cpp",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 5050,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								587,
-								587
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
 					"type": "text"
 				}
 			]
@@ -1271,7 +1168,7 @@
 	},
 	"input":
 	{
-		"height": 0.0
+		"height": 31.0
 	},
 	"layout":
 	{
@@ -1296,21 +1193,22 @@
 		]
 	},
 	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 100.0
+	},
 	"output.find_results":
 	{
 		"height": 0.0
 	},
-	"pinned_build_system": "",
-	"project": "rid-analytics.sublime-project",
 	"replace":
 	{
-		"height": 64.0
+		"height": 46.0
 	},
 	"save_all_on_build": true,
 	"select_file":
 	{
 		"height": 0.0,
-		"last_filter": "",
 		"selected_items":
 		[
 			[
@@ -1447,32 +1345,15 @@
 	"select_project":
 	{
 		"height": 0.0,
-		"last_filter": "",
 		"selected_items":
 		[
 		],
 		"width": 0.0
 	},
-	"select_symbol":
-	{
-		"height": 392.0,
-		"last_filter": "",
-		"selected_items":
-		[
-		],
-		"width": 512.0
-	},
-	"selected_group": 0,
-	"settings":
-	{
-	},
 	"show_minimap": true,
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 199.0,
-	"status_bar_visible": true,
-	"template_settings":
-	{
-	}
+	"side_bar_width": 348.0,
+	"status_bar_visible": true
 }
