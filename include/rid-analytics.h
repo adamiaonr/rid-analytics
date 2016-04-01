@@ -5,7 +5,6 @@
 #define MAX_REQUEST_SIZE    30
 #define MAX_TIER_DEPTH      30
 
-#define DEFAULT_ALPHA   (double) (1.0 / 10.0)
 #define END_OF_PATH     (int) -1
 
 #define AVERAGE_LATENCY     (char *) "average_latency"
@@ -24,44 +23,75 @@
 
 #define BF_SIZE 160
 
-class RIDAnalytics {
+#include "tree/tree.hh"
+#include "rid-router.h"
+#include "path-state.h"
+
+class RID_Analytics {
 
     public:
 
-        enum DecisionMode {
-            DEFAULT = 0x00
-        };
+        RID_Analytics() {}
+        RID_Analytics(
+            uint8_t access_tree_num,
+            uint8_t access_tree_height,
+            uint8_t iface_num,
+            uint8_t f_max,
+            uint32_t fwd_table_size,
+            __float080 * iface_entry_proportion,
+            __float080 * f_distribution);
+        ~RID_Analytics() {}
 
-        struct rid_analytics_inputs {
+        int print_tp_sizes();
+        int print_iface_entry_proportions();
 
-            double * fp_prob;
-            double * alpha;
-            double * latencies;
-            double * penalties;
+        int run(
+            uint8_t request_size,
+            int * tp_sizes,
+            __float080 * f_r_distribution);
 
-            int * domains;          // tier breadth: "how many domains within each tier"
-            int * content_sources;
+    private:
 
-            int tier_depth;
-            int origin_tier;
-            int cache_tier;
-            int fp_resolution_tech;
+        int build_network();
+        int build_network_rec(RID_Router * parent_router);
+        int run_rec(
+                RID_Router * router, 
+                uint8_t ingress_iface,
+                tree<Path_State *>::iterator prev_path_state_itr);
 
-            char * title;           // title for output files handled within 
-                                    // (e.g. probability graphs)
-        };
+        // NETWORK PARAMETERS : 
 
-        RIDAnalytics() {};
-        ~RIDAnalytics() {};
+        // # of of access trees in the network
+        uint8_t access_tree_num;
+        // height and outdegree of the tree (outdegree is iface_num - 1)
+        uint8_t access_tree_height;
+        uint8_t iface_num;
+        // max. possible size for requests & forwarding entries
+        uint8_t f_max;
+        // % of entries in pointing to an iface
+        __float080 * iface_entry_proportion;
+        // distribution of |F| over iface (i.e. % of entries 
+        // with |F| = x). e.g. for IFACE_LOCAL one could expect a 
+        // distr. skewed towards |F| = f_max, while for IFACE_UPSTREAM a 
+        // distr. skewed towards |F| = 1 (single prefixes like '/cmu')
+        __float080 * f_distribution;
+        // forwarding table size
+        uint32_t fwd_table_size;
 
-        static int run_model(
-            double & avg_latency,
-            rid_analytics_inputs input_params,
-            unsigned int modes, 
-            FILE ** outcomes_files,
-            int outcomes_files_size,
-            char * title,
-            std::string data_dir);
+        // an array of access trees (pointers to root of access trees)
+        RID_Router ** root_routers;
+        // special pointer to 'starting' router of the network (by convention, 
+        // bottom left router of access tree at index 0)
+        RID_Router * start_router;
+
+        // FORWARDING PARAMETERS : only necessary when calling forward() on an 
+        // RID router
+        uint8_t request_size;
+        int * tp_sizes;
+        __float080 * f_r_distribution;
+
+        // path state tree
+        tree<Path_State *> path_state_tree;
 };
 
 #endif
