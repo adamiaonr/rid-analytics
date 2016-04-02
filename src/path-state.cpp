@@ -1,7 +1,11 @@
 #include "path-state.h"
 
-Path_State::Path_State(__float080 ingress_prob, int path_length) {
+Path_State::Path_State(
+    RID_Router * rid_router, 
+    __float080 ingress_prob, 
+    int path_length) {
 
+    this->rid_router = rid_router;
     this->ingress_prob = ingress_prob;
     this->path_length = path_length;
     this->is_eop = false;
@@ -38,4 +42,42 @@ void Path_State::set_outcome(uint8_t outcome) {
 
 uint8_t Path_State::get_outcome() { 
     return this->outcome; 
+}
+
+RID_Router * Path_State::get_router() { 
+    return this->rid_router; 
+}
+
+char * Path_State::to_string() {
+
+    // using calloc() since node_str will be returned
+    char * node_str = (char *) calloc(MAX_PATH_STATE_STRING_SIZE, sizeof(char));
+    char _outcome[MAX_PATH_STATE_STRING_SIZE];
+
+    switch(this->outcome) {
+
+        case OUTCOME_MULTI_HITS:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "mult. iface hits");
+            break;
+        case OUTCOME_NO_HITS:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "no hits");
+            break;
+        case OUTCOME_TP:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "tp hit");
+            break;
+        case OUTCOME_FP:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "fp hit");
+            break;
+        default:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "unknown");
+            break;
+    }
+
+    snprintf(
+        node_str, MAX_PATH_STATE_STRING_SIZE, 
+        "ROUTER[%d][%d] : [PROB : %-.5LE][PATH_LENGTH : %-5d][OUTCOME: %s]",
+        this->rid_router->get_height(), this->rid_router->get_width(),
+        this->ingress_prob, this->path_length, _outcome);
+
+    return node_str;
 }

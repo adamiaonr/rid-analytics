@@ -25,7 +25,20 @@ RID_Router::RID_Router(
 
 RID_Router::~RID_Router() {
 
+    // forwarding table
     free(this->fwd_table);
+
+    // pmf for F_i random variable
+    for (int i = 0; i < this->iface_num; i++)
+        free(this->f_pmf[i]);
+
+    free(this->f_pmf);
+
+    // joint probability distribution
+    free(this->joint_f_pmf);
+
+    // pmf for I_i random variable
+    free(this->lpm_iface_pmf);
 }
 
 int RID_Router::forward(
@@ -211,13 +224,16 @@ void RID_Router::print_f_pmf() {
         printf("-------------");
 
     __float080 subtotal = 0.0;
+    __float080 f_pmf_prob = 0.0;
 
     for (uint8_t i = 0; i < (this->iface_num); i++) {
 
         printf("\n[P(F_%d = |F|)] : |", i);
 
         for (uint8_t f = 0; f < (this->f_max + 1); f++) {
-            printf(" %-.5LE|", this->get_f_pmf(i, f));
+
+            f_pmf_prob = this->get_f_pmf(i, f);
+            printf(" %-.5LE|", f_pmf_prob);
 
             subtotal += this->get_f_pmf(i, f);
         }
@@ -441,7 +457,9 @@ int RID_Router::calc_f_pmf(
             this->fwd_table[i].iface_proportion, this->fwd_table[i].f_distribution, f_r_distribution, 
             log_fp_rates) < 0) {
 
+            free(log_fp_rates);
             fprintf(stderr, "RID_Router::calc_f_pmf() : couldn't retrieve log FP rates\n");
+
             return -1;
         }
 
@@ -506,6 +524,8 @@ int RID_Router::calc_f_pmf(
             // save P(F_i = f)
             this->set_f_pmf(i, f, prob_Li_f);
         }
+
+        free(log_fp_rates);
     }
 
     return 0;
@@ -653,6 +673,8 @@ __float080 RID_Router::calc_cumulative_joint_f(uint8_t iface, uint8_t f) {
         }
     }
 
+    free(iface_pivots);
+
     return cumulative_prob;
 }
 
@@ -691,6 +713,7 @@ int RID_Router::calc_lpm_iface_pmf() {
     this->set_lpm_iface_pmf(IFACE_NO_HITS, this->calc_no_match_prob());
 
     // FIXME: THIS IS SUPER HACK-ISH AND YOU SHOULD FEEL BAD...
+
     // i had to resort to this because we were getting negative probability 
     // values, with very small exponents (e.g. -17), which *CAN* be explained 
     // by approx. errors. that's the basis for the hack below. however, i 

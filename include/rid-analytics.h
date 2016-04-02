@@ -23,6 +23,10 @@
 
 #define BF_SIZE 160
 
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "tree/tree.hh"
 #include "rid-router.h"
 #include "path-state.h"
@@ -40,7 +44,7 @@ class RID_Analytics {
             uint32_t fwd_table_size,
             __float080 * iface_entry_proportion,
             __float080 * f_distribution);
-        ~RID_Analytics() {}
+        ~RID_Analytics();
 
         int print_tp_sizes();
         int print_iface_entry_proportions();
@@ -50,6 +54,8 @@ class RID_Analytics {
             int * tp_sizes,
             __float080 * f_r_distribution);
 
+        int view_results(uint8_t mode, char * output_file_path);
+
     private:
 
         int build_network();
@@ -58,6 +64,7 @@ class RID_Analytics {
                 RID_Router * router, 
                 uint8_t ingress_iface,
                 tree<Path_State *>::iterator prev_path_state_itr);
+        int erase_access_tree_rec(RID_Router * router);
 
         // NETWORK PARAMETERS : 
 

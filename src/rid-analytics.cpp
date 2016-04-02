@@ -36,6 +36,50 @@ RID_Analytics::RID_Analytics(
     this->build_network();    
 }
 
+int RID_Analytics::erase_access_tree_rec(RID_Router * router) {
+
+    uint8_t _iface_num = router->get_iface_num();
+    uint8_t _height = router->get_height();
+
+    // recursion ends if we get to the bottom of the access tree
+    if (_height >= (this->access_tree_height - 1)) {
+
+        delete router;
+
+        return 0;
+    }
+
+    for (int iface = IFACE_DOWNSTREAM; iface < _iface_num; iface++) {
+
+        erase_access_tree_rec(router->get_fwd_table_next_hop(iface));
+    }
+
+    delete router;
+
+    return 0;
+}
+
+RID_Analytics::~RID_Analytics() {
+
+    // basically erase the path state tree
+    tree<Path_State *>::post_order_iterator post_itr = this->path_state_tree.begin_post();
+    tree<Path_State *>::post_order_iterator end_post_itr = this->path_state_tree.end_post();
+
+    while (post_itr != end_post_itr) {
+
+        // delete the Path_State object associated with the tree node (not the 
+        // node itself)
+        delete (*post_itr);
+
+        ++post_itr;
+    }
+
+    for (int i = 0; i < this->access_tree_num; i++)
+        erase_access_tree_rec(this->root_routers[i]);  
+
+    free(this->root_routers); 
+}
+
 int RID_Analytics::print_tp_sizes() {
 
     if (this->tp_sizes == NULL) {
@@ -194,12 +238,12 @@ int RID_Analytics::build_network_rec(RID_Router * parent_router) {
                 this->iface_entry_proportion[_offset_h + _offset_w + i], 
                 this->f_distribution);
 
-            printf("RID_Analytics::build_network_rec() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
-                "\n\t[iface] = %d"\
-                "\n\t[iface_proportion] = %-.5LE\n", 
-                child_router->get_height(),  child_router->get_width(), 
-                _offset_h + _offset_w + i,
-                i, child_router->get_fwd_table()[i].iface_proportion);
+            // printf("RID_Analytics::build_network_rec() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
+            //     "\n\t[iface] = %d"\
+            //     "\n\t[iface_proportion] = %-.5LE\n", 
+            //     child_router->get_height(),  child_router->get_width(), 
+            //     _offset_h + _offset_w + i,
+            //     i, child_router->get_fwd_table()[i].iface_proportion);
         }
 
         // we can now set the DOWNSTREAM next hops of the parent router
@@ -232,12 +276,12 @@ int RID_Analytics::build_network() {
                 this->iface_entry_proportion[i], 
                 this->f_distribution);
 
-            printf("RID_Analytics::build_network() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
-                "\n\t[iface] = %d"\
-                "\n\t[iface_proportion] = %-.5LE\n", 
-                root_router->get_height(),  root_router->get_width(), 
-                i,
-                i, root_router->get_fwd_table()[i].iface_proportion);
+            // printf("RID_Analytics::build_network() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
+            //     "\n\t[iface] = %d"\
+            //     "\n\t[iface_proportion] = %-.5LE\n", 
+            //     root_router->get_height(),  root_router->get_width(), 
+            //     i,
+            //     i, root_router->get_fwd_table()[i].iface_proportion);
         }
 
         // for now, set the IFACE_UPSTREAM of a root router to NULL 
@@ -263,6 +307,10 @@ int RID_Analytics::run_rec(
     uint8_t _width = router->get_width();
     uint8_t _ingress_iface = 0;
 
+    uint32_t _tp_size_offset = 
+        _height * (((int) pow(2.0, this->access_tree_height - 1)) * this->iface_num) 
+        + _width * this->iface_num;
+
     __float080 iface_prob = 0.0;
     int iface_path_length = 0;
 
@@ -277,7 +325,7 @@ int RID_Analytics::run_rec(
     router->forward(
         this->request_size, 
         ingress_iface,
-        &(this->tp_sizes[_height * (((int) pow(2.0, this->access_tree_height - 1)) * this->iface_num) + _width * this->iface_num]), 
+        &(this->tp_sizes[_tp_size_offset]), 
         this->f_r_distribution);
 
     // cycle through each of router's ifaces to fill path_state accordingly 
@@ -294,7 +342,7 @@ int RID_Analytics::run_rec(
         }
 
         // new path state to be added to the path state tree
-        Path_State * path_state = new Path_State(iface_prob, iface_path_length);
+        Path_State * path_state = new Path_State(router, iface_prob, iface_path_length);
         path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
 
         // all forwarding outcomes (except IFACE_UPSTREAM and IFACE_UPSTREAM) 
@@ -313,7 +361,7 @@ int RID_Analytics::run_rec(
 
             // a match is verified : it's either have a TP or FP. this 
             // will affect the final outcome if iface == IFACE_LOCAL
-            if (tp_sizes[iface] > 0) {
+            if (this->tp_sizes[_tp_size_offset + iface] > 0) {
 
                 path_state->set_outcome(OUTCOME_TP); 
 
@@ -363,10 +411,82 @@ int RID_Analytics::run(
     tree<Path_State *>::iterator path_state_tree_itr;
 
     path_state_tree_itr = this->path_state_tree.begin();
-    path_state_tree_itr = this->path_state_tree.insert(path_state_tree_itr, new Path_State(1.0, 0));
+    // FIXME: not sure if it is ok to set the rid_router arg on Path_State() 
+    // as NULL
+    path_state_tree_itr = this->path_state_tree.insert(
+                                                    path_state_tree_itr, 
+                                                    new Path_State(NULL, 1.0, 0));
 
     // ingress iface is the IFACE_DOWNSTREAM of upstream router
     run_rec(this->start_router, IFACE_DOWNSTREAM, path_state_tree_itr);
+
+    return 0;
+}
+
+int RID_Analytics::view_results(
+    uint8_t modes,
+    char * output_file_path) {
+
+    // iterate through the path_tree leafs to learn 
+    // a bit about latencies for this scenario
+    tree<Path_State *>::leaf_iterator leaf_itr = this->path_state_tree.begin_leaf();
+    tree<Path_State *>::leaf_iterator end_leaf_itr = this->path_state_tree.end_leaf();
+
+    __float080 checksum = 0.0;
+
+    char * path_state_str = NULL;
+
+    // print some results for quick checking
+    if ((modes & MODE_VERBOSE))
+        printf("\n*** RESULTS ***\n\n");
+
+    // if requested, save outcomes in the path given as arg
+    FILE * output_file;
+
+    if ((modes & MODE_SAVEOUTCOMES)) {
+
+        output_file = fopen(output_file_path, "a");
+    }
+
+    while (leaf_itr != end_leaf_itr) {
+
+        if ((*leaf_itr)->get_ingress_prob() > 0.0) {
+
+            if ((modes & MODE_VERBOSE)) {
+
+                path_state_str = (*leaf_itr)->to_string();
+
+                printf("[PATH_TREE DEPTH %d] : %s\n", 
+                    this->path_state_tree.depth(leaf_itr), 
+                    path_state_str);
+
+                free(path_state_str);
+            }
+
+            if ((modes & MODE_SAVEOUTCOMES)) {
+
+                // append a line in the output file, with the following 
+                // format : 
+                // <rtr.hght>,<rtr.wdth>,<prob>,<path_length>,<outcome>
+                fprintf(output_file, 
+                    "%d,%d,%-.5LE,%d,%d\n", 
+                    (*leaf_itr)->get_router()->get_height(),
+                    (*leaf_itr)->get_router()->get_width(),
+                    (*leaf_itr)->get_ingress_prob(),
+                    (*leaf_itr)->get_path_length(),
+                    (*leaf_itr)->get_outcome());
+            }
+
+            checksum += (*leaf_itr)->get_ingress_prob();
+        }
+
+        ++leaf_itr;
+    }
+
+    if ((modes & MODE_VERBOSE)) {
+
+        printf("\n[CHECKSUM : %-.5LE]\n", checksum);
+    }
 
     return 0;
 }

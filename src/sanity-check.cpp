@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-//#include "tree/tree.hh"
 #include "dataparser.h"
 #include "rid-analytics.h"
 
@@ -18,17 +17,11 @@
 #define FWD_TABLE_SIZE              (char *) "fwd_table_size"
 
 #define DEFAULT_SCN_FILE	(char *) "/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity.scn"
+#define DEFAULT_CSV_DIR     (char *) "/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check"
 
 using namespace std;
 
 int main (int argc, char **argv) {
-
-    // // create a new vanilla RID router object:
-    // //	* access tree 0, (0,0) coordinates
-    // //	* forwarding table with FWD_TABLE_SIZE entries
-    // //	* 3 interfaces (local, up and down)
-    // RID_Router_Vanilla * rid_vanilla_rtr = 
-    //     new RID_Router_Vanilla(0, 0, 0, FWD_TABLE_SIZE, IFACE_NUM, request_size);
 
     DataParser * scn_parser = new DataParser(DEFAULT_SCN_FILE);
 
@@ -87,6 +80,20 @@ int main (int argc, char **argv) {
                                                 f_distribution);
 
     rid_analytics->run(request_size, tp_sizes, f_r_distribution);
+
+    char output_file_path[MAX_ARRAY_SIZE] = {0};
+    snprintf(output_file_path, MAX_ARRAY_SIZE, "%s/no0-4h.csv", DEFAULT_CSV_DIR);
+
+    rid_analytics->view_results(MODE_VERBOSE | MODE_SAVEOUTCOMES, output_file_path);
+
+    // clean up after yourself...
+    delete scn_parser;
+    delete rid_analytics;
+
+    free(tp_sizes);
+    free(iface_entry_proportion);
+    free(f_distribution);
+    free(f_r_distribution);
 
     return 0;
 }

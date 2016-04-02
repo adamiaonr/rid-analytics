@@ -24,8 +24,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "path-state.h"
-
 class RID_Router {
 
     public:

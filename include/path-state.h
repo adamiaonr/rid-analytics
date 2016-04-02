@@ -23,7 +23,7 @@ class Path_State {
     public:
 
         Path_State() {}
-        Path_State(__float080 ingress_prob, int path_length);
+        Path_State(RID_Router * rid_router, __float080 ingress_prob, int path_length);
         ~Path_State() {}
 
         void set_ingress_prob(__float080 ingress_prob);
@@ -38,8 +38,14 @@ class Path_State {
         void set_outcome(uint8_t outcome);
         uint8_t get_outcome();
 
+        RID_Router * get_router();
+
+        char * to_string();
+
     private:
 
+        // a pointer to the RID router associated with this path state
+        RID_Router * rid_router;
         // the probability of having a request reach this state
         __float080 ingress_prob;
         // is this the end of an RID packet path?
