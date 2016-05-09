@@ -4,12 +4,440 @@
 		"selected_items":
 		[
 			[
+				"f_",
+				"f_pmf_prob"
+			],
+			[
+				"ro",
+				"router"
+			],
+			[
+				"_",
+				"_height"
+			],
+			[
+				"IFA",
+				"IFACE_DOWNSTREAM"
+			],
+			[
+				"RID",
+				"RID_Router"
+			],
+			[
+				"roo",
+				"root_routers"
+			],
+			[
+				"acc",
+				"access_tree_num"
+			],
+			[
+				"iface",
+				"iface_num"
+			],
+			[
+				"pa",
+				"path_state_tree"
+			],
+			[
+				"scn",
+				"scn_parser"
+			],
+			[
+				"ou",
+				"outcomes"
+			],
+			[
+				"out",
+				"outcome"
+			],
+			[
+				"scen",
+				"scenario_code"
+			],
+			[
+				"sc",
+				"scenario_code"
+			],
+			[
+				"fi",
+				"file_name"
+			],
+			[
+				"in",
+				"input_file_dir"
+			],
+			[
+				"pr",
+				"print"
+			],
+			[
+				"fil",
+				"files"
+			],
+			[
+				"ifa",
+				"iface"
+			],
+			[
+				"ui",
+				"uint32_t"
+			],
+			[
+				"MAX",
+				"MAX_PATH_STATE_STRING_SIZE"
+			],
+			[
+				"OU",
+				"OUTCOME_UNDEF"
+			],
+			[
+				"pat",
+				"path_state_tree"
+			],
+			[
+				"_p",
+				"_prob_aux"
+			],
+			[
+				"_pr",
+				"_prob_aux"
+			],
+			[
+				"_po",
+				"_prob_aux"
+			],
+			[
+				"get",
+				"get_height"
+			],
+			[
+				"ch",
+				"child_router"
+			],
+			[
+				"if",
+				"iface_proportion"
+			],
+			[
+				"ifc",
+				"iface_proportion"
+			],
+			[
+				"iface_",
+				"iface_proportion"
+			],
+			[
+				"pre",
+				"prev_width"
+			],
+			[
+				"ac",
+				"access_tree"
+			],
+			[
+				"_o",
+				"_offset_w"
+			],
+			[
+				"prev",
+				"prev_height"
+			],
+			[
+				"of",
+				"_offset_y"
+			],
+			[
+				"tp",
+				"tp_sizes"
+			],
+			[
+				"tp_",
+				"tp_sizes_size"
+			],
+			[
+				"IF",
+				"IFACE_ENTRY_PROPORTION"
+			],
+			[
+				"re",
+				"return"
+			],
+			[
+				"inc",
+				"include"
+			],
+			[
+				"path",
+				"prev_path_state_itr"
+			],
+			[
+				"F",
+				"F_PROPORTION"
+			],
+			[
+				"req",
+				"request_size"
+			],
+			[
+				"FWD_TABLE",
+				"FWD_TABLE_SIZE"
+			],
+			[
+				"T",
+				"TP_SIZES"
+			],
+			[
+				"dim",
+				"dimensions"
+			],
+			[
+				"int",
+				"int_array"
+			],
+			[
+				"x",
+				"x_str"
+			],
+			[
 				"pro",
-				"prob"
+				"property_name"
+			],
+			[
+				"OUT",
+				"OUTCOME_UNDEF"
+			],
+			[
+				"de",
+				"define"
+			],
+			[
+				"rou",
+				"router_next_hop"
+			],
+			[
+				"get_",
+				"get_height"
+			],
+			[
+				"prev_",
+				"prev_path_state"
+			],
+			[
+				"ing",
+				"ingress_iface"
+			],
+			[
+				"def",
+				"default"
+			],
+			[
+				"IFAC",
+				"IFACE_LOCAL"
+			],
+			[
+				"nex",
+				"next_path_state"
+			],
+			[
+				"PA",
+				"Path_State"
+			],
+			[
+				"router",
+				"router_next_hop"
+			],
+			[
+				"con",
+				"continue"
+			],
+			[
+				"fow",
+				"forward"
+			],
+			[
+				"star",
+				"start_router"
+			],
+			[
+				"f",
+				"f_pmf"
+			],
+			[
+				"new",
+				"network_parameters"
+			],
+			[
+				"nre",
+				"network_parameters"
+			],
+			[
+				"network",
+				"network_parameters"
+			],
+			[
+				"__",
+				"_build_network_rec"
+			],
+			[
+				"o",
+				"outdegree"
+			],
+			[
+				"lp",
+				"lpm_iface_pmf"
+			],
+			[
+				"fwd",
+				"fwd_table"
+			],
+			[
+				"no",
+				"no_match_probability"
+			],
+			[
+				"_f",
+				"_forward_prob"
+			],
+			[
+				"_prob_i",
+				"_prob_exclusive"
+			],
+			[
+				"CUMULATIVE_I",
+				"CUMULATIVE_INCLUSIVE"
+			],
+			[
+				"C",
+				"CUMULATIVE_INCLUSIVE"
+			],
+			[
+				"cum",
+				"cumulative_joint_f"
+			],
+			[
+				"RID_",
+				"RID_Router_Vanilla"
+			],
+			[
+				"cu",
+				"curr_i"
+			],
+			[
+				"cur",
+				"curr_f"
+			],
+			[
+				"g",
+				"going_up"
+			],
+			[
+				"curr",
+				"curr_i"
+			],
+			[
+				"to",
+				"total"
+			],
+			[
+				"lpm",
+				"lpm_pmf_cached"
+			],
+			[
+				"set",
+				"set_lpm_pmf"
+			],
+			[
+				"i",
+				"int"
+			],
+			[
+				"tot",
+				"total_prob"
+			],
+			[
+				"prin",
+				"printf	printf …"
+			],
+			[
+				"log",
+				"log_prob"
+			],
+			[
+				"lo",
+				"log_prob"
+			],
+			[
+				"calc",
+				"calc_lpm_pmf"
+			],
+			[
+				"print",
+				"print_iface_pmf"
+			],
+			[
+				"P",
+				"Path_State"
+			],
+			[
+				"h",
+				"height"
+			],
+			[
+				"ma",
+				"max_tp_iface"
 			],
 			[
 				"max",
-				"max_hops"
+				"max_tp_size"
+			],
+			[
+				"fp",
+				"fp_rate"
+			],
+			[
+				"LO",
+				"LOCAL_IFACE"
+			],
+			[
+				"rr",
+				"rr_fwd_table_row"
+			],
+			[
+				"do",
+				"double"
+			],
+			[
+				"fo",
+				"forward"
+			],
+			[
+				"str",
+				"struct	struct"
+			],
+			[
+				"tr",
+				"truth_table"
+			],
+			[
+				"m",
+				"max_iface"
+			],
+			[
+				"dec",
+				"decision_type"
+			],
+			[
+				"table",
+				"table_size"
+			],
+			[
+				"wi",
+				"width"
+			],
+			[
+				"I",
+				"IfaceType"
 			],
 			[
 				"prev_node_",
@@ -18,10 +446,6 @@
 			[
 				"sta",
 				"stackd"
-			],
-			[
-				"x",
-				"x_labels_str"
 			],
 			[
 				"ar",
@@ -36,14 +460,6 @@
 				"lightgreen"
 			],
 			[
-				"out",
-				"outcomes"
-			],
-			[
-				"fi",
-				"fig_line"
-			],
-			[
 				"fig",
 				"figure"
 			],
@@ -56,28 +472,12 @@
 				"y_stack"
 			],
 			[
-				"in",
-				"index"
-			],
-			[
-				"fo",
-				"fontsize"
-			],
-			[
 				"x_",
 				"x_labels_str"
 			],
 			[
 				"_x",
 				"_x_10"
-			],
-			[
-				"ou",
-				"outcomes_file_name"
-			],
-			[
-				"sc",
-				"scn_file"
 			],
 			[
 				"x_p",
@@ -112,450 +512,74 @@
 				"alpha_size"
 			],
 			[
-				"OU",
-				"OUTCOME_RELAYED"
-			],
-			[
 				"single",
 				"single"
-			],
-			[
-				"cac",
-				"cache_latency"
-			],
-			[
-				"f",
-				"float"
-			],
-			[
-				"origin",
-				"origin_latency"
-			],
-			[
-				"b",
-				"box"
-			],
-			[
-				"oue",
-				"outcomes"
-			],
-			[
-				"pe",
-				"penalty_types"
-			],
-			[
-				"pen",
-				"penalty_types"
-			],
-			[
-				"S",
-				"SCN_FILE"
-			],
-			[
-				"scn",
-				"scn-file"
-			],
-			[
-				"fp",
-				"fp_prob"
-			],
-			[
-				"get",
-				"get_array_size"
-			],
-			[
-				"sing",
-				"single_fp_prob"
-			],
-			[
-				"sin",
-				"single_fp_prob"
-			],
-			[
-				"v",
-				"value"
-			],
-			[
-				"PA",
-				"PARAMETER_VALUES"
-			],
-			[
-				"sh",
-				"shift"
-			],
-			[
-				"qu",
-				"quick-change"
-			],
-			[
-				"run",
-				"run-example"
-			],
-			[
-				"graph",
-				"graph-dir"
-			],
-			[
-				"grap",
-				"graph-dir"
-			],
-			[
-				"late",
-				"latency_through_tier"
-			],
-			[
-				"cont",
-				"content_sources"
-			],
-			[
-				"or",
-				"origin_tier"
-			],
-			[
-				"F",
-				"Fallback"
-			],
-			[
-				"col",
-				"colors_index"
-			],
-			[
-				"colo",
-				"colors"
-			],
-			[
-				"set",
-				"set_ylim"
-			],
-			[
-				"set_xl",
-				"set_xlim"
-			],
-			[
-				"ba",
-				"bar"
-			],
-			[
-				"bar",
-				"bar_shift"
-			],
-			[
-				"pr",
-				"print"
-			],
-			[
-				"key",
-				"keys"
-			],
-			[
-				"k",
-				"keys"
-			],
-			[
-				"pena",
-				"penalty"
-			],
-			[
-				"G",
-				"GRAPH_CASE"
-			],
-			[
-				"GR",
-				"GRAPH_DIR"
-			],
-			[
-				"alp",
-				"alpha"
-			],
-			[
-				"cach",
-				"cache_tier_str"
-			],
-			[
-				"co",
-				"const"
-			],
-			[
-				"cache",
-				"cache_loc"
-			],
-			[
-				"CAC",
-				"OPTION_CACHE_LOC"
-			],
-			[
-				"OP",
-				"OPTION_CACHE_LOC"
-			],
-			[
-				"o",
-				"outcome"
-			],
-			[
-				"fp_pr",
-				"fp_prob"
-			],
-			[
-				"fp_p",
-				"fp_prob_str"
-			],
-			[
-				"MO",
-				"MODE_VERBOSE"
-			],
-			[
-				"M",
-				"MAX_ARRAY_SIZE"
-			],
-			[
-				"da",
-				"dat_filename"
-			],
-			[
-				"str",
-				"string"
-			],
-			[
-				"PEN",
-				"PENALTY_TYPE_STR"
-			],
-			[
-				"con",
-				"content_sources"
-			],
-			[
-				"lat",
-				"latencies"
-			],
-			[
-				"AL",
-				"ALPHA"
-			],
-			[
-				"inpu",
-				"input_params"
-			],
-			[
-				"ALP",
-				"ALPHA_VALUES_SIZE"
-			],
-			[
-				"tier",
-				"tier_depth"
-			],
-			[
-				"tie",
-				"tier_depth"
-			],
-			[
-				"OPTIO",
-				"OPTION_TITLE"
-			],
-			[
-				"is_",
-				"is_all_eop"
-			],
-			[
-				"EN",
-				"END_OF_PATH"
-			],
-			[
-				"get_",
-				"get_curr_level	(node.h)"
-			],
-			[
-				"cur",
-				"curr_node_level"
-			],
-			[
-				"nex",
-				"next_node_prob"
-			],
-			[
-				"size",
-				"sizeof"
-			],
-			[
-				"fil",
-				"fill"
-			],
-			[
-				"MAX",
-				"MAX_LEVEL_DEPTH"
-			],
-			[
-				"level",
-				"level_depth"
-			],
-			[
-				"o_p",
-				"o_optimistic"
-			],
-			[
-				"ali",
-				"align_nodes"
-			],
-			[
-				"nodes",
-				"nodes_to_align_size"
-			],
-			[
-				"nodes_",
-				"nodes_to_align"
-			],
-			[
-				"prope",
-				"property"
-			],
-			[
-				"std",
-				"std::to_string"
-			],
-			[
-				"next_no",
-				"next_node_prob"
-			],
-			[
-				"next_",
-				"next_node_prob"
-			],
-			[
-				"c_",
-				"c_node"
-			],
-			[
-				"set_",
-				"set_uid	(node.h)"
-			],
-			[
-				"var",
-				"varname	(graph.cpp)"
-			],
-			[
-				"re",
-				"return"
-			],
-			[
-				"edge",
-				"edge_str"
-			],
-			[
-				"dep",
-				"depth"
-			],
-			[
-				"cu",
-				"curr_node_level"
-			],
-			[
-				"de",
-				"depth"
-			],
-			[
-				"DE",
-				"DECISION"
-			],
-			[
-				"do",
-				"double	(rid-analytics.cpp)"
-			],
-			[
-				"next",
-				"next_depth"
-			],
-			[
-				"bre",
-				"breadth"
-			],
-			[
-				"get_node",
-				"get_node_type_int"
-			],
-			[
-				"get_ty",
-				"get_type_int	(graph.cpp)"
-			],
-			[
-				"prev_",
-				"prev_node"
-			],
-			[
-				"node_ty",
-				"node_type_int"
-			],
-			[
-				"inc",
-				"include"
-			],
-			[
-				"node_type",
-				"node_type_int"
-			],
-			[
-				"deci",
-				"decision"
-			],
-			[
-				"add",
-				"add_node	(graph.h)"
-			],
-			[
-				"te",
-				"terminate	(graph.h)"
-			],
-			[
-				"edg",
-				"edge_str"
-			],
-			[
-				"MAX_S",
-				"MAX_STRING_SIZE"
-			],
-			[
-				"node",
-				"node_varname_str"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "README.md",
+			"file": "src/rid-analytics.cpp",
 			"settings":
 			{
-				"buffer_size": 8360,
+				"buffer_size": 15112,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "test/configs/sensitivity/sensitivity.dist.scn",
+			"file": "include/rid-analytics.h",
 			"settings":
 			{
-				"buffer_size": 111,
+				"buffer_size": 3074,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "test/configs/sensitivity/sensitivity.scn",
+			"file": "src/sanity-check.cpp",
 			"settings":
 			{
-				"buffer_size": 142,
+				"buffer_size": 3871,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "scripts/plot-box.py",
+			"file": "src/rid-router.cpp",
 			"settings":
 			{
-				"buffer_size": 5138,
+				"buffer_size": 21263,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "include/node.h",
+			"file": "include/rid-router.h",
 			"settings":
 			{
-				"buffer_size": 6560,
+				"buffer_size": 5095,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/path-state.cpp",
+			"settings":
+			{
+				"buffer_size": 2126,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "include/path-state.h",
+			"settings":
+			{
+				"buffer_size": 1415,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Makefile",
+			"settings":
+			{
+				"buffer_size": 1313,
 				"line_ending": "Unix"
 			}
 		}
@@ -600,32 +624,53 @@
 	},
 	"file_history":
 	[
-		"/Users/adamiaonr/workbench/rid-analytics/src/sensitivity-analysis.cpp",
-		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-bar.py",
-		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.3/pre-process.sh",
-		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-stackd.py",
-		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-alpha.py",
-		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-dist.py",
-		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-tier.py",
-		"/Users/adamiaonr/workbench/rid-analytics/src/rid-analytics.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/Makefile",
-		"/Users/adamiaonr/workbench/rid-analytics/run-analysis.sh",
-		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-hop.py",
-		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-box.py",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.dist.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/src/help.bak",
-		"/Users/adamiaonr/workbench/sandbox/n-roots.cpp",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/include/node.h",
+		"/Users/adamiaonr/workbench/rid-analytics/include/dataparser.h",
+		"/Users/adamiaonr/workbench/rid-analytics/src/dataparser.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/fdist/5.fdist",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-stackd-sanity-check.py",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check/so1-4h.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check/oc3-1h.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-stackd.py",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check/no0-4h.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check/oc5-1h.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check/oc5-2h.csv",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.1/pre-process.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-tier.py",
+		"/Users/adamiaonr/workbench/rid-analytics/include/rid-router-vanilla.h",
+		"/Users/adamiaonr/workbench/rid-analytics/src/rid-router-vanilla.cpp",
 		"/Users/adamiaonr/workbench/rid-analytics/include/graph.h",
 		"/Users/adamiaonr/workbench/rid-analytics/src/graph.cpp",
+		"/Users/adamiaonr/workbench/sandbox/floating.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/include/node.h",
+		"/Users/adamiaonr/workbench/rid-analytics/src/rid-analytics.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/src/sensitivity-analysis.cpp",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/README.md",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.dist.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/fdist/10.fdist",
+		"/Users/adamiaonr/workbench/rid-analytics/src/test.cpp",
+		"/Users/adamiaonr/Downloads/back",
+		"/Users/adamiaonr/workbench/rid-analytics/include/rid-analytics.h",
+		"/Users/adamiaonr/workbench/xia-core/click-2.0.1/include/click/xiaridpatricia.hh",
+		"/Users/adamiaonr/workbench/decision-support-cvrp/include/CWS.h",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-box.py",
+		"/Users/adamiaonr/workbench/rid-analytics/include/rid-router.h",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-bar.py",
+		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.3/pre-process.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-alpha.py",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-dist.py",
+		"/Users/adamiaonr/workbench/rid-analytics/run-analysis.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-outcome-vs-hop.py",
+		"/Users/adamiaonr/workbench/rid-analytics/src/help.bak",
+		"/Users/adamiaonr/workbench/sandbox/n-roots.cpp",
 		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.2/pre-process.sh",
-		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.1/pre-process.sh",
 		"/Users/adamiaonr/workbench/rid-analytics/test/data/example/cache.1/pre-process.sh",
 		"/Users/adamiaonr/workbench/rid-analytics/test/data/sensitivity/cache.3/outcomes.csv",
 		"/Users/adamiaonr/workbench/rid-analytics/src/example.cpp",
 		"/Users/adamiaonr/workbench/rid-analytics/run-example.sh",
-		"/Users/adamiaonr/workbench/rid-analytics/include/rid-analytics.h",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/dfp.ha.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/hfp.ha.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/example/ifp.ha.scn",
@@ -643,7 +688,6 @@
 		"/Users/adamiaonr/workbench/latent_variable/alsa/scripts/dependencyfinder.sh",
 		"/Users/adamiaonr/workbench/latent_variable/cyanogenmod/upload-n-build",
 		"/Users/adamiaonr/workbench/rid-analytics/include/tree/tree.hh",
-		"/Users/adamiaonr/workbench/rid-analytics/src/dataparser.cpp",
 		"/Users/adamiaonr/workbench/rid-analytics/test/data/example/cache1/dfp.ha.outcomes.csv",
 		"/Users/adamiaonr/workbench/rid-analytics/src/sanity-check.cpp",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/present/dfp.scn",
@@ -707,27 +751,7 @@
 		"/home/adamiaonr/Downloads/conclusions",
 		"/home/adamiaonr/Workbench/papers/qualifier-2015/challenges.tex",
 		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/research-statement/cover-letter.txt",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/research-statement/statement.tex",
-		"/home/adamiaonr/Downloads/reddit.post",
-		"/home/adamiaonr/Workbench/papers/hotnets-2015/challenges.tex",
-		"/home/adamiaonr/Workbench/papers/rids/background.tex",
-		"/home/adamiaonr/Workbench/rid-analytics/include/tree/tree.hh",
-		"/home/adamiaonr/Workbench/sandbox/tree/tree-3.1/src/tree_example.cc",
-		"/home/adamiaonr/Workbench/coursework/18-859/doc/mid-evaluation/mid-evaluation.tex",
-		"/home/adamiaonr/Workbench/coursework/18-859/doc/mid-evaluation/Makefile",
-		"/home/adamiaonr/Workbench/coursework/18-859/doc/dsn.tex",
-		"/home/adamiaonr/Workbench/papers/qualifier-2015/Makefile",
-		"/home/adamiaonr/Workbench/coursework/18-859/doc/final/Makefile",
-		"/home/adamiaonr/Workbench/coursework/18-859/doc/Makefile",
-		"/home/adamiaonr/Workbench/coursework/18-859/doc/dsn-non-paper.bib",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/research-statement/conclusions",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/research-statement/Makefile",
-		"/home/adamiaonr/Workbench/xia/xia-core/applications/rid/src/rid_requester.c",
-		"/home/adamiaonr/Workbench/coursework/decision-support-cvrp/doc/instances/A_n34_k5_sa.m",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/Makefile",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/adamiaonr-cv.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/education.tex",
-		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/awesome-cv/resume/publications.tex"
+		"/home/adamiaonr/Dropbox/Workbench/PhD/individual topics/cv/research-statement/statement.tex"
 	],
 	"find":
 	{
@@ -747,6 +771,112 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"log",
+			"get_f_pmf",
+			"24031E",
+			"x_descr",
+			"log",
+			"calc_f_pmf",
+			"build_ne",
+			"tp_sizes",
+			"OUTCOME",
+			"OUTCOME_UNDEF",
+			"Path_State(",
+			"calc_cumulative_joint_f",
+			"get_joint_f_pmf",
+			"calc_no_match_prob",
+			"calc_f_pmf(",
+			"calc_f_pmf",
+			"get_log",
+			"aborting",
+			"get_log_fp_rates",
+			"iface_entry_proportion",
+			"get_log_fp_rates",
+			"init",
+			"f_pmf",
+			"calc_f",
+			"append",
+			"tree",
+			"dimensions",
+			"int_array_add",
+			"double_array_add_",
+			"get_double_property_array",
+			"is N",
+			"tree",
+			"tp_",
+			"uint8_t * tp_",
+			"height",
+			"this->height",
+			"lineG",
+			"iface_proportion",
+			"f_proportion",
+			"this->network_parameters->",
+			"this->",
+			"print_joi",
+			"_int_array",
+			":",
+			"path_state_tree",
+			"path_tree",
+			"append",
+			"attach",
+			"Path",
+			"cached",
+			"this->path_state",
+			"init_f_pmf",
+			"Path_State::",
+			"ingress_iface",
+			"_height",
+			"prev_path_state",
+			"this_path_state",
+			"is_all_eop",
+			"iterator",
+			"next_path_state",
+			"IFACE_UPSTREAM",
+			"set_next_hop",
+			"iface_proportion",
+			"Carne",
+			"checksum",
+			"rr_fwd_table_row",
+			"f_propo",
+			"get_log_fp_rates",
+			"RID_R",
+			"get_log_fp_rates",
+			"this->fwd_table_s",
+			"path_state",
+			"print_",
+			"print",
+			"this->path_state->",
+			"this->path_state",
+			"this->path_state->",
+			"i < this->iface_num",
+			"UPSTREAM_IFACE",
+			"LOCAL_IFACE",
+			"CUMULATIVE_INCLUSIVE",
+			"calc_lpm_log_prob",
+			"get_log",
+			"fp_rate(",
+			"fp_rate",
+			"cumulative_joint_f",
+			"forward(",
+			"forward",
+			"L_",
+			"L_i",
+			"L_",
+			"lpm_pmf",
+			"iface_pmf",
+			"set_iface_pmf",
+			"get_log_fp_rates",
+			"__float128",
+			"double",
+			"__float128",
+			"f_distribution",
+			"this",
+			"prob_iface_f",
+			"iface_pmf",
+			"protected",
+			"double",
+			"__float128",
+			"lookup(",
 			"line",
 			"stackd",
 			"plt.figure()",
@@ -768,113 +898,7 @@
 			"// *** LATENCIES *** ",
 			"BAR_WIDTH",
 			"y_max",
-			"title",
-			"outcomes_str",
-			"csv",
-			"a",
-			"do",
-			"alpha",
-			"alpha_str",
-			"GRAPH_DIR",
-			"CONFIG",
-			"run-example",
-			"get_arr",
-			"_EXAMPLE",
-			"o_optimistic",
-			"graphviz_graph->add_node((*depth_itr), depth, fpo_node",
-			"graphviz_graph->add_node((*depth_itr), depth, mhs_node",
-			"OUTCOME_ICACHE",
-			"add_node((*depth_itr), depth, fpo_node",
-			"add_node((*depth_itr), depth, fpo_node, depth + 1, breadth, single_fp_prob)",
-			"curr_node_max",
-			"FPO",
-			"impossible outcomes",
-			"impossible cases",
-			"SPF",
-			"SFP",
-			"sfp",
-			"SFP",
-			"...",
-			"tight",
-			"penalties[",
-			"origin_tier",
-			"run_checksum",
-			"INTER",
-			"i",
-			"=\"\"\n",
-			"alphas",
-			"OPTION_CACHE_LOC",
-			"\")\nOPTION_CACHE_LOC",
-			"\")\n",
-			"grep",
-			"run_checksum",
-			"checksum",
-			"MODE_VERBOSE",
-			"verbose",
-			"[1]",
-			"outcomes_file",
-			"outcomes_files",
-			"PENALTY_TYPE_STR",
-			"scn_file",
-			"_PENALTY_TYPE_STR",
-			"PENALTY_TYPE_STR",
-			"_PENALTY_TYPE_STR",
-			"std::to_string",
-			"outcomes_file",
-			"graphviz",
-			"_ANALYSIS",
-			"is_all_eop",
-			"tree<Node *>",
-			"o_optimistic",
-			"align_nodes(graph_viz, ",
-			"align_nodes(",
-			"align_nodes",
-			"[n - 1]",
-			"get_level",
-			"set_level",
-			"_prob_va",
-			"prev_node_prob",
-			"sizeof(Node *)",
-			"breadth++",
-			"I21[",
-			"next_level",
-			"curr_",
-			"curr_level",
-			"decision",
-			"get_node_type_str",
-			"std::str",
-			"std::sti",
-			"dot_",
-			"next_level",
-			"prev_level",
-			"std::s",
-			"o_op",
-			"shown in T",
-			"Han",
-			"han",
-			"Han",
-			"subsubsection",
-			"Cons:",
-			"Cons?",
-			"Pros:",
-			"to",
-			"capaci",
-			"$",
-			"header",
-			"color",
-			"name",
-			"complement",
-			"challenges-fps-tbl",
-			"\\le",
-			"fig:challenges-fps-fwd",
-			"tnote",
-			"distri",
-			"%",
-			"-#",
-			"		",
-			"	-#",
-			"	",
-			"prev_node"
+			"title"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -882,6 +906,37 @@
 		"regex": false,
 		"replace_history":
 		[
+			"dim",
+			"_offset",
+			"_offset_x",
+			"tp_size_",
+			"access_tree_height",
+			"this->access_tree_height",
+			"iface_entry_proportion",
+			"this->",
+			"this->network_parameters->",
+			"_double_array",
+			",",
+			"'",
+			"this",
+			"RID_Router::",
+			"prev_path_state_itr",
+			"path_state",
+			"this_path_state",
+			"set_fwd_table_next_hop",
+			"fwd_table_row",
+			"this->",
+			"i < (this->iface_num + 1)",
+			"IFACE_LOCAL",
+			"F_",
+			"F_i",
+			"joint_f_pmf",
+			"f_pmf",
+			"__float080",
+			"long double",
+			"prob_Li_f",
+			"__float128",
+			"double",
 			"splitted",
 			"",
 			"*** NEXT TIER ***",
@@ -978,38 +1033,7 @@
 			"cid_push_payload",
 			"rid_local_addr",
 			"x_sock",
-			"listen_sock",
-			"send_sock",
-			"listen_sock",
-			"send_sock",
-			"rid_dest_addr",
-			"name_to_mangle",
-			"bloom_filter",
-			"name",
-			"name_to_rid",
-			"",
-			"snd_pcm_stream_lock",
-			"snd_pcm_stream_un",
-			"~",
-			"milliseconds",
-			"width=0.30",
-			"]{",
-			"",
-			" ",
-			"",
-			", ",
-			"",
-			" ",
-			"",
-			" ",
-			"",
-			",0], ",
-			"",
-			"devnullian",
-			", ",
-			"\\n",
-			"//snd_pcm_stream_lock_irq(substream)",
-			"//snd_pcm_stream_unlock_irq(substream)"
+			"listen_sock"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1020,56 +1044,66 @@
 	"groups":
 	[
 		{
-			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "README.md",
+					"file": "src/rid-analytics.cpp",
 					"settings":
 					{
-						"buffer_size": 8360,
+						"buffer_size": 15112,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1230,
-								1230
+								2155,
+								2155
 							]
 						],
 						"settings":
 						{
+							"rulers":
+							[
+								80
+							],
 							"spell_check": true,
-							"syntax": "Packages/Markdown/Markdown.tmLanguage",
-							"translate_tabs_to_spaces": false
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 3075.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "test/configs/sensitivity/sensitivity.dist.scn",
+					"file": "include/rid-analytics.h",
 					"settings":
 					{
-						"buffer_size": 111,
+						"buffer_size": 3074,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								26,
-								26
+								1707,
+								1707
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"rulers":
+							[
+								80
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -1079,23 +1113,127 @@
 				},
 				{
 					"buffer": 2,
-					"file": "test/configs/sensitivity/sensitivity.scn",
+					"file": "src/sanity-check.cpp",
 					"settings":
 					{
-						"buffer_size": 142,
+						"buffer_size": 3871,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								35,
-								35
+								3745,
+								3745
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"rulers":
+							[
+								80
+							],
+							"spell_check": true,
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 543.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/rid-router.cpp",
+					"settings":
+					{
+						"buffer_size": 21263,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								12013,
+								12013
+							]
+						],
+						"settings":
+						{
+							"rulers":
+							[
+								80
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 3208.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "include/rid-router.h",
+					"settings":
+					{
+						"buffer_size": 5095,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4438,
+								4451
+							]
+						],
+						"settings":
+						{
+							"rulers":
+							[
+								80
+							],
+							"spell_check": true,
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1601.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "src/path-state.cpp",
+					"settings":
+					{
+						"buffer_size": 2126,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								921,
+								958
+							]
+						],
+						"settings":
+						{
+							"rulers":
+							[
+								80
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -1104,57 +1242,60 @@
 					"type": "text"
 				},
 				{
-					"buffer": 3,
-					"file": "scripts/plot-box.py",
+					"buffer": 6,
+					"file": "include/path-state.h",
 					"settings":
 					{
-						"buffer_size": 5138,
+						"buffer_size": 1415,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4603,
-								4607
+								645,
+								645
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1857.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "include/node.h",
-					"settings":
-					{
-						"buffer_size": 6560,
-						"regions":
-						{
-						},
-						"selection":
-						[
+							"rulers":
 							[
-								2037,
-								2037
-							]
-						],
-						"settings":
-						{
+								80
+							],
+							"spell_check": true,
 							"syntax": "Packages/C++/C++.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 523.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "Makefile",
+					"settings":
+					{
+						"buffer_size": 1313,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								764,
+								764
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Makefile/Makefile.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

@@ -17,16 +17,45 @@
 #define IFACE_UPSTREAM      1
 #define IFACE_DOWNSTREAM    2
 
+// interface events
+#define EVENT_NUM           0x04
+
+#define EVENT_NIS           0x00
+#define EVENT_MIS           0x01
+#define EVENT_LI            0x02
+#define EVENT_EI            0x03
+//#define EVENT_UNKNOWN       0x04
+
+// modes for calc_cumulative_prob()
+#define ONLY_LESS           0x00
+#define ONLY_DIAGONAL       0x01
+#define LESS_OR_EQUAL       0x02
+
 // default values for Bloom Filters
 #define DEFAULT_M   (__float080) 160.0
 
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 class RID_Router {
 
     public:
+
+        struct lpm_pmf_row
+        {
+            // // L_{i,p} = {0, 1, ..., |R|_max} for iface i
+            // uint8_t iface;
+
+            // // ifaces can be associated with a 'prefix tree', to which the 
+            // // request got 'stuck'. this is the size of the 
+            // // tree (\in {1, ..., |R|_max}).
+            // uint8_t ptree_size;
+            // 
+            __float080 * lpm_pmf_prob;
+            // __float080 * lpm_not_in_ptree_pmf;
+        };
 
         struct fwd_table_row
         {
@@ -71,41 +100,48 @@ class RID_Router {
         uint8_t get_access_tree_index();
         uint8_t get_height();
         uint8_t get_width();
+        
+        void set_as_starting_router();
+        bool is_starting_router();
 
         int forward(
             uint8_t request_size,
             uint8_t ingress_iface,                   
-            int * tp_sizes,                 
+            int * tp_sizes,     
+            __float080 * ingress_probs,          
             __float080 * f_r_distribution);
 
-        void print_f_pmf();
-        void print_joint_f_pmf();
+        void print_lpm_pmf(uint8_t iface);
 
-        __float080 get_lpm_iface_pmf(int iface);
-        void print_lpm_iface_pmf();
+        __float080 get_iface_events_prob(uint8_t event);
+        void print_iface_events_pmf();
 
-    protected:
-
-        __float080 * init_f_pmf(uint8_t iface);
-        void set_f_pmf(int iface, int f, __float080 prob);
-        __float080 * get_f_pmf(uint8_t iface);
-        __float080 get_f_pmf(uint8_t iface, uint8_t f);
-        int calc_f_pmf(
-            uint8_t request_size,
-            uint8_t ingress_iface,
-            int * tp_sizes, 
-            __float080 * f_r_distribution);
-
-        __float080 * init_joint_f_pmf();
-        void set_joint_f_pmf(int * iface_pivots, __float080 value);
-        __float080 get_joint_f_pmf(int * iface_pivots);
-        int calc_joint_f_pmf();
-
-        __float080 * init_lpm_iface_pmf();
-        void set_lpm_iface_pmf(int iface, __float080 value);
-        int calc_lpm_iface_pmf();
+        __float080 get_egress_size_prob(uint8_t iface, uint8_t f);
+        void print_egress_size_pmf();
 
     private:
+
+        // computation of LPM match distributions (L_{i,p})
+        void init_lpm_pmf(uint8_t iface);
+        __float080 * get_lpm_prob(uint8_t iface, uint8_t ptree_size);
+        __float080 get_lpm_prob(uint8_t iface, uint8_t ptree_size, uint8_t f);
+        int calc_lpm_pmf(
+            uint8_t request_size, 
+            uint8_t ingress_iface, 
+            int * tp_sizes, 
+            __float080 * ingress_probs, 
+            __float080 * f_r_distribution);
+
+        // computation of joint distribution of L_{i,p}, for all ifaces
+        void init_joint_lpm_pmf(__float080 ** joint_prob_matrix);
+        void clear_joint_lpm_pmf(__float080 ** joint_prob_matrix);
+        void add_joint_lpm_prob(__float080 * joint_prob_matrix, int * iface_pivots, __float080 value);
+        __float080 get_joint_lpm_prob(__float080 * joint_prob_matrix, int * iface_pivots);
+        int calc_joint_lpm_pmf(__float080 * joint_prob_matrix, uint8_t ptree_size, uint8_t ptree_iface);
+
+        // computation of iface event & egress size probabilities
+        void init_egress_size_pmf(uint8_t iface);
+        int calc_iface_events_pmf(__float080 * joint_prob_matrix);
 
         int get_log_fp_rates(
             __float080 m, 
@@ -116,35 +152,48 @@ class RID_Router {
             __float080 * f_r_distribution,
             __float080 * log_fp_rates);
 
-        __float080 calc_cumulative_joint_f(uint8_t iface, uint8_t f);
-        __float080 calc_joint_f_log_prob(int * iface_pivots);
-        __float080 calc_no_match_prob();
+        __float080 calc_cumulative_prob(__float080 * joint_prob_matrix, uint8_t iface, uint8_t f, uint8_t mode);
+        __float080 calc_joint_log_prob(uint8_t ptree_size, uint8_t in_ptree_iface, int * iface_pivots);
 
-        // pmf for the random variable F_i, the size of the longest match 
-        // pointing to iface i. F_i can assume values in {0, 1, 2, ..., f_max}.
-        __float080 ** f_pmf;
+        // pmf for random variables L_i : size of the longest 
+        // match pointing to iface i. L_i can assume values in 
+        // {0, 1, 2, ..., f_max}.
+        RID_Router::lpm_pmf_row ** lpm_pmf;
 
-        // joint pmf of random variables F_i (F_0, F_1, ..., F_n)
-        __float080 * joint_f_pmf;
+        // // joint pmf of random variables L_i (L_0 x L_1 x ... x L_n)
+        // // FIXME: note that if L_0 > 0, path automatically ends at the 
+        // // router
+        // __float080 * joint_lpm_size_pmf;
 
         // pmf for random variable I, the interface to be chosen by the LPM 
         // engine. can take values {-2, -1, 0, 1, 2, ..., iface_num - 1}:
         //  * -2 is used for multiple iface hits
         //  * -1 is used for no hits (remember 0 is the IFACE_LOCAL)
-        __float080 * lpm_iface_pmf;
+
+        __float080 total_joint_prob;
+
+        // probability of interface events (NIS, MIS, LI)
+        __float080 iface_events_pmf[EVENT_NUM];
+
+        // probability of having iface i output associated with the longest 
+        // match of size L
+        __float080 ** egress_size_pmf;
 
         // a scenario is composed by n access trees
         uint8_t access_tree_index;  
         // each router as (x, y) coordinates in the access tree
         uint8_t height;             
         uint8_t width;
+        // if this is the starting router, set it to TRUE
+        bool starting_router;
 
-        // size of forwarding table (important for some calculations)
-        uint32_t fwd_table_size;
         // number of interfaces (at least 2 : LOCAL & // UPSTREAM)    
         uint8_t iface_num;          
+        uint8_t iface_ingress;
         // max. possible size of a forwarding entry 
         uint8_t f_max;              
+        // size of forwarding table (important for some calculations)
+        uint32_t fwd_table_size;
 
         // the forwarding table : an array of fwd_table_row structs
         RID_Router::fwd_table_row * fwd_table;

@@ -84,7 +84,7 @@ int main (int argc, char **argv) {
     char output_file_path[MAX_ARRAY_SIZE] = {0};
     snprintf(output_file_path, MAX_ARRAY_SIZE, "%s/no0-4h.csv", DEFAULT_CSV_DIR);
 
-    rid_analytics->view_results(MODE_VERBOSE | MODE_SAVEOUTCOMES, output_file_path);
+    rid_analytics->view_results(MODE_VERBOSE | MODE_SAVE_OUTCOMES, output_file_path);
 
     // clean up after yourself...
     delete scn_parser;

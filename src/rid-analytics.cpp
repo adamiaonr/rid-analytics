@@ -226,6 +226,11 @@ int RID_Analytics::build_network_rec(RID_Router * parent_router) {
                 this->fwd_table_size,
                 _iface_num, 
                 this->f_max);
+            
+        // FIXME: ugly hack to pinpoint the router on which a request starts
+        // (bottom-leftmost...)
+        if (prev_height + 1 == (this->access_tree_height - 1) && ((prev_width * (this->iface_num - 2)) + o) == 0)
+            child_router->set_as_starting_router();
 
         _offset_h = child_router->get_height() * (pow(2.0, this->access_tree_height - 1) * this->iface_num);
         _offset_w = child_router->get_width() * this->iface_num;
@@ -265,7 +270,7 @@ int RID_Analytics::build_network() {
             new RID_Router(
                 t, 0, 0, 
                 this->fwd_table_size,
-                this->iface_num, 
+                this->iface_num,        // since IFACE_UPSTREAM is null, we do '-1' 
                 this->f_max);
 
         // initialize the ifaces
@@ -301,86 +306,130 @@ int RID_Analytics::run_rec(
     uint8_t ingress_iface,
     tree<Path_State *>::iterator prev_path_state_itr) {
 
-    // the +2 counts with the special IFACE_MULTI_HITS and IFACE_NO_HITS
+    // local vars for quick access to router attributes
     uint8_t _iface_num = router->get_iface_num();
     uint8_t _height = router->get_height();
     uint8_t _width = router->get_width();
     uint8_t _ingress_iface = 0;
 
+    // index to cycle through the TP info given as an argument to the 
+    // RID_Analytics object
     uint32_t _tp_size_offset = 
         _height * (((int) pow(2.0, this->access_tree_height - 1)) * this->iface_num) 
         + _width * this->iface_num;
 
-    __float080 iface_prob = 0.0;
-    int iface_path_length = 0;
+    __float080 _event_prob = 0.0, _cumulative_event_prob = 0.0;
+    __float080 * ingress_ptree_prob = (*prev_path_state_itr)->get_ingress_ptree_prob();
 
     // next hop router pointer
-    RID_Router * router_next_hop = NULL;
-    tree<Path_State *>::iterator path_state_itr;
+    RID_Router * _router_next_hop = NULL;
+    tree<Path_State *>::iterator _path_state_itr;
 
     // run the forward() operation on this router : this will determine the 
-    // possible outgoing ifaces
+    // following info:
+    //  1) interface event probabilities
+    //  2) egress size probabilities
+    //
+    // we then use this info to determine the path state
     printf("\nRID_Analytics::run_rec() : FORWARD() BY ROUTER[%d][%d]\n", _height, _width);
 
     router->forward(
         this->request_size, 
         ingress_iface,
-        &(this->tp_sizes[_tp_size_offset]), 
+        &(this->tp_sizes[_tp_size_offset]),
+        ingress_ptree_prob,
         this->f_r_distribution);
 
-    // cycle through each of router's ifaces to fill path_state accordingly 
-    // and invoke the next hop's forward() (if any router is attached)
-    for (int iface = IFACE_MULTI_HITS; iface < _iface_num; iface++) {
+    // we now cycle through all possible interface events and set the possible 
+    // path states and probabilities
+    for (int _event = EVENT_NIS; _event < EVENT_NUM; _event++) {
 
-        iface_prob = (*prev_path_state_itr)->get_ingress_prob() * router->get_lpm_iface_pmf(iface);
-        iface_path_length = (*prev_path_state_itr)->get_path_length() + 1;
+        // we differentiate the establishment of states by iface events:
+        //  1) if EVENT_NIS, EVENT_MIS or EVENT_LI the path ends
+        //  2) if EVENT_EI, the path continues, and so we have additional 
+        //     work : setting ingress 'prefix tree' probabilities, determining 
+        //     the intermediate state (TP or FP), calling run_rec() again, etc.
+        Path_State * _path_state = NULL;
 
-        // don't add state nor forward if there's no chance of following this 
-        // iface.
-        if (iface_prob == 0.0) {
-            continue;
-        }
+        if (_event < EVENT_EI) {
 
-        // new path state to be added to the path state tree
-        Path_State * path_state = new Path_State(router, iface_prob, iface_path_length);
-        path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
+            _path_state = new Path_State(router, this->request_size);
+            _path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, _path_state);
 
-        // all forwarding outcomes (except IFACE_UPSTREAM and IFACE_UPSTREAM) 
-        // result in an end of path (with diff. path outcomes)
-        if (iface == IFACE_MULTI_HITS) {
+            _path_state->set_final_prob(router->get_iface_events_prob(_event));
+            _path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
 
-            path_state->set_eop();
-            path_state->set_outcome(OUTCOME_MULTI_HITS); 
+            if (_event > EVENT_NIS) {
 
-        } else if (iface == IFACE_NO_HITS) {
+                // as long as the event is EVENT_MIS or EVENT_LI, the path 
+                // ends here...
+                _path_state->set_eop();
 
-            path_state->set_eop();
-            path_state->set_outcome(OUTCOME_NO_HITS); 
+                if (_event == EVENT_MIS) {
+
+                    _path_state->set_outcome(OUTCOME_FALLBACK_DELIVERY);
+
+                } else if (_event == EVENT_LI) {
+
+                    if (this->tp_sizes[_tp_size_offset + IFACE_LOCAL] > 0) {
+
+                        _path_state->set_outcome(OUTCOME_CORRECT_DELIVERY);
+
+                    } else {
+
+                        _path_state->set_outcome(OUTCOME_INCORRECT_DELIVERY);
+                    }
+                }
+
+            } else {
+
+                // EVENT_NIS leads to the relay of the packet
+                _path_state->set_outcome(OUTCOME_FALLBACK_RELAY);
+            }
 
         } else {
 
-            // a match is verified : it's either have a TP or FP. this 
-            // will affect the final outcome if iface == IFACE_LOCAL
-            if (this->tp_sizes[_tp_size_offset + iface] > 0) {
+            // if EVENT_EI, the request paths continue to be built. therefore, 
+            // we cycle through all egress interfaces
+            for (int _iface = IFACE_LOCAL + 1; _iface < _iface_num; _iface++) {
 
-                path_state->set_outcome(OUTCOME_TP); 
+                _cumulative_event_prob = 0.0;
 
-            } else {
+                // note how we now add a new Path_State object for each egress 
+                // iface
+                _path_state = new Path_State(router, this->request_size);
+                _path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, _path_state);
 
-                path_state->set_outcome(OUTCOME_FP);
-            }
+                _path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
 
-            if (iface == IFACE_LOCAL) {
+                // set the ingress 'prefix tree' probabilities
+                for (int _f = 0; _f < this->f_max + 1; _f++) {
 
-                path_state->set_eop();
+                    _event_prob = router->get_egress_size_prob(_iface, _f);
+                    _cumulative_event_prob += _event_prob;
 
-            } else {
+                    _path_state->set_ingress_ptree_prob(_f, _event_prob);
+                }
 
+                // just because, set this overall probability too...
+                _path_state->set_final_prob(_cumulative_event_prob);
+
+                // determine the correctness of the decision
+                if (this->tp_sizes[_tp_size_offset + _iface] > 0) {
+
+                    _path_state->set_outcome(OUTCOME_INTERMEDIATE_TP); 
+
+                } else {
+
+                    _path_state->set_outcome(OUTCOME_INTERMEDIATE_FP);
+                }
+
+                // finally, we continue with the request path
                 // get the next hop router by iface
-                router_next_hop = router->get_fwd_table_next_hop(iface);
+                _router_next_hop = router->get_fwd_table_next_hop(_iface);
 
                 // this can still happen (or can it?)
-                if (router_next_hop == NULL)
+                if (_router_next_hop == NULL || _iface == ingress_iface)
                     continue;
 
                 // recursively call run_rec() for router_next_hop : its ingress 
@@ -389,11 +438,11 @@ int RID_Analytics::run_rec(
                 //      IFACE_DOWNSTREAM
                 //  * else (i.e. if iface > IFACE_UPSTREAM) : ingress iface 
                 //      will be IFACE_UPSTREAM
-                _ingress_iface = ((iface == IFACE_UPSTREAM) ? IFACE_DOWNSTREAM : IFACE_UPSTREAM);
+                _ingress_iface = ((_iface == IFACE_UPSTREAM) ? IFACE_DOWNSTREAM : IFACE_UPSTREAM);
 
-                run_rec(router_next_hop, _ingress_iface, path_state_itr);
+                run_rec(_router_next_hop, _ingress_iface, _path_state_itr);
             }
-        } 
+        }
     }
 
     return 0;
@@ -408,17 +457,28 @@ int RID_Analytics::run(
     this->tp_sizes = tp_sizes;
     this->f_r_distribution = f_r_distribution;
 
-    tree<Path_State *>::iterator path_state_tree_itr;
+    tree<Path_State *>::iterator _path_state_tree_itr;
+    _path_state_tree_itr = this->path_state_tree.begin();
 
-    path_state_tree_itr = this->path_state_tree.begin();
     // FIXME: not sure if it is ok to set the rid_router arg on Path_State() 
     // as NULL
-    path_state_tree_itr = this->path_state_tree.insert(
-                                                    path_state_tree_itr, 
-                                                    new Path_State(NULL, 1.0, 0));
+    Path_State * _initial_state = new Path_State(NULL, request_size);
+    _initial_state->set_path_length(0);
+
+    _path_state_tree_itr = this->path_state_tree.insert(
+                                                    _path_state_tree_itr, 
+                                                    _initial_state);
+
+    // set the initial ingress probabilities: _ptree_size = 0 gets 1.0 
+    // probability, i.e. initially the request isn't bound to any prefix tree
+    _initial_state->set_ingress_ptree_prob(0, 1.0);
+
+    // all other prefix tree sizes get 0.0 probability
+    for (uint8_t _ptree_size = 1; _ptree_size < (request_size + 1); _ptree_size++)
+        _initial_state->set_ingress_ptree_prob(_ptree_size, 0.0);
 
     // ingress iface is the IFACE_DOWNSTREAM of upstream router
-    run_rec(this->start_router, IFACE_DOWNSTREAM, path_state_tree_itr);
+    run_rec(this->start_router, IFACE_DOWNSTREAM, _path_state_tree_itr);
 
     return 0;
 }
@@ -429,63 +489,59 @@ int RID_Analytics::view_results(
 
     // iterate through the path_tree leafs to learn 
     // a bit about latencies for this scenario
-    tree<Path_State *>::leaf_iterator leaf_itr = this->path_state_tree.begin_leaf();
-    tree<Path_State *>::leaf_iterator end_leaf_itr = this->path_state_tree.end_leaf();
+    tree<Path_State *>::leaf_iterator _leaf_itr = this->path_state_tree.begin_leaf();
+    tree<Path_State *>::leaf_iterator _end_leaf_itr = this->path_state_tree.end_leaf();
 
-    __float080 checksum = 0.0;
+    __float080 _checksum = 0.0;
 
-    char * path_state_str = NULL;
+    char * _path_state_str = NULL;
 
     // print some results for quick checking
     if ((modes & MODE_VERBOSE))
         printf("\n*** RESULTS ***\n\n");
 
     // if requested, save outcomes in the path given as arg
-    FILE * output_file;
+    FILE * _output_file;
 
-    if ((modes & MODE_SAVEOUTCOMES)) {
+    if ((modes & MODE_SAVE_OUTCOMES)) {
 
-        output_file = fopen(output_file_path, "a");
+        _output_file = fopen(output_file_path, "a");
     }
 
-    while (leaf_itr != end_leaf_itr) {
+    while (_leaf_itr != _end_leaf_itr) {
 
-        if ((*leaf_itr)->get_ingress_prob() > 0.0) {
+        if ((modes & MODE_VERBOSE)) {
 
-            if ((modes & MODE_VERBOSE)) {
+            _path_state_str = (*_leaf_itr)->to_string();
 
-                path_state_str = (*leaf_itr)->to_string();
+            printf("[PATH_TREE DEPTH %d] : %s\n", 
+                this->path_state_tree.depth(_leaf_itr), 
+                _path_state_str);
 
-                printf("[PATH_TREE DEPTH %d] : %s\n", 
-                    this->path_state_tree.depth(leaf_itr), 
-                    path_state_str);
-
-                free(path_state_str);
-            }
-
-            if ((modes & MODE_SAVEOUTCOMES)) {
-
-                // append a line in the output file, with the following 
-                // format : 
-                // <rtr.hght>,<rtr.wdth>,<prob>,<path_length>,<outcome>
-                fprintf(output_file, 
-                    "%d,%d,%-.5LE,%d,%d\n", 
-                    (*leaf_itr)->get_router()->get_height(),
-                    (*leaf_itr)->get_router()->get_width(),
-                    (*leaf_itr)->get_ingress_prob(),
-                    (*leaf_itr)->get_path_length(),
-                    (*leaf_itr)->get_outcome());
-            }
-
-            checksum += (*leaf_itr)->get_ingress_prob();
+            free(_path_state_str);
         }
 
-        ++leaf_itr;
+        if ((modes & MODE_SAVE_OUTCOMES)) {
+
+            // append a line in the output file, with the following 
+            // format : 
+            // <rtr.hght>,<rtr.wdth>,<prob>,<path_length>,<outcome>
+            fprintf(_output_file, 
+                "%d,%d,%-.5LE,%d,%d\n", 
+                (*_leaf_itr)->get_router()->get_height(),
+                (*_leaf_itr)->get_router()->get_width(),
+                (*_leaf_itr)->get_final_prob(),
+                (*_leaf_itr)->get_path_length(),
+                (*_leaf_itr)->get_outcome());
+        }
+
+        _checksum += (*_leaf_itr)->get_final_prob();
+        ++_leaf_itr;
     }
 
     if ((modes & MODE_VERBOSE)) {
 
-        printf("\n[CHECKSUM : %-.5LE]\n", checksum);
+        printf("\n[CHECKSUM : %-.5LE]\n", _checksum);
     }
 
     return 0;

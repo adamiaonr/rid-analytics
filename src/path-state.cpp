@@ -1,23 +1,40 @@
 #include "path-state.h"
 
-Path_State::Path_State(
-    RID_Router * rid_router, 
-    __float080 ingress_prob, 
-    int path_length) {
+Path_State::Path_State(RID_Router * rid_router, int request_size) {
 
     this->rid_router = rid_router;
-    this->ingress_prob = ingress_prob;
-    this->path_length = path_length;
+    this->request_size = request_size;
+    // requests can come in by hitting FP matches of diff. sizes at previous 
+    // routers
+    this->final_prob = 0.0;
+    this->ingress_ptree_prob = (__float080 *) calloc(request_size + 1, sizeof(__float080));
     this->is_eop = false;
     this->outcome = OUTCOME_UNDEF;
 }
 
-void Path_State::set_ingress_prob(__float080 ingress_prob) {
-    this->ingress_prob = ingress_prob;
+void Path_State::set_final_prob(__float080 prob) {
+
+    this->final_prob = prob;
 }
 
-__float080 Path_State::get_ingress_prob() {
-    return this->ingress_prob;
+__float080 Path_State::get_final_prob() {
+
+    return this->final_prob;
+}
+
+void Path_State::set_ingress_ptree_prob(uint8_t f, __float080 prob) {
+
+    this->ingress_ptree_prob[f] = prob;
+}
+
+__float080 * Path_State::get_ingress_ptree_prob() {
+
+    return this->ingress_ptree_prob;
+}
+
+__float080 Path_State::get_ingress_ptree_prob(uint8_t f) {
+
+    return this->ingress_ptree_prob[f];
 }
 
 void Path_State::set_eop() { 
@@ -51,33 +68,39 @@ RID_Router * Path_State::get_router() {
 char * Path_State::to_string() {
 
     // using calloc() since node_str will be returned
-    char * node_str = (char *) calloc(MAX_PATH_STATE_STRING_SIZE, sizeof(char));
+    char * _node_str = (char *) calloc(MAX_PATH_STATE_STRING_SIZE, sizeof(char));
     char _outcome[MAX_PATH_STATE_STRING_SIZE];
 
     switch(this->outcome) {
 
-        case OUTCOME_MULTI_HITS:
-            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "mult. iface hits");
+        case OUTCOME_CORRECT_DELIVERY:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "CORRECT_DELIVERY");
             break;
-        case OUTCOME_NO_HITS:
-            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "no hits");
+        case OUTCOME_INCORRECT_DELIVERY:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "INCORRECT_DELIVERY");
             break;
-        case OUTCOME_TP:
-            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "tp hit");
+        case OUTCOME_FALLBACK_DELIVERY:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "FALLBACK_DELIVERY");
             break;
-        case OUTCOME_FP:
-            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "fp hit");
+        case OUTCOME_FALLBACK_RELAY:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "FALLBACK_RELAY");
+            break;
+        case OUTCOME_INTERMEDIATE_TP:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "INTERMEDIATE_TP");
+            break;
+        case OUTCOME_INTERMEDIATE_FP:
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "INTERMEDIATE_FP");
             break;
         default:
-            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "unknown");
+            snprintf(_outcome, MAX_PATH_STATE_STRING_SIZE, "UNKNOWN");
             break;
     }
 
     snprintf(
-        node_str, MAX_PATH_STATE_STRING_SIZE, 
+        _node_str, MAX_PATH_STATE_STRING_SIZE, 
         "ROUTER[%d][%d] : [PROB : %-.5LE][PATH_LENGTH : %-5d][OUTCOME: %s]",
         this->rid_router->get_height(), this->rid_router->get_width(),
-        this->ingress_prob, this->path_length, _outcome);
+        this->final_prob, this->path_length, _outcome);
 
-    return node_str;
+    return _node_str;
 }

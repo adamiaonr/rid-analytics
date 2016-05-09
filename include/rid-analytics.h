@@ -17,9 +17,9 @@
 #define PENALTY_TYPE_STR_SIZE   2
 
 #define MODE_VERBOSE        0x01
-#define MODE_SAVECDF        0x02
-#define MODE_SAVEGRAPH      0x04
-#define MODE_SAVEOUTCOMES   0x08
+#define MODE_SAVE_CDF       0x02
+#define MODE_SAVE_GRAPH     0x04
+#define MODE_SAVE_OUTCOMES  0x08
 
 #define BF_SIZE 160
 
