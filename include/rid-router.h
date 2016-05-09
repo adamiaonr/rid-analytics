@@ -27,9 +27,9 @@
 //#define EVENT_UNKNOWN       0x04
 
 // modes for calc_cumulative_prob()
-#define ONLY_LESS           0x00
-#define ONLY_DIAGONAL       0x01
-#define LESS_OR_EQUAL       0x02
+#define MODE_EI             0x00
+#define MODE_MIS            0x01
+#define MODE_LI             0x02
 
 // default values for Bloom Filters
 #define DEFAULT_M   (__float080) 160.0
@@ -100,7 +100,7 @@ class RID_Router {
         uint8_t get_access_tree_index();
         uint8_t get_height();
         uint8_t get_width();
-        
+
         void set_as_starting_router();
         bool is_starting_router();
 
@@ -129,7 +129,6 @@ class RID_Router {
             uint8_t request_size, 
             uint8_t ingress_iface, 
             int * tp_sizes, 
-            __float080 * ingress_probs, 
             __float080 * f_r_distribution);
 
         // computation of joint distribution of L_{i,p}, for all ifaces
@@ -175,6 +174,8 @@ class RID_Router {
         // probability of interface events (NIS, MIS, LI)
         __float080 iface_events_pmf[EVENT_NUM];
 
+        // ingress size probabilities
+        __float080 * ingress_size_pmf;
         // probability of having iface i output associated with the longest 
         // match of size L
         __float080 ** egress_size_pmf;
