@@ -79,8 +79,8 @@ int RID_Router::forward(
         
         this->ingress_size_pmf[_ptree_size] = ingress_probs[_ptree_size];
 
-        printf("RID_Router::forward() : ingress_probs[%d] = %-.5LE\n", 
-            _ptree_size, (__float080) this->ingress_size_pmf[_ptree_size]);
+        // printf("RID_Router::forward() : ingress_probs[%d] = %-.5LE\n", 
+        //     _ptree_size, (__float080) this->ingress_size_pmf[_ptree_size]);
     }
 
     // printf("RID_Router::forward() : 1 / (iface_num = %d) = %-.5LE\n", 
@@ -731,20 +731,20 @@ int RID_Router::calc_joint_lpm_pmf(
                 this->add_joint_lpm_prob(joint_prob_matrix, iface_pivots, _log_prob);
                 this->total_joint_prob += _log_prob;
 
-                int _sum = 0;
-                for (int _iface = 0; _iface < this->iface_num; _iface++) 
-                    _sum += iface_pivots[_iface];
+                // int _sum = 0;
+                // for (int _iface = 0; _iface < this->iface_num; _iface++) 
+                //     _sum += iface_pivots[_iface];
 
-                if (_sum == 0) {
+                // if (_sum == 0) {
 
-                    printf("RID_Router::calc_joint_lpm_pmf() : [ptree_size = %d][ptree_iface = %d] joint_prob_matrix",
-                        ptree_size, ptree_iface);        
+                //     printf("RID_Router::calc_joint_lpm_pmf() : [ptree_size = %d][ptree_iface = %d] joint_prob_matrix",
+                //         ptree_size, ptree_iface);        
 
-                    for (int _iface = 0; _iface < this->iface_num; _iface++) 
-                        printf("[%d]", iface_pivots[_iface]);
+                //     for (int _iface = 0; _iface < this->iface_num; _iface++) 
+                //         printf("[%d]", iface_pivots[_iface]);
 
-                    printf(" = %-.5LE (%-.5LE)\n", _log_prob, this->total_joint_prob);
-                }
+                //     printf(" = %-.5LE (%-.5LE)\n", _log_prob, this->total_joint_prob);
+                // }
             }
         }
 
