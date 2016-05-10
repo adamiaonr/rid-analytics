@@ -21,6 +21,10 @@
 #define MODE_SAVE_GRAPH     0x04
 #define MODE_SAVE_OUTCOMES  0x08
 
+// P(|F|_i) distributions (for IFACE_LOCAL and otherwise)
+#define LOCAL       0x00
+#define NON_LOCAL   0x01
+
 #define BF_SIZE 160
 
 #include <math.h>
@@ -43,7 +47,7 @@ class RID_Analytics {
             uint8_t f_max,
             uint32_t fwd_table_size,
             __float080 * iface_entry_proportion,
-            __float080 * f_distribution);
+            __float080 ** f_distributions);
         ~RID_Analytics();
 
         int print_tp_sizes();
@@ -81,7 +85,8 @@ class RID_Analytics {
         // with |F| = x). e.g. for IFACE_LOCAL one could expect a 
         // distr. skewed towards |F| = f_max, while for IFACE_UPSTREAM a 
         // distr. skewed towards |F| = 1 (single prefixes like '/cmu')
-        __float080 * f_distribution;
+        __float080 * f_distribution_local;
+        __float080 * f_distribution_non_local;
         // forwarding table size
         uint32_t fwd_table_size;
 

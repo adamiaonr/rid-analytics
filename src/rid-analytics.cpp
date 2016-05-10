@@ -13,7 +13,7 @@ RID_Analytics::RID_Analytics(
     uint8_t f_max,
     uint32_t fwd_table_size,
     __float080 * iface_entry_proportion,
-    __float080 * f_distribution) {
+    __float080 ** f_distributions) {
 
     // initialize the network parameters
     this->access_tree_num = access_tree_num;
@@ -22,7 +22,8 @@ RID_Analytics::RID_Analytics(
     this->f_max = f_max;
     this->fwd_table_size = fwd_table_size;
     this->iface_entry_proportion = iface_entry_proportion;
-    this->f_distribution = f_distribution;
+    this->f_distribution_local = f_distributions[LOCAL];
+    this->f_distribution_non_local = f_distributions[NON_LOCAL];
 
     // initialize the forward() parameters
     this->request_size = 0;
@@ -235,13 +236,19 @@ int RID_Analytics::build_network_rec(RID_Router * parent_router) {
         _offset_h = child_router->get_height() * (pow(2.0, this->access_tree_height - 1) * this->iface_num);
         _offset_w = child_router->get_width() * this->iface_num;
 
-        // initialize the ifaces
-        for (uint8_t i = 0; i < _iface_num; i++) {
+        // initialize the ifaces : add a 'local' P(|F|_i) distribution to  
+        // IFACE_LOCAL, and a 'non-local' to ifaces > IFACE_LOCAL
+        child_router->add_fwd_table_entry(
+                IFACE_LOCAL, 
+                this->iface_entry_proportion[_offset_h + _offset_w + IFACE_LOCAL], 
+                this->f_distribution_local);
+
+        for (uint8_t i = IFACE_LOCAL + 1; i < _iface_num; i++) {
             
             child_router->add_fwd_table_entry(
                 i, 
                 this->iface_entry_proportion[_offset_h + _offset_w + i], 
-                this->f_distribution);
+                this->f_distribution_non_local);
 
             // printf("RID_Analytics::build_network_rec() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
             //     "\n\t[iface] = %d"\
@@ -273,13 +280,19 @@ int RID_Analytics::build_network() {
                 this->iface_num,        // since IFACE_UPSTREAM is null, we do '-1' 
                 this->f_max);
 
-        // initialize the ifaces
-        for (uint8_t i = 0; i < this->iface_num; i++) {
+        // initialize the ifaces : add a 'local' P(|F|_i) distribution to  
+        // IFACE_LOCAL, and a 'non-local' to ifaces > IFACE_LOCAL
+        root_router->add_fwd_table_entry(
+                IFACE_LOCAL, 
+                this->iface_entry_proportion[IFACE_LOCAL], 
+                this->f_distribution_local);
+
+        for (uint8_t i = IFACE_LOCAL + 1; i < iface_num; i++) {
             
             root_router->add_fwd_table_entry(
                 i, 
                 this->iface_entry_proportion[i], 
-                this->f_distribution);
+                this->f_distribution_non_local);
 
             // printf("RID_Analytics::build_network() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
             //     "\n\t[iface] = %d"\
@@ -384,6 +397,9 @@ int RID_Analytics::run_rec(
             } else {
 
                 // EVENT_NIS leads to the relay of the packet
+                if (router->get_height() > 0 || router->get_width() > 0)
+                    _path_state->set_final_prob(0.0);
+
                 _path_state->set_outcome(OUTCOME_FALLBACK_RELAY);
             }
 
@@ -505,7 +521,7 @@ int RID_Analytics::view_results(
 
     if ((modes & MODE_SAVE_OUTCOMES)) {
 
-        _output_file = fopen(output_file_path, "a");
+        _output_file = fopen(output_file_path, "w");
     }
 
     while (_leaf_itr != _end_leaf_itr) {

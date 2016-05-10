@@ -4,13 +4,13 @@
 #define MAX_PATH_STATE_STRING_SIZE 128
 
 // possible outcomes
-#define OUTCOME_UNDEF               0x00
-#define OUTCOME_CORRECT_DELIVERY    0x01
-#define OUTCOME_INCORRECT_DELIVERY  0x02
-#define OUTCOME_FALLBACK_DELIVERY   0x04
-#define OUTCOME_FALLBACK_RELAY      0x08
-#define OUTCOME_INTERMEDIATE_TP     0x10
-#define OUTCOME_INTERMEDIATE_FP     0x20
+#define OUTCOME_CORRECT_DELIVERY    0x00
+#define OUTCOME_INCORRECT_DELIVERY  0x01
+#define OUTCOME_FALLBACK_DELIVERY   0x02
+#define OUTCOME_FALLBACK_RELAY      0x03
+#define OUTCOME_INTERMEDIATE_TP     0x04
+#define OUTCOME_INTERMEDIATE_FP     0x05
+#define OUTCOME_UNDEF               0x06
 
 //const char * OUTCOME_STR[] = { "correct dest.", "wrong dest. > orig. server", "fp detect. > orig. server", "dropped"};
 

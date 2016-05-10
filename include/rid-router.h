@@ -172,7 +172,7 @@ class RID_Router {
         __float080 total_joint_prob;
 
         // probability of interface events (NIS, MIS, LI)
-        __float080 iface_events_pmf[EVENT_NUM];
+        __float080 * iface_events_pmf;
 
         // ingress size probabilities
         __float080 * ingress_size_pmf;
