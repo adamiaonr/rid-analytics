@@ -11,6 +11,7 @@ RID_Analytics::RID_Analytics(
     uint8_t access_tree_height,
     uint8_t iface_num,
     uint8_t f_max,
+    uint16_t bf_size,
     uint32_t fwd_table_size,
     __float080 * iface_entry_proportion,
     __float080 ** f_distributions) {
@@ -26,7 +27,8 @@ RID_Analytics::RID_Analytics(
     this->f_distribution_non_local = f_distributions[NON_LOCAL];
 
     // initialize the forward() parameters
-    this->request_size = 0;
+    this->request_size = f_max;
+    this->bf_size = bf_size;
     this->tp_sizes = NULL;
     this->f_r_distribution = NULL;
 
@@ -226,7 +228,8 @@ int RID_Analytics::build_network_rec(RID_Router * parent_router) {
                 (prev_width * (this->iface_num - 2)) + o,
                 this->fwd_table_size,
                 _iface_num, 
-                this->f_max);
+                this->f_max,
+                this->bf_size);
             
         // FIXME: ugly hack to pinpoint the router on which a request starts
         // (bottom-leftmost...)
@@ -278,7 +281,8 @@ int RID_Analytics::build_network() {
                 t, 0, 0, 
                 this->fwd_table_size,
                 this->iface_num,        // since IFACE_UPSTREAM is null, we do '-1' 
-                this->f_max);
+                this->f_max,
+                this->bf_size);
 
         // initialize the ifaces : add a 'local' P(|F|_i) distribution to  
         // IFACE_LOCAL, and a 'non-local' to ifaces > IFACE_LOCAL
@@ -397,8 +401,10 @@ int RID_Analytics::run_rec(
             } else {
 
                 // EVENT_NIS leads to the relay of the packet
-                if (router->get_height() > 0 || router->get_width() > 0)
+                if (ingress_iface != IFACE_UPSTREAM 
+                    && (router->get_height() > 0 && router->get_width() > 0)) {
                     _path_state->set_final_prob(0.0);
+                }
 
                 _path_state->set_outcome(OUTCOME_FALLBACK_RELAY);
             }

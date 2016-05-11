@@ -15,11 +15,13 @@ import math
 # in honor of "stack'd", the pittsburgh restaurant next to my shadyside 
 # place
 
-LABEL_FONT_SIZE=10
-LEGEND_FONT_SIZE=8
+LABEL_FONT_SIZE=12
+LEGEND_FONT_SIZE=10
+
+BAR_WIDTH=0.35
 
 # outcome type strings
-outcomes = ['Correct', 'Incorrect', 'Fallback', 'Relay (no hits)', 'TP', 'FP', 'Unknown']
+outcomes = ['Correct', 'Incorrect', 'Fallback', 'Relay', 'TP', 'FP', 'Unknown']
 colors = ['green', 'red', 'orange', 'black']
 
 # sub dirs with results for different request sizes
@@ -63,19 +65,22 @@ def custom_ceil(x, base=5):
 def main():
 
     if len(sys.argv) < 2:
-        print "usage: python plot-outcomes.py <input-file-dir> <output-file-dir>"
+        print "usage: python plot-outcomes.py <bf-size> <input-file-dir> <output-file-dir> <output-file-name>"
         return
 
     start_time = time.time()
 
-    input_file_dir = sys.argv[1]
+    bf_size = sys.argv[1]
+    input_file_dir = sys.argv[2]
 
     _data = []
+    _latency = []
 
     # we will directly fill a data array structured as 
     # _data[<outcome index>][(<scenario code>, <probability>)]
     for i in xrange(len(sub_dirs)):
         _data.append([])
+        _latency.append([])
 
         for j in xrange(len(outcomes)):
             _data[i].append([])
@@ -87,7 +92,7 @@ def main():
 
         for file_name in os.listdir(_for_real_dir):
 
-            if file_name.endswith(".csv"):
+            if file_name.endswith(bf_size + ".csv"):
 
                 _file = open(_for_real_dir + "/" + file_name, 'rb')
 
@@ -99,13 +104,24 @@ def main():
                         request_size = ((int(file_name.split("-")[2]) / 5) - 1)
                         origin_distance = int(file_name.split("-")[1])
                         _data[request_size][outcome_index].append((origin_distance, float(line_splitted[2])))
+
+                        if (float(line_splitted[2]) > 0.0):
+
+                            _latency_to_origin = float(line_splitted[3])
+
+                            if (outcome_index == 1):
+                                _latency_to_origin += float(origin_distance)
+                            elif (outcome_index == 2):
+                                _latency_to_origin = float(origin_distance)
+
+                            _latency[request_size].append([origin_distance, _latency_to_origin * float(line_splitted[2])])
                     
                     except IndexError:
 
                         print "line = " + line
                         print "out. index = " + str(outcome_index) + " out. str = " + outcomes[outcome_index]
-                        print "request size = " + request_size + ", " + file_name.split("-")[2] + ", " + str((int(file_name.split("-")[2]) / 5) - 1)
-                        print "origin distance = " + origin_distance
+                        print "request size = " + str(request_size) + ", " + file_name.split("-")[2] + ", " + str((int(file_name.split("-")[2]) / 5) - 1)
+                        print "origin distance = " + str(origin_distance)
                         print "prob. = " + str(float(line_splitted[2]))
 
                         return
@@ -206,13 +222,10 @@ def main():
 
     for i in xrange(len(sub_dirs)):
 
-        if (i > 0):
-            continue
-
         # subplot_code += 1
         # outcome_probs = fig.add_subplot(subplot_code)
 
-        outcome_probs = plt.subplot2grid((4,4), (0,2), rowspan=2, colspan=2)
+        outcome_probs = plt.subplot2grid((4,4), ((i * 2), -(i * 2) + 2), rowspan=2, colspan=2)
 
         outcome_probs.set_title("Final state probabilities for |R| = " + str(request_sizes[i]), fontsize=LABEL_FONT_SIZE)
         outcome_probs.grid(True)
@@ -237,63 +250,112 @@ def main():
         outcome_probs.legend((_cd[0], _id[0], _fd[0], _rd[0]), (outcomes[0], outcomes[1], outcomes[2], outcomes[3]), loc='center right', fontsize=LEGEND_FONT_SIZE)
 
     # just an experiment with stack'd graphs...
+    # for i in xrange(len(sub_dirs)):
+
+    #     if (i < 1):
+    #         continue
+
+    #     # here, we cumulatively sum the columns of the data[] array : the idea is 
+    #     # to sum the elements below row i to the row i, which results in an offset 
+    #     # for the data in row i (this needs a better explanation)
+    #     y_stack = np.cumsum(y[i], axis = 0)
+    #     y_stack = (y_stack / max(y_stack[3])) * 100.0
+
+    #     # subplot_code += 1
+    #     # stackd = fig.add_subplot(subplot_code)
+    #     stackd = plt.subplot2grid((4,4), (2,0), rowspan=2, colspan=2)
+
+    #     stackd.set_title("% of final states for |R| = " + str(request_sizes[i]), fontsize=LABEL_FONT_SIZE)
+    #     stackd.grid(True)
+
+    #     _x_min = 1000
+    #     _x_max = 0
+
+    #     for j in xrange(4):
+
+    #         if (j > 3):
+    #             break
+
+    #         if (max(x[i][j]) > _x_max):
+    #             _x_max = max(x[i][j])
+
+    #         if (min(x[i][j]) < _x_min):
+    #             _x_min = min(x[i][j])
+
+    #         if (j == 0):
+    #             stackd.fill_between(x[i][j], 0, y_stack[1,:], facecolor=colors[j], alpha=.7)
+    #         else:
+    #             stackd.fill_between(x[i][j], y_stack[j - 1,:], y_stack[j,:], facecolor=colors[j], alpha=.7)
+
+    #     stackd.set_xlabel('Origin distance (# of hops)', fontsize=LABEL_FONT_SIZE)
+    #     stackd.set_ylabel('Final state %', fontsize=LABEL_FONT_SIZE)
+        
+    #     _cd = plt.plot([], [], '-', color=colors[0], linewidth=5)
+    #     _id = plt.plot([], [], '-', color=colors[1], linewidth=5)
+    #     _fd = plt.plot([], [], '-', color=colors[2], linewidth=5)
+    #     _rd = plt.plot([], [], '-', color=colors[3], linewidth=5)
+
+    #     stackd.legend((_cd[0], _id[0], _fd[0], _rd[0]), (outcomes[0], outcomes[1], outcomes[2], outcomes[3]), loc='upper right', fontsize=LEGEND_FONT_SIZE)
+
+    #     stackd.grid(True)
+
+    #     # x-axis handling by parts:
+    #     stackd.set_xlim(_x_min, _x_max)
+
+    #     # y axis is easy...
+    #     stackd.set_ylim(0.0, 100.0)
+
+    x = []
+    y = []
+
+    bar_shift = -BAR_WIDTH
+
+    avg_latencies = plt.subplot2grid((4,4), (2,2), rowspan=2, colspan=2)
+    avg_latencies.grid(True)
+    avg_latencies.set_title("Avg. latencies (# of hops) per origin distance", fontsize=LABEL_FONT_SIZE)
+
     for i in xrange(len(sub_dirs)):
 
-        if (i < 1):
-            continue
+        print sub_dirs[i]
 
-        # here, we cumulatively sum the columns of the data[] array : the idea is 
-        # to sum the elements below row i to the row i, which results in an offset 
-        # for the data in row i (this needs a better explanation)
-        y_stack = np.cumsum(y[i], axis = 0)
-        y_stack = (y_stack / max(y_stack[3])) * 100.0
+        x.append([])
+        y.append([])
 
-        # subplot_code += 1
-        # stackd = fig.add_subplot(subplot_code)
-        stackd = plt.subplot2grid((4,4), (2,0), rowspan=2, colspan=2)
+        # this sums all probabilities of the same <outcome, scn code> pair 
+        # into a single bucket data[outcome][scn code]
+        _counter = collections.Counter()
+        for key, value in _latency[i]:
+            _counter[key] += value
 
-        stackd.set_title("% of final states for |R| = " + str(request_sizes[i]), fontsize=LABEL_FONT_SIZE)
-        stackd.grid(True)
+        # sort [scn codes] alphabetically
+        _counter = sorted(_counter.items())
 
-        _x_min = 1000
-        _x_max = 0
+        x[i] = [ seq[0] for seq in _counter ]
+        y[i] = [ seq[1] for seq in _counter ]
 
-        for j in xrange(4):
+        for j in xrange(len(x[i])):
+            x[i][j] += bar_shift
 
-            if (j > 3):
-                break
+        print x[i]
+        print y[i]
 
-            if (max(x[i][j]) > _x_max):
-                _x_max = max(x[i][j])
+        avg_latencies.bar(x[i], y[i], BAR_WIDTH, color=colors[i])
 
-            if (min(x[i][j]) < _x_min):
-                _x_min = min(x[i][j])
+        bar_shift = 0
 
-            if (j == 0):
-                stackd.fill_between(x[i][j], 0, y_stack[1,:], facecolor=colors[j], alpha=.7)
-            else:
-                stackd.fill_between(x[i][j], y_stack[j - 1,:], y_stack[j,:], facecolor=colors[j], alpha=.7)
+    avg_latencies.set_xlim(0, 10)
+    avg_latencies.set_xticks(np.arange(1, 10, 1))
 
-        stackd.set_xlabel('Origin distance (# of hops)', fontsize=LABEL_FONT_SIZE)
-        stackd.set_ylabel('Final state %', fontsize=LABEL_FONT_SIZE)
-        
-        _cd = plt.plot([], [], '-', color=colors[0], linewidth=5)
-        _id = plt.plot([], [], '-', color=colors[1], linewidth=5)
-        _fd = plt.plot([], [], '-', color=colors[2], linewidth=5)
-        _rd = plt.plot([], [], '-', color=colors[3], linewidth=5)
+    avg_latencies.set_xlabel('Origin distance (# of hops)', fontsize=LABEL_FONT_SIZE)
+    avg_latencies.set_ylabel('Avg. latency (# of hops)', fontsize=LABEL_FONT_SIZE)
 
-        stackd.legend((_cd[0], _id[0], _fd[0], _rd[0]), (outcomes[0], outcomes[1], outcomes[2], outcomes[3]), loc='upper right', fontsize=LEGEND_FONT_SIZE)
+    _r5 = plt.plot([], [], '-', color=colors[0], linewidth=5)
+    _r10 = plt.plot([], [], '-', color=colors[1], linewidth=5)
 
-        stackd.grid(True)
+    avg_latencies.legend((_r5[0], _r10[0]), ('|R| = 5', '|R| = 10'), loc='upper left', fontsize=LEGEND_FONT_SIZE)
 
-        # x-axis handling by parts:
-        stackd.set_xlim(_x_min, _x_max)
-
-        # y axis is easy...
-        stackd.set_ylim(0.0, 100.0)
-
-    plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
-    plt.savefig(sys.argv[2] + "/outcomes_origin_srv.pdf", format='pdf', bbox_inches='tight')
+    plt.tight_layout(pad=0.4, w_pad=0.4, h_pad=0.4)
+    plt.savefig(sys.argv[3] + "/" + sys.argv[4] + ".pdf", format='pdf', bbox_inches='tight')
 
 if __name__ == "__main__":
     main()

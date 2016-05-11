@@ -5,7 +5,7 @@
 #define MAX_REQUEST_SIZE    30
 #define MAX_TIER_DEPTH      30
 
-#define END_OF_PATH     (int) -1
+#define END_OF_PATH         (int) -1
 
 #define AVERAGE_LATENCY     (char *) "average_latency"
 #define CACHE_LATENCY       (char *) "cache_latency"
@@ -25,8 +25,6 @@
 #define LOCAL       0x00
 #define NON_LOCAL   0x01
 
-#define BF_SIZE 160
-
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,6 +43,7 @@ class RID_Analytics {
             uint8_t access_tree_height,
             uint8_t iface_num,
             uint8_t f_max,
+            uint16_t bf_size,
             uint32_t fwd_table_size,
             __float080 * iface_entry_proportion,
             __float080 ** f_distributions);
@@ -99,6 +98,7 @@ class RID_Analytics {
         // FORWARDING PARAMETERS : only necessary when calling forward() on an 
         // RID router
         uint8_t request_size;
+        uint16_t bf_size;
         int * tp_sizes;
         __float080 * f_r_distribution;
 

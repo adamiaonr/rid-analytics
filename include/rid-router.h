@@ -31,9 +31,6 @@
 #define MODE_MIS            0x01
 #define MODE_LI             0x02
 
-// default values for Bloom Filters
-#define DEFAULT_M   (__float080) 160.0
-
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -82,7 +79,8 @@ class RID_Router {
             uint8_t width,
             uint32_t fwd_table_size,
             uint8_t iface_num,
-            uint8_t f_max);
+            uint8_t f_max,
+            uint16_t bf_size);
         ~RID_Router();
 
         int add_fwd_table_entry(
@@ -139,7 +137,6 @@ class RID_Router {
         int calc_joint_lpm_pmf(__float080 * joint_prob_matrix, uint8_t ptree_size, uint8_t ptree_iface);
 
         // computation of iface event & egress size probabilities
-        void init_egress_size_pmf(uint8_t iface);
         int calc_iface_events_pmf(__float080 * joint_prob_matrix);
 
         int get_log_fp_rates(
@@ -192,7 +189,8 @@ class RID_Router {
         uint8_t iface_num;          
         uint8_t iface_ingress;
         // max. possible size of a forwarding entry 
-        uint8_t f_max;              
+        uint8_t f_max;
+        uint16_t bf_size;              
         // size of forwarding table (important for some calculations)
         uint32_t fwd_table_size;
 
