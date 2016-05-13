@@ -17,6 +17,13 @@
 #define OPTION_REQUEST_SIZE         (char *) "request-size"
 #define OPTION_BF_SIZE              (char *) "bf-size"
 #define OPTION_FWD_TABLE_SIZE       (char *) "fwd-table-size"
+// special eval options : 
+//  * --f-min : the min. length of forwarding entries allowed in the forwarding 
+//              table
+//  * --expand-factor : expanding entries of length f to (f + a) creates 
+//                      f * (expand-factor)^(a) new entries
+#define OPTION_F_MIN                (char *) "f-min"
+#define OPTION_EXPAND_FACTOR        (char *) "expand-factor"
 
 #define REQUEST_SIZE                (char *) "request_size"
 #define BF_SIZE                     (char *) "bf_size"
@@ -29,8 +36,8 @@
 #define IFACE_NUM                   (char *) "iface_num"
 #define FWD_TABLE_SIZE              (char *) "fwd_table_size"
 
-#define DEFAULT_SCN_FILE	(char *) "/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity.scn"
-#define DEFAULT_CSV_DIR     (char *) "/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check"
+#define NON_LOCAL_FRACTION          (__float080) 0.75
+#define LOCAL_FRACTION              (__float080) 0.25
 
 using namespace std;
 using namespace CommandLineProcessing;
@@ -76,6 +83,18 @@ ArgvParser * create_argv_parser() {
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
+            OPTION_F_MIN,
+            "the min. size of forwarding entries (in # of URL elements) "\
+            "allowed in the forwarding table. all existing entries with size "\
+            "f < f-min are 'expanded' to entries of size f-min.",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
+            OPTION_EXPAND_FACTOR,
+            "expanding entries of size f to size (f + a) creates f * (expand-factor)^(a) new entries",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
             OPTION_VERBOSE,
             "print stats during the model run. default: not verbose",
             ArgvParser::NoOptionAttribute);
@@ -102,6 +121,9 @@ int main (int argc, char **argv) {
                                 // in # of URL parameters
     int bf_size = 0;            // bloom filter size (in bit)
     int fwd_table_size = 0;     // forwarding table size (# of entries)
+    int f_min = 0;              // min. forwarding entry size allowed in the 
+                                // table
+    int expand_factor = 0;
 
 
     // parse() takes the arguments to main() and parses them according to 
@@ -177,6 +199,16 @@ int main (int argc, char **argv) {
             fwd_table_size = std::stoi(cmds->optionValue(OPTION_FWD_TABLE_SIZE));
         }
 
+        if (cmds->foundOption(OPTION_F_MIN)) {
+
+            f_min = std::stoi(cmds->optionValue(OPTION_F_MIN));
+        }
+
+        if (cmds->foundOption(OPTION_EXPAND_FACTOR)) {
+
+            expand_factor = std::stoi(cmds->optionValue(OPTION_EXPAND_FACTOR));
+        }
+
         if (cmds->foundOption(OPTION_VERBOSE)) {
             verbose = true;
         }
@@ -247,6 +279,20 @@ int main (int argc, char **argv) {
         f_r_distribution[f] = f_r_distribution[f] / 100.0;    
     }
 
+    if (f_min == 0) {
+
+        printf("rid-analytics : invalid f_min value (%d). changing f_min = 1\n", 
+            f_min);
+        f_min = 1;
+    }
+
+    if (expand_factor <= 0) {
+
+        printf("rid-analytics : invalid expand_factor value (%d). changing expand_factor = 1\n", 
+            expand_factor);
+        expand_factor = 1;
+    }
+
     __float080 ** f_distributions = (__float080 **) calloc(2, sizeof(__float080 *));
     f_distributions[0] = f_distribution_local;
     f_distributions[1] = f_distribution_non_local;
@@ -256,6 +302,8 @@ int main (int argc, char **argv) {
                                                 access_tree_height,
                                                 iface_num,
                                                 request_size,
+                                                f_min,
+                                                expand_factor,
                                                 bf_size,
                                                 fwd_table_size,
                                                 iface_entry_proportion,

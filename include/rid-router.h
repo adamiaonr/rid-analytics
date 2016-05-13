@@ -68,6 +68,9 @@ class RID_Router {
             // distr. skewed towards |F| = 1 (single prefixes like '/cmu')
             __float080 * f_distribution;
 
+            // nr. of prefixes associated with this iface
+            uint64_t num_entries;
+
             // the RID_Router object at the other end of this iface
             RID_Router * next_hop;
         };
@@ -77,7 +80,7 @@ class RID_Router {
             uint8_t access_tree_index, 
             uint8_t height, 
             uint8_t width,
-            uint32_t fwd_table_size,
+            uint64_t fwd_table_size,
             uint8_t iface_num,
             uint8_t f_max,
             uint16_t bf_size);
@@ -86,12 +89,14 @@ class RID_Router {
         int add_fwd_table_entry(
             int iface, 
             __float080 iface_proportion, 
-            __float080 * f_distribution);
+            __float080 * f_distribution,
+            int f_min,
+            int expand_factor);
         void set_fwd_table_next_hop(uint8_t iface, RID_Router * next_hop_router);
         RID_Router * get_fwd_table_next_hop(uint8_t iface);
         void set_fwd_table(RID_Router::fwd_table_row * fwd_table);
         RID_Router::fwd_table_row * get_fwd_table();
-        uint32_t get_fwd_table_size();
+        uint64_t get_fwd_table_size();
 
         uint8_t get_iface_num();
         uint8_t get_f_max();
@@ -192,7 +197,7 @@ class RID_Router {
         uint8_t f_max;
         uint16_t bf_size;              
         // size of forwarding table (important for some calculations)
-        uint32_t fwd_table_size;
+        uint64_t fwd_table_size;
 
         // the forwarding table : an array of fwd_table_row structs
         RID_Router::fwd_table_row * fwd_table;

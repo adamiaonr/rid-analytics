@@ -108,12 +108,6 @@ def main():
                         if (float(line_splitted[2]) > 0.0):
 
                             _latency_to_origin = float(line_splitted[3])
-
-                            if (outcome_index == 1):
-                                _latency_to_origin += float(origin_distance)
-                            elif (outcome_index == 2):
-                                _latency_to_origin = float(origin_distance)
-
                             _latency[request_size].append([origin_distance, _latency_to_origin * float(line_splitted[2])])
                     
                     except IndexError:
@@ -170,7 +164,7 @@ def main():
     # f_distributions_plot = fig.add_subplot(subplot_code)
 
     # markers for this graph
-    markers = ['-o', '-x', ':o', ':x']
+    markers = ['--o', '-d', ':o', ':x']
 
     for i in xrange(len(sub_dirs)):
 
@@ -180,10 +174,7 @@ def main():
         f_distributions_plot.grid(True)
 
         # title goes here
-        if (i < 1):
-            f_distributions_plot.set_title("% of Entry Lengths per iface Type (|R| = 5)", fontsize=LABEL_FONT_SIZE)
-        else:
-            f_distributions_plot.set_title("|R| = 10", fontsize=LABEL_FONT_SIZE)
+        f_distributions_plot.set_title("|R| = 5", fontsize=LABEL_FONT_SIZE)
 
         for j in xrange(2):
 
@@ -191,8 +182,8 @@ def main():
 
         # labels
         if (i > 0):
-            f_distributions_plot.set_xlabel("Entry length |F|", fontsize=LEGEND_FONT_SIZE)
-        f_distributions_plot.set_ylabel('% of entry lengths', fontsize=LEGEND_FONT_SIZE)
+            f_distributions_plot.set_xlabel("Prefix length |F|", fontsize=LEGEND_FONT_SIZE)
+        f_distributions_plot.set_ylabel('%', fontsize=LABEL_FONT_SIZE)
 
         f_distributions_plot.set_ylim(0.0, 100.0)
 
@@ -203,10 +194,13 @@ def main():
         y_labels = f_distributions_plot.get_yticklabels()
         plt.setp(y_labels, rotation=0, fontsize=LEGEND_FONT_SIZE)
 
-        _mlocal = plt.plot([], [], '-o', color='black', linewidth=2)
-        _m_non_local = plt.plot([], [], '-x', color='black', linewidth=2)
+        _mlocal = plt.plot([], [], '--o', color='black', linewidth=2)
+        _m_non_local = plt.plot([], [], '-d', color='black', linewidth=2)
 
         f_distributions_plot.legend((_mlocal[0], _m_non_local[0]), ('local iface', 'non-local iface'), loc='upper center', fontsize=LEGEND_FONT_SIZE)
+
+    plt.tight_layout(pad=0.4, w_pad=0.4, h_pad=0.4)
+    plt.savefig(sys.argv[3] + "/" + sys.argv[4] + "-dist" + ".pdf", format='pdf', bbox_inches='tight')
 
     # # 2 legends
     # _mlocal = plt.plot([], [], '-o', color='black', linewidth=2)
@@ -225,9 +219,10 @@ def main():
         # subplot_code += 1
         # outcome_probs = fig.add_subplot(subplot_code)
 
-        outcome_probs = plt.subplot2grid((4,4), ((i * 2), -(i * 2) + 2), rowspan=2, colspan=2)
+        fig = plt.figure()
+        outcome_probs = plt.subplot2grid((6,6), (0,0), rowspan=2, colspan=2)
 
-        outcome_probs.set_title("Final state probabilities for |R| = " + str(request_sizes[i]), fontsize=LABEL_FONT_SIZE)
+        # outcome_probs.set_title("Final state probabilities for |R| = " + str(request_sizes[i]), fontsize=LABEL_FONT_SIZE)
         outcome_probs.grid(True)
 
         for j in xrange(len(outcomes)):
@@ -237,8 +232,8 @@ def main():
 
             outcome_probs.plot(x[i][j], y[i][j], markers[j], markersize=markers_size[j], linewidth=2, color=colors[j])
 
-            outcome_probs.set_xlabel("Origin distance (# of hops)", fontsize=LABEL_FONT_SIZE)
-            outcome_probs.set_ylabel('Prob. of final states [0.0, 1.0]', fontsize=LABEL_FONT_SIZE)
+            outcome_probs.set_xlabel("Origin dist. (# of hops)", fontsize=LABEL_FONT_SIZE)
+            outcome_probs.set_ylabel('Outcome prob. [0.0, 1.0]', fontsize=LABEL_FONT_SIZE)
 
             outcome_probs.set_yscale('log')
 
@@ -247,7 +242,10 @@ def main():
         _fd = plt.plot([], [], markers[2], markersize=5, color=colors[2], linewidth=2)
         _rd = plt.plot([], [], markers[3], markersize=5, color=colors[3], linewidth=2)
 
-        outcome_probs.legend((_cd[0], _id[0], _fd[0], _rd[0]), (outcomes[0], outcomes[1], outcomes[2], outcomes[3]), loc='center right', fontsize=LEGEND_FONT_SIZE)
+        outcome_probs.legend((_cd[0], _id[0], _fd[0], _rd[0]), (outcomes[0], outcomes[1], outcomes[2], outcomes[3]), loc='center left', fontsize=LEGEND_FONT_SIZE)
+
+        plt.tight_layout(pad=0.4, w_pad=0.4, h_pad=0.4)
+        plt.savefig(sys.argv[3] + "/" + sys.argv[4] + "-outcomes-" + sub_dirs[i] + ".pdf", format='pdf', bbox_inches='tight')
 
     # just an experiment with stack'd graphs...
     # for i in xrange(len(sub_dirs)):
@@ -310,13 +308,17 @@ def main():
 
     bar_shift = -BAR_WIDTH
 
-    avg_latencies = plt.subplot2grid((4,4), (2,2), rowspan=2, colspan=2)
+    fig = plt.figure()
+
+    avg_latencies = plt.subplot2grid((6,6), (0,0), rowspan=2, colspan=2)
     avg_latencies.grid(True)
-    avg_latencies.set_title("Avg. latencies (# of hops) per origin distance", fontsize=LABEL_FONT_SIZE)
+    # avg_latencies.set_title("Avg. latencies", fontsize=LABEL_FONT_SIZE)
+
+    _colors = ['black', 'white']
+
+    y_max = 0
 
     for i in xrange(len(sub_dirs)):
-
-        print sub_dirs[i]
 
         x.append([])
         y.append([])
@@ -339,23 +341,32 @@ def main():
         print x[i]
         print y[i]
 
-        avg_latencies.bar(x[i], y[i], BAR_WIDTH, color=colors[i])
+        if (y_max < max(y[i])):
+            y_max = max(y[i])
+
+        avg_latencies.bar(x[i], y[i], BAR_WIDTH, color=_colors[i])
 
         bar_shift = 0
+
+    avg_latencies.plot(np.arange(1, 10, 1), np.arange(1, 10, 1), '--', linewidth=2, color='black');
 
     avg_latencies.set_xlim(0, 10)
     avg_latencies.set_xticks(np.arange(1, 10, 1))
 
-    avg_latencies.set_xlabel('Origin distance (# of hops)', fontsize=LABEL_FONT_SIZE)
+    avg_latencies.set_ylim(0, math.ceil(y_max + 1))
+    avg_latencies.set_yticks(np.arange(1, math.ceil(y_max + 1), 2))
+
+    avg_latencies.set_xlabel('Origin dist. (# of hops)', fontsize=LABEL_FONT_SIZE)
     avg_latencies.set_ylabel('Avg. latency (# of hops)', fontsize=LABEL_FONT_SIZE)
 
-    _r5 = plt.plot([], [], '-', color=colors[0], linewidth=5)
-    _r10 = plt.plot([], [], '-', color=colors[1], linewidth=5)
+    _r5 = plt.plot([], [], '-', color=_colors[0], linewidth=5)
+    _r10 = plt.plot([], [], '-', color=_colors[1], linewidth=5)
+    _ori = plt.plot([], [], '--', color='green', linewidth=2)
 
     avg_latencies.legend((_r5[0], _r10[0]), ('|R| = 5', '|R| = 10'), loc='upper left', fontsize=LEGEND_FONT_SIZE)
 
     plt.tight_layout(pad=0.4, w_pad=0.4, h_pad=0.4)
-    plt.savefig(sys.argv[3] + "/" + sys.argv[4] + ".pdf", format='pdf', bbox_inches='tight')
+    plt.savefig(sys.argv[3] + "/" + sys.argv[4] + "-latencies" + ".pdf", format='pdf', bbox_inches='tight')
 
 if __name__ == "__main__":
     main()

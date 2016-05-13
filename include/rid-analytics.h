@@ -43,8 +43,10 @@ class RID_Analytics {
             uint8_t access_tree_height,
             uint8_t iface_num,
             uint8_t f_max,
+            int f_min,
+            int expand_factor,
             uint16_t bf_size,
-            uint32_t fwd_table_size,
+            uint64_t fwd_table_size,
             __float080 * iface_entry_proportion,
             __float080 ** f_distributions);
         ~RID_Analytics();
@@ -69,6 +71,9 @@ class RID_Analytics {
                 tree<Path_State *>::iterator prev_path_state_itr);
         int erase_access_tree_rec(RID_Router * router);
 
+        int get_tp_distance(RID_Router * from_router);
+        int get_tp_distance_rec(RID_Router * from_router);
+
         // NETWORK PARAMETERS : 
 
         // # of of access trees in the network
@@ -78,6 +83,9 @@ class RID_Analytics {
         uint8_t iface_num;
         // max. possible size for requests & forwarding entries
         uint8_t f_max;
+        // min. possible size for forwarding entries
+        int f_min;
+        int expand_factor;
         // % of entries in pointing to an iface
         __float080 * iface_entry_proportion;
         // distribution of |F| over iface (i.e. % of entries 
@@ -87,7 +95,7 @@ class RID_Analytics {
         __float080 * f_distribution_local;
         __float080 * f_distribution_non_local;
         // forwarding table size
-        uint32_t fwd_table_size;
+        uint64_t fwd_table_size;
 
         // an array of access trees (pointers to root of access trees)
         RID_Router ** root_routers;

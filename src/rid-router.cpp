@@ -7,7 +7,7 @@ RID_Router::RID_Router(
     uint8_t access_tree_index, 
     uint8_t height, 
     uint8_t width,
-    uint32_t fwd_table_size,
+    uint64_t fwd_table_size,
     uint8_t iface_num,
     uint8_t f_max,
     uint16_t bf_size) {
@@ -48,6 +48,11 @@ RID_Router::RID_Router(
 RID_Router::~RID_Router() {
 
     // free forwarding table
+    for (uint8_t _iface = 0; _iface < this->iface_num; _iface++) {
+
+        free(this->fwd_table[_iface].f_distribution);
+    }
+
     free(this->fwd_table);
 
     // free lpm_pmf
@@ -163,20 +168,97 @@ int RID_Router::forward(
 int RID_Router::add_fwd_table_entry(
     int iface, 
     __float080 iface_proportion, 
-    __float080 * f_distribution) {
+    __float080 * f_distribution,
+    int f_min,
+    int expand_factor) {
 
     if (iface >= IFACE_LOCAL && iface < iface_num) {
 
+        // initialize the num. of entries to 0
+        this->fwd_table[iface].num_entries = 0;
         // this marks the entry as valid, as it becomes != -1
         this->fwd_table[iface].iface = iface;
         this->fwd_table[iface].iface_proportion = iface_proportion;
-        this->fwd_table[iface].f_distribution = f_distribution;
+
+        // allocate memory for iface_proportion and f_distribution
+        //this->fwd_table[iface].f_distribution = f_distribution;
+        this->fwd_table[iface].f_distribution = 
+            (__float080 *) calloc(this->f_max, sizeof(__float080));
+
+        // WARNING : unnecessarily complex code ahead. this was made 
+        // to account for the forwarding table bloating factor caused by 
+        // prefix management techniques. this is probably one of the ugliest 
+        // pieces of code i've ever written...
+
+        __float080 _to_expand = 0.0;
+        __float080 _to_not_expand = 0.0;
+        __float080 _not_expanded = 0.0;
+        __float080 _original_size = 
+            (iface_proportion * (__float080) (this->fwd_table_size));
+
+        // printf("RID_Router::add_fwd_table_entry() : original nr. of entries for ROUTER[%d][%d] = %-.5LE\n", 
+        //     this->height, this->width, _original_size);
+
+        for (int _f = 0; _f < this->f_max; _f++) {
+
+            if (_f < (f_min - 1)) {
+
+                // extract the number of prefixes to expand
+                _to_expand = this->fwd_table[iface].num_entries 
+                    + (f_distribution[_f] * _original_size);
+
+                // expand them, and add them to the expanded stack
+                this->fwd_table[iface].num_entries += 
+                    _to_expand * (__float080) (expand_factor);
+
+                this->fwd_table[iface].f_distribution[_f] = 0.0;
+
+            } else {
+
+                _to_not_expand = (f_distribution[_f] * _original_size);
+                _not_expanded += _to_not_expand;
+
+                if (_f == (f_min - 1)) {
+                    this->fwd_table[iface].f_distribution[_f] = 
+                        this->fwd_table[iface].num_entries + _to_not_expand;
+                } else {
+
+                    this->fwd_table[iface].f_distribution[_f] = _to_not_expand;
+                }
+            }
+        }
+
+        this->fwd_table[iface].num_entries += (uint64_t) _not_expanded;
+
+        if (this->fwd_table[iface].num_entries > 0) {
+
+            this->fwd_table[iface].f_distribution[f_min - 1] = 
+                this->fwd_table[iface].f_distribution[f_min - 1] / ((__float080) this->fwd_table[iface].num_entries);
+
+            for (int _f = f_min; _f < this->f_max; _f++) {
+
+                this->fwd_table[iface].f_distribution[_f] = 
+                    this->fwd_table[iface].f_distribution[_f] / ((__float080) this->fwd_table[iface].num_entries); 
+            }
+        }
+
         this->fwd_table[iface].next_hop = NULL;
 
-        // printf("RID_Router::add_fwd_table_entry() : added fwd entry to r[%d][%d]:"\
+        // printf("RID_Router::add_fwd_table_entry() : added fwd entry to ROUTER[%d][%d]:"\
         //     "\n\t[iface] = %d"\
+        //     "\n\t[num_entries] = %llu"\
         //     "\n\t[iface_proportion] = %-.5LE\n", 
-        //     this->height, this->width, this->fwd_table[iface].iface, this->fwd_table[iface].iface_proportion = iface_proportion);
+        //     this->height, this->width, 
+        //     this->fwd_table[iface].iface, 
+        //     this->fwd_table[iface].num_entries,
+        //     this->fwd_table[iface].iface_proportion);    
+
+        // printf("\t[f_distribution] = [%-.5LE]", this->fwd_table[iface].f_distribution[0]);
+
+        // for (int _f = 1; _f < this->f_max; _f++)
+        //     printf("[%-.5LE]", this->fwd_table[iface].f_distribution[_f]);
+
+        // printf("\n");
 
     } else {
 
@@ -207,7 +289,7 @@ RID_Router::fwd_table_row * RID_Router::get_fwd_table() {
     return this->fwd_table;
 }
 
-uint32_t RID_Router::get_fwd_table_size() { 
+uint64_t RID_Router::get_fwd_table_size() { 
     return this->fwd_table_size; 
 }
 
@@ -243,14 +325,13 @@ bool RID_Router::is_starting_router() {
 
 __float080 fp_rate(__float080 m, __float080 n, __float080 k, __float080 c) {
 
-    printf("fp_rate() :"\
-        "\n\tm = %-.5LE"\
-        "\n\tn = %-.5LE"\
-        "\n\tk = %-.5LE"\
-        "\n\t|F\\R| = %-.5LE"\
-        "\n\tc = %-.5LE\n",
-        m, n, k, c, (__float080) pow((1.0 - exp(-((n / m) * k))), k * c));
-
+    // printf("fp_rate() :"\
+    //     "\n\tm = %-.5LE"\
+    //     "\n\tn = %-.5LE"\
+    //     "\n\tk = %-.5LE"\
+    //     "\n\t|F\\R| = %-.5LE"\
+    //     "\n\tP(fp) = %-.5LE\n",
+    //     m, n, k, c, (__float080) pow((1.0 - exp(-((n / m) * k))), k * c));
 
     return pow((1.0 - exp(-((n / m) * k))), k * c);
 }
@@ -259,22 +340,34 @@ int RID_Router::get_log_fp_rates(
     __float080 m, 
     __float080 n, 
     __float080 k,
-    __float080 iface_proportion,
+    __float080 f_entries,               // nr. of entries for iface
     __float080 * f_distribution, 
     __float080 * f_r_distribution,
     __float080 * log_fp_rates) {        // function fills this array
 
-    __float080 n_entries = 0.0;
-    __float080 f_entries = 0.0; 
+    __float080 _n_entries = 0.0;
+    __float080 _f_entries = 0.0; 
 
-    for (int f = 0; f < this->f_max; f++) {
+    for (int _f = 0; _f < this->f_max; _f++) {
 
-        f_entries = (__float080) this->fwd_table_size * iface_proportion * f_distribution[f];
+        _f_entries = f_entries * f_distribution[_f];
 
-        for (int i = 0; i <= f; i++) {
+        for (int _jf = 0; _jf <= _f; _jf++) {
 
-            n_entries = (__float080) f_entries * f_r_distribution[i];
-            log_fp_rates[f] += n_entries * log(1.0 - fp_rate(m, n, k, (__float080) (i + 1)));
+            _n_entries = (__float080) _f_entries * f_r_distribution[_jf];
+            log_fp_rates[_f] += _n_entries * log(1.0 - fp_rate(m, n, k, (__float080) (_jf + 1)));
+
+            // printf("RID_Router::get_log_fp_rates() : _n_entries = %-.5LE *  %-.5LE[%d] = %-.5LE\n",
+            //     _f_entries, f_r_distribution[_jf], _jf, _n_entries);
+
+            // printf("RID_Router::get_log_fp_rates() :"\
+            //         "\n\tP(fp) = %-.5LE"\
+            //         "\n\tlog(1 - P(fp)) = %-.5LE (%-.5LE)"\
+            //         "\n\tlog_fp_rates[%d] += _n_entries * log(1 - P(fp)) = %-.5LE (%-.5LE)\n",
+            //         fp_rate(m, n, k, (__float080) (_jf + 1)),
+            //         (__float080) log(1.0 - fp_rate(m, n, k, (__float080) (_jf + 1))), 
+            //         (__float080) exp(log(1.0 - fp_rate(m, n, k, (__float080) (_jf + 1)))),
+            //         _f, log_fp_rates[_f], (__float080) exp(log_fp_rates[_f]));
         }
     }
 
@@ -564,9 +657,15 @@ int RID_Router::calc_lpm_pmf(
         // form, since we'll be dealing with small numbers.
         __float080 _k = (log(2) * ((__float080) this->bf_size)) / ((__float080) request_size);
 
+        // printf("***** RID_Router::calc_lpm_pmf() : *****"\
+        //             "\n\t[_iface = %d].num_entries = %llu (%-.5LE)\n",
+        //             _iface, 
+        //             this->fwd_table[_iface].num_entries,
+        //             (__float080) this->fwd_table[_iface].num_entries);
+
         if (get_log_fp_rates(
             (__float080) (this->bf_size), (__float080) request_size, _k,   // BF parameters
-            this->fwd_table[_iface].iface_proportion,   // % of entries for _iface
+            (__float080) this->fwd_table[_iface].num_entries,   // # of entries for _iface
             this->fwd_table[_iface].f_distribution,     // distr. of diff. |F| for _iface
             f_r_distribution,                           // distr. of |F\R| for _iface
             _log_fp_rates) < 0) {                       // array were result is stored
@@ -586,18 +685,18 @@ int RID_Router::calc_lpm_pmf(
         // 'prefix trees'). this makes sense: L_{_iface,p} = _f can only happen 
         // if a match larger than _f doesn't happen.
 
-        // if (_iface == 0)
-        //     printf("RID_Router::calc_lpm_pmf() : P( |FP|(_iface = %d) <= %d) = %-.5LE\n", _iface, this->f_max, (__float080) exp(_log_prob_not_fp[this->f_max]));
+        // printf("RID_Router::calc_lpm_pmf() : P( |FP|(_iface = %d) <= %d) = %-.5LE\n", 
+        //     _iface, this->f_max, (__float080) exp(_log_prob_not_fp[this->f_max]));
 
         for (int _f = (this->f_max - 1); _f >= 0; _f--) {
             _log_prob_not_fp[_f] = _log_prob_not_fp[_f + 1] + _log_fp_rates[_f];
 
-            // if (_iface == 0) {
-
-            //     printf("RID_Router::calc_lpm_pmf() : P(~|FP|(_iface = %d) == %d) = %-.5LE\n", _iface, _f + 1, (__float080) exp(_log_fp_rates[_f]));
-            //     printf("RID_Router::calc_lpm_pmf() : P( |FP|(_iface = %d) == %d) = %-.5LE\n", _iface, _f + 1, (__float080) 1.0 - (__float080) exp(_log_prob_not_fp[_f]));
-            //     printf("RID_Router::calc_lpm_pmf() : P( |FP|(_iface = %d) <= %d) = %-.5LE\n", _iface, _f, (__float080) exp(_log_prob_not_fp[_f]));
-            // }
+            // printf("RID_Router::calc_lpm_pmf() : P(~|FP|(_iface = %d) == %d) = %-.5LE\n", 
+            //     _iface, _f + 1, (__float080) exp(_log_fp_rates[_f]));
+            // printf("RID_Router::calc_lpm_pmf() : P( |FP|(_iface = %d) == %d) = %-.5LE\n", 
+            //     _iface, _f + 1, (__float080) 1.0 - (__float080) exp(_log_prob_not_fp[_f]));
+            // printf("RID_Router::calc_lpm_pmf() : P( |FP|(_iface = %d) <= %d) = %-.5LE\n", 
+            //     _iface, _f, (__float080) exp(_log_prob_not_fp[_f]));
         }
 
         // start with P(L_{_iface,_ptree_size} = |R|_max AND 
@@ -635,7 +734,7 @@ int RID_Router::calc_lpm_pmf(
                             // FIXME: this seems hack-ish : here i check if 
                             // _iface is associated with any entries
                             this->lpm_pmf[_iface][_ptree_size].lpm_pmf_prob[_f] = 
-                                (__float080) ((this->fwd_table[_iface].iface_proportion > 0.0) ? 0.0 : 1.0);
+                                (__float080) ((this->fwd_table[_iface].num_entries > 0) ? 0.0 : 1.0);
 
                         } else {
 
@@ -676,7 +775,7 @@ int RID_Router::calc_lpm_pmf(
 
 
                                 this->lpm_pmf[_iface][_ptree_size].lpm_pmf_prob[_f] = 
-                                    (__float080) exp(_log_prob_not_fp[_f]) * ((this->fwd_table[_iface].iface_proportion > 0.0) ? 1.0 : 0.0);
+                                    (__float080) exp(_log_prob_not_fp[_f]) * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0);
 
                                 // if (_iface == 0) {
 
@@ -695,7 +794,7 @@ int RID_Router::calc_lpm_pmf(
                             } else {
 
                                 this->lpm_pmf[_iface][_ptree_size].lpm_pmf_prob[_f] = 
-                                    exp(_log_prob_not_fp[_f]) * (1.0 - exp(_log_fp_rates[_f - 1]));
+                                    exp(_log_prob_not_fp[_f]) * (1.0 - exp(_log_fp_rates[_f - 1])) * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0);
 
                                 // if (_iface == 0) {
 
@@ -712,7 +811,7 @@ int RID_Router::calc_lpm_pmf(
                                 // _iface is associated with any entries. if it 
                                 // is, then
                                 this->lpm_pmf[_iface][_ptree_size].lpm_pmf_prob[_f] = 
-                                    (__float080) ((this->fwd_table[_iface].iface_proportion > 0.0) ? 0.0 : 1.0);
+                                    (__float080) ((this->fwd_table[_iface].num_entries > 0) ? 0.0 : 1.0);
 
                             } else {
 

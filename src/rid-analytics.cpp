@@ -11,8 +11,10 @@ RID_Analytics::RID_Analytics(
     uint8_t access_tree_height,
     uint8_t iface_num,
     uint8_t f_max,
+    int f_min,
+    int expand_factor,
     uint16_t bf_size,
-    uint32_t fwd_table_size,
+    uint64_t fwd_table_size,
     __float080 * iface_entry_proportion,
     __float080 ** f_distributions) {
 
@@ -31,6 +33,9 @@ RID_Analytics::RID_Analytics(
     this->bf_size = bf_size;
     this->tp_sizes = NULL;
     this->f_r_distribution = NULL;
+
+    this->f_min = f_min;
+    this->expand_factor = expand_factor;
 
     // initialize the array of tree roots
     this->root_routers = (RID_Router **) calloc(this->access_tree_num, sizeof(RID_Router *));
@@ -191,6 +196,89 @@ int RID_Analytics::print_iface_entry_proportions() {
     return 0;
 }
 
+int RID_Analytics::get_tp_distance_rec(RID_Router * from_router) {
+
+    int _tp_distance = 0;
+    int _height = from_router->get_height();
+    int _width = from_router->get_width();
+    uint32_t _tp_size_offset = 
+        _height * (((int) pow(2.0, this->access_tree_height - 1)) * this->iface_num) 
+        + _width * this->iface_num;
+
+    // we found it, it's right here under your nose...
+    if (this->tp_sizes[_tp_size_offset + IFACE_LOCAL] > 0)
+        return 1;
+
+    // check if it is below you
+    RID_Router * child_router = NULL;
+
+    for (int _iface = IFACE_DOWNSTREAM; _iface < from_router->get_iface_num(); _iface++) {
+
+        child_router = from_router->get_fwd_table_next_hop(_iface);
+
+        if (child_router != NULL) {
+
+            if ((_tp_distance = get_tp_distance_rec(child_router)) > 0) {
+
+                return _tp_distance + 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int RID_Analytics::get_tp_distance(RID_Router * from_router) {
+
+    // find the offset of this router's TP size info in the true positive 
+    // array
+    int _height = from_router->get_height();
+    int _width = from_router->get_width();
+    uint32_t _tp_size_offset = 
+        _height * (((int) pow(2.0, this->access_tree_height - 1)) * this->iface_num) 
+        + _width * this->iface_num;
+
+    // 1st, check if the true positive is here
+    if (this->tp_sizes[_tp_size_offset + IFACE_LOCAL] > 0)
+        return 1;
+
+    // if not here, check if it is below this router or its parents. 
+    // we start by checking if the true positive lies directly below this 
+    // router. if not, we go up one level, and check if it is on another 
+    // subtree
+    int _tp_distance = 0, _go_up = 0;
+    RID_Router * parent_router = from_router;
+    RID_Router * child_router = NULL;
+
+    for (_go_up = 0; (_height - _go_up) >= 0; _go_up++) {
+
+        // if the parent router doesn't exist anymore, we're screwed... it's 
+        // like there is no true positive in the topology.
+        if (parent_router == NULL)
+            break;
+
+        for (int _iface = IFACE_DOWNSTREAM; _iface < parent_router->get_iface_num(); _iface++) {
+
+            child_router = parent_router->get_fwd_table_next_hop(_iface);
+
+            if (child_router != NULL) {
+
+                if ((_tp_distance = get_tp_distance_rec(child_router)) > 0) {
+
+                    return _go_up + _tp_distance + 1;
+                }
+            }
+        }
+
+        parent_router = parent_router->get_fwd_table_next_hop(IFACE_UPSTREAM);
+        _tp_distance = 0;
+    }
+
+    // this should never happen (?) this means there are no true positives in 
+    // the topology
+    return -1;
+}
+
 int RID_Analytics::build_network_rec(RID_Router * parent_router) {
 
     uint8_t access_tree = parent_router->get_access_tree_index();
@@ -244,14 +332,18 @@ int RID_Analytics::build_network_rec(RID_Router * parent_router) {
         child_router->add_fwd_table_entry(
                 IFACE_LOCAL, 
                 this->iface_entry_proportion[_offset_h + _offset_w + IFACE_LOCAL], 
-                this->f_distribution_local);
+                this->f_distribution_local,
+                f_min,
+                expand_factor);
 
         for (uint8_t i = IFACE_LOCAL + 1; i < _iface_num; i++) {
             
             child_router->add_fwd_table_entry(
                 i, 
                 this->iface_entry_proportion[_offset_h + _offset_w + i], 
-                this->f_distribution_non_local);
+                this->f_distribution_non_local,
+                f_min,
+                expand_factor);
 
             // printf("RID_Analytics::build_network_rec() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
             //     "\n\t[iface] = %d"\
@@ -284,19 +376,21 @@ int RID_Analytics::build_network() {
                 this->f_max,
                 this->bf_size);
 
-        // initialize the ifaces : add a 'local' P(|F|_i) distribution to  
-        // IFACE_LOCAL, and a 'non-local' to ifaces > IFACE_LOCAL
         root_router->add_fwd_table_entry(
                 IFACE_LOCAL, 
                 this->iface_entry_proportion[IFACE_LOCAL], 
-                this->f_distribution_local);
+                this->f_distribution_local,
+                f_min,
+                expand_factor);
 
-        for (uint8_t i = IFACE_LOCAL + 1; i < iface_num; i++) {
+        for (uint8_t _iface = IFACE_LOCAL + 1; _iface < iface_num; _iface++) {
             
             root_router->add_fwd_table_entry(
-                i, 
-                this->iface_entry_proportion[i], 
-                this->f_distribution_non_local);
+                _iface, 
+                this->iface_entry_proportion[_iface], 
+                this->f_distribution_non_local,
+                f_min,
+                expand_factor);
 
             // printf("RID_Analytics::build_network() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
             //     "\n\t[iface] = %d"\
@@ -385,6 +479,12 @@ int RID_Analytics::run_rec(
                 if (_event == EVENT_MIS) {
 
                     _path_state->set_outcome(OUTCOME_FALLBACK_DELIVERY);
+                    _path_state->set_path_length(
+                        (*prev_path_state_itr)->get_path_length() + 1
+                        + get_tp_distance(_path_state->get_router()));
+
+                    printf("\nRID_Analytics::run_rec() : Event 'MIS' at ROUTER[%d][%d] : latency = %d\n", 
+                        _height, _width, _path_state->get_path_length());
 
                 } else if (_event == EVENT_LI) {
 
@@ -395,6 +495,9 @@ int RID_Analytics::run_rec(
                     } else {
 
                         _path_state->set_outcome(OUTCOME_INCORRECT_DELIVERY);
+                        _path_state->set_path_length(
+                            (*prev_path_state_itr)->get_path_length() + 1
+                            + get_tp_distance(_path_state->get_router()));
                     }
                 }
 
@@ -407,6 +510,9 @@ int RID_Analytics::run_rec(
                 }
 
                 _path_state->set_outcome(OUTCOME_FALLBACK_RELAY);
+                _path_state->set_path_length(
+                    (*prev_path_state_itr)->get_path_length() + 1
+                    + get_tp_distance(_path_state->get_router()));
             }
 
         } else {
@@ -549,12 +655,14 @@ int RID_Analytics::view_results(
             // format : 
             // <rtr.hght>,<rtr.wdth>,<prob>,<path_length>,<outcome>
             fprintf(_output_file, 
-                "%d,%d,%-.5LE,%d,%d\n", 
+                "%d,%d,%-.5LE,%d,%d,%d,%d\n", 
                 (*_leaf_itr)->get_router()->get_height(),
                 (*_leaf_itr)->get_router()->get_width(),
                 (*_leaf_itr)->get_final_prob(),
                 (*_leaf_itr)->get_path_length(),
-                (*_leaf_itr)->get_outcome());
+                (*_leaf_itr)->get_outcome(),
+                this->f_min,
+                this->expand_factor);
         }
 
         _checksum += (*_leaf_itr)->get_final_prob();
