@@ -83,6 +83,7 @@ class RID_Router {
             uint64_t fwd_table_size,
             uint8_t iface_num,
             uint8_t f_max,
+            uint8_t f_min_annc,
             uint16_t bf_size);
         ~RID_Router();
 
@@ -142,7 +143,7 @@ class RID_Router {
         int calc_joint_lpm_pmf(__float080 * joint_prob_matrix, uint8_t ptree_size, uint8_t ptree_iface);
 
         // computation of iface event & egress size probabilities
-        int calc_iface_events_pmf(__float080 * joint_prob_matrix);
+        int calc_iface_events_pmf(__float080 * joint_prob_matrix, __float080 * iface_probs);
 
         int get_log_fp_rates(
             __float080 m, 
@@ -195,6 +196,7 @@ class RID_Router {
         uint8_t iface_ingress;
         // max. possible size of a forwarding entry 
         uint8_t f_max;
+        uint8_t f_min_annc;
         uint16_t bf_size;              
         // size of forwarding table (important for some calculations)
         uint64_t fwd_table_size;

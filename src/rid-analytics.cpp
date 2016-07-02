@@ -11,6 +11,7 @@ RID_Analytics::RID_Analytics(
     uint8_t access_tree_height,
     uint8_t iface_num,
     uint8_t f_max,
+    int f_min_annc,
     int f_min,
     int expand_factor,
     uint16_t bf_size,
@@ -33,6 +34,8 @@ RID_Analytics::RID_Analytics(
     this->bf_size = bf_size;
     this->tp_sizes = NULL;
     this->f_r_distribution = NULL;
+
+    this->f_min_annc = f_min_annc;
 
     this->f_min = f_min;
     this->expand_factor = expand_factor;
@@ -317,6 +320,7 @@ int RID_Analytics::build_network_rec(RID_Router * parent_router) {
                 this->fwd_table_size,
                 _iface_num, 
                 this->f_max,
+                this->f_min_annc,
                 this->bf_size);
             
         // FIXME: ugly hack to pinpoint the router on which a request starts
@@ -374,6 +378,7 @@ int RID_Analytics::build_network() {
                 this->fwd_table_size,
                 this->iface_num,        // since IFACE_UPSTREAM is null, we do '-1' 
                 this->f_max,
+                this->f_min_annc,
                 this->bf_size);
 
         root_router->add_fwd_table_entry(

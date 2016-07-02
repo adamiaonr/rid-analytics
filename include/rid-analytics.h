@@ -43,6 +43,7 @@ class RID_Analytics {
             uint8_t access_tree_height,
             uint8_t iface_num,
             uint8_t f_max,
+            int f_min_annc,
             int f_min,
             int expand_factor,
             uint16_t bf_size,
@@ -83,6 +84,7 @@ class RID_Analytics {
         uint8_t iface_num;
         // max. possible size for requests & forwarding entries
         uint8_t f_max;
+        int f_min_annc;
         // min. possible size for forwarding entries
         int f_min;
         int expand_factor;

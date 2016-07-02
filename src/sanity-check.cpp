@@ -17,6 +17,7 @@
 #define OPTION_REQUEST_SIZE         (char *) "request-size"
 #define OPTION_BF_SIZE              (char *) "bf-size"
 #define OPTION_FWD_TABLE_SIZE       (char *) "fwd-table-size"
+#define OPTION_F_MIN_ANNC           (char *) "f-min-annc"
 // special eval options : 
 //  * --f-min : the min. length of forwarding entries allowed in the forwarding 
 //              table
@@ -95,6 +96,11 @@ ArgvParser * create_argv_parser() {
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
+            OPTION_F_MIN_ANNC,
+            "shortest possible prefix announcement",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
             OPTION_VERBOSE,
             "print stats during the model run. default: not verbose",
             ArgvParser::NoOptionAttribute);
@@ -124,6 +130,7 @@ int main (int argc, char **argv) {
     int f_min = 0;              // min. forwarding entry size allowed in the 
                                 // table
     int expand_factor = 0;
+    int f_min_annc = 0;
 
 
     // parse() takes the arguments to main() and parses them according to 
@@ -207,6 +214,11 @@ int main (int argc, char **argv) {
         if (cmds->foundOption(OPTION_EXPAND_FACTOR)) {
 
             expand_factor = std::stoi(cmds->optionValue(OPTION_EXPAND_FACTOR));
+        }
+
+        if (cmds->foundOption(OPTION_F_MIN_ANNC)) {
+
+            f_min_annc = std::stoi(cmds->optionValue(OPTION_F_MIN_ANNC));
         }
 
         if (cmds->foundOption(OPTION_VERBOSE)) {
@@ -297,11 +309,14 @@ int main (int argc, char **argv) {
     f_distributions[0] = f_distribution_local;
     f_distributions[1] = f_distribution_non_local;
 
+    // create an rid simulation w/ the parameters given as input and in the 
+    // red .scn file
     RID_Analytics * rid_analytics = new RID_Analytics(
                                                 1,
                                                 access_tree_height,
                                                 iface_num,
                                                 request_size,
+                                                f_min_annc,
                                                 f_min,
                                                 expand_factor,
                                                 bf_size,
@@ -309,6 +324,7 @@ int main (int argc, char **argv) {
                                                 iface_entry_proportion,
                                                 f_distributions);
 
+    // ... and run the simulation
     rid_analytics->run(request_size, tp_sizes, f_r_distribution);
 
     char output_file_path[MAX_ARRAY_SIZE] = {0};

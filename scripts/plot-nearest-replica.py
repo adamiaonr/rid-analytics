@@ -19,12 +19,12 @@ LEGEND_FONT_SIZE=10
 BAR_WIDTH=0.35
 
 # outcome type strings
-outcomes = ['Correct', 'Incorrect', 'Fallback', 'Relay', 'TP', 'FP', 'Unknown']
+outcomes = ['CD', 'ID', 'FD', 'Relay', 'TP', 'FP', 'Unknown']
 colors = ['green', 'red', 'orange', 'black']
 
 # sub dirs with results for different request sizes
-sub_dirs = ['r5', 'r10']
-request_sizes = [5, 10]
+sub_dirs = ['r5', 'r10', 'r15']
+request_sizes = [5, 10, 15]
 
 def custom_ceil(x, base=5):
 #    return int(base * math.ceil(float(x)/base))
@@ -58,9 +58,12 @@ def main():
 
         real_dir = input_file_dir + "/" + sub_dir
 
+        # if (sub_dir == "r15"):
+        #     real_dir = real_dir + "/diff"
+
         for file_name in os.listdir(real_dir):
 
-            if file_name.endswith(bf_size + ".csv"):
+            if file_name.endswith(".csv"):
 
                 data_file = open(real_dir + "/" + file_name, 'rb')
 
@@ -71,7 +74,9 @@ def main():
                         outcome_index = int(int(line_splitted[4]))
                         request_size = ((int(file_name.split("-")[3]) / 5) - 1)
                         cache_distance = int(file_name.split("-")[2])
-                        _data[request_size][outcome_index].append((cache_distance, float(line_splitted[2])))
+
+                        if (float(line_splitted[2]) > 1E-25):
+                            _data[request_size][outcome_index].append((cache_distance, float(line_splitted[2])))
 
                         if (float(line_splitted[2]) > 0.0):
 
@@ -142,7 +147,7 @@ def main():
 
         for j in xrange(len(outcomes)):
 
-            if (j > 3):
+            if (j > 2):
                 break
 
             outcome_probs.plot(x[i][j], y[i][j], markers[j], markersize=markers_size[j], linewidth=2, color=colors[j])
@@ -152,16 +157,18 @@ def main():
             outcome_probs.set_ylabel('Outcome prob. [0.0, 1.0]', fontsize=LABEL_FONT_SIZE)
             outcome_probs.set_yscale('log')
 
-            if (i == 0):
-                outcome_probs.set_ylim(1E-12, 1E0)
-                outcome_probs.set_yticks([1E-12, 1E-10, 1E-8, 1E-6, 1E-4, 1E-2, 1E0])
+            outcome_probs.set_xlim(0, 8)
+            outcome_probs.set_xticks(np.arange(1,8))
+
+            outcome_probs.set_ylim(1E-2, 5)
+            #outcome_probs.set_yticks([1E-15, 1E-10, 1E-5, 1E0])
 
         _cd = plt.plot([], [], markers[0], markersize=5, color=colors[0], linewidth=2)
         _id = plt.plot([], [], markers[1], markersize=5, color=colors[1], linewidth=2)
         _fd = plt.plot([], [], markers[2], markersize=5, color=colors[2], linewidth=2)
         _rd = plt.plot([], [], markers[3], markersize=5, color=colors[3], linewidth=2)
 
-        outcome_probs.legend((_cd[0], _id[0], _fd[0], _rd[0]), (outcomes[0], outcomes[1], outcomes[2], outcomes[3]), loc='lower center', fontsize=LEGEND_FONT_SIZE)
+        outcome_probs.legend((_cd[0], _id[0], _fd[0]), (outcomes[0], outcomes[1], outcomes[2]), loc='lower left', fontsize=LEGEND_FONT_SIZE, ncol=3)
 
         plt.tight_layout(pad=0.4, w_pad=0.4, h_pad=0.4)
         plt.savefig(sys.argv[3] + "/" + sys.argv[4] + "-outcomes-" + sub_dirs[i] + ".pdf", format='pdf', bbox_inches='tight')

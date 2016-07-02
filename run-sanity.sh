@@ -33,7 +33,7 @@ FWD_TABLE_SIZE=100000000
 SCN_DIR=""
 SCN_DIR_ALT="test/data/sanity-check/default"
 DATA_DIR=""
-DATA_SUB_DIR=(5 10)
+DATA_SUB_DIR=(15)
 EXPAND_FACTORS=(1 2 5 10)
 GRAPH_DIR=""
 SCRIPT_DIR="scripts"
@@ -85,7 +85,7 @@ if [ "${TEST_CASE}" = 'no-caching' ]; then
 
     for sub_dir in ${DATA_SUB_DIR[@]} 
     do
-        for file in $SCN_DIR/r$sub_dir/*.scn
+        for file in $SCN_DIR/no-caching/r$sub_dir/*.scn
         do
             echo "processing $file"
 
@@ -93,16 +93,18 @@ if [ "${TEST_CASE}" = 'no-caching' ]; then
             file_name=$(basename "$file")
             file_name="${file_name%.*}"-$BF_SIZE
 
+            output_dir=$DATA_DIR/no-caching/r$sub_dir/f2
+
             # run the sanity check for each test case
-            ./sanity-check --bf-size $BF_SIZE --request-size $sub_dir --fwd-table-size $FWD_TABLE_SIZE --scn-file $file --data-dir $DATA_DIR/r$sub_dir --output-file $file_name -v
+            ./sanity-check --bf-size $BF_SIZE --request-size $sub_dir --fwd-table-size $FWD_TABLE_SIZE --scn-file $file --data-dir $output_dir --output-file $file_name -v
         done
     done
 
-    cd $SCRIPT_DIR
-    python plot-outcomes.py $BF_SIZE $DATA_DIR $GRAPH_DIR no-caching-$BF_SIZE
+    # cd $SCRIPT_DIR
+    # python plot-no-caching.py $BF_SIZE $DATA_DIR/no-caching $GRAPH_DIR no-caching-$BF_SIZE
 
-    cd $HOME_DIR
-    open $GRAPH_DIR/no-caching-$BF_SIZE.pdf
+    # cd $HOME_DIR
+    # open $GRAPH_DIR/no-caching-$BF_SIZE.pdf
 fi
 
 i=1
@@ -134,6 +136,7 @@ if [ "${TEST_CASE}" = 'prefix-management' ]; then
     open $GRAPH_DIR/prefix-management-5-10-$BF_SIZE.pdf
 fi
 
+p=(15)
 if [ "${TEST_CASE}" = 'on-path' ]; then
 
     for sub_dir in ${DATA_SUB_DIR[@]} 
@@ -150,13 +153,17 @@ if [ "${TEST_CASE}" = 'on-path' ]; then
             # output data dir
             output_dir=$DATA_DIR/$CACHING/$PERVASIVE_CACHING/on-path/r$sub_dir
 
-            # run the sanity check for each test case
-            ./sanity-check --bf-size $BF_SIZE --request-size $sub_dir --fwd-table-size $FWD_TABLE_SIZE --scn-file $scn_file --data-dir $output_dir --output-file $output_file_name -v
+            for _p in ${p[@]} 
+            do
+                # run the sanity check for each test case
+                ./sanity-check --f-min-annc $_p --bf-size $BF_SIZE --request-size $sub_dir --fwd-table-size $FWD_TABLE_SIZE --scn-file $scn_file --data-dir $output_dir --output-file $output_file_name-$_p -v
+            done
         done
 
     done
 fi
 
+p=(5)
 if [ "${TEST_CASE}" = 'nearest-replica' ]; then
 
     for sub_dir in ${DATA_SUB_DIR[@]} 
@@ -171,10 +178,15 @@ if [ "${TEST_CASE}" = 'nearest-replica' ]; then
             output_file_name="${output_file_name%.*}"-$BF_SIZE
 
             # output data dir
-            output_dir=$DATA_DIR/$CACHING/$PERVASIVE_CACHING/nearest-replica/r$sub_dir
+            output_dir=$DATA_DIR/$CACHING/$PERVASIVE_CACHING/nearest-replica/r$sub_dir/diff
 
-            # run the sanity check for each test case
-            ./sanity-check --bf-size $BF_SIZE --request-size $sub_dir --fwd-table-size $FWD_TABLE_SIZE --scn-file $scn_file --data-dir $output_dir --output-file $output_file_name -v
+            for _p in ${p[@]} 
+            do
+
+                # run the sanity check for each test case
+                ./sanity-check --f-min-annc $_p --bf-size $BF_SIZE --request-size $sub_dir --fwd-table-size $FWD_TABLE_SIZE --scn-file $scn_file --data-dir $output_dir --output-file $output_file_name-$_p -v
+
+            done
         done
 
     done
