@@ -596,11 +596,14 @@ __float080 RID_Router::get_joint_lpm_prob(
 
 /*
  * \brief   compute the distribution of L_{i,p} random variables, for all 
- *          <iface, prefix tree size> pairs in the router
+ *          <iface, prefix tree size> pairs in the router. L_{i,p} doesn't 
+ *          take true positive info into account.
  *
  * the random variable L_{i,p} represents the longest match reported by an 
- * iface i, for a prefix tree of size p. P(L_{i,p} = f) is the probability 
- * of getting a longest match equal to f.
+ * iface i, assuming a prefix tree of size p. e.g., P(L_{0,1} = 5) is the prob 
+ * of getting a longest match equal to 5, for iface 0 and assuming that the 
+ * request got 'stuck' to a prefix tree of size 1 in some previous point 
+ * in the path.
  *
  * the objective is to build a table like the following, one for each iface:
  *
@@ -615,15 +618,17 @@ __float080 RID_Router::get_joint_lpm_prob(
  * |          4 |         "          | " | " | " | " | " |
  * |          5 |         "          | " | " | " | " | " |
  *
- * positive matches can happen due to (1) false positive matches and (2) true 
- * positive matches. in their turn, FP matches can happen in 2 ways:
- *  -# 'local' FP matches, triggered for the first time at this router 
- *      (in other words, a request found a new tree)
- *  -# FP matches coming from a previous router, due to a 'prefix tree binding'
- * 
- * in addition to FP matches, P(L_{i,p} = f) is influenced by TP matches, provided 
- * as input to the function. unlike FPs, true positive info is 
- * deterministic (as opposed to "probabilistic").
+ *
+ * L_{i,p} as if true positives don't exist. we apply true positive info later.
+ *  
+ * for example, P(L_{0,1} = 3) can be > 0.0, when iface 0 has a true 
+ * positive entry of size 4. in rigor, P(L_{0,1} = 3) should be 0.0 because 
+ * we know for sure that the true positive entry will always be a match, and 
+ * thus the size of the matches for iface 0 will ALWAYS be larger than or equal 
+ * to 4. HOWEVER, we first calculate L_{i,p} as if true positives don't exist, 
+ * and then apply true positive information later.
+ *
+ * why do we do things this way?  
  * 
  * \param   fp_size_prob    probabilities of the FP match sizes that led the 
  *                          request to this router.

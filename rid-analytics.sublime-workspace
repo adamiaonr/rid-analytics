@@ -547,7 +547,7 @@
 			"file": "src/sanity-check.cpp",
 			"settings":
 			{
-				"buffer_size": 12446,
+				"buffer_size": 12578,
 				"line_ending": "Unix"
 			}
 		},
@@ -555,7 +555,7 @@
 			"file": "src/rid-router.cpp",
 			"settings":
 			{
-				"buffer_size": 52944,
+				"buffer_size": 53149,
 				"line_ending": "Unix"
 			}
 		},
@@ -568,42 +568,45 @@
 			}
 		},
 		{
-			"file": "scripts/plot-no-caching.py",
-			"settings":
-			{
-				"buffer_size": 15855,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "scripts/plot-no-caching-fx",
-			"settings":
-			{
-				"buffer_size": 0,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "test/configs/fdist/15.fdist",
-			"settings":
-			{
-				"buffer_size": 681,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "scripts/plot-no-caching-fx.py",
-			"settings":
-			{
-				"buffer_size": 6287,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": ".todos",
 			"settings":
 			{
-				"buffer_size": 5818,
+				"buffer_size": 1199,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "request_size=15\nbf_size=256\naccess_tree_height=5\niface_num=4\nfwd_table_size=100000000\ntp_size_0=0,0,0,0\ntp_size_1=0,0,0,0,0,0,0,0\ntp_size_2=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\ntp_size_3=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\ntp_size_4=15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\niface_entry_proportion_0=0.00,0.00,0.50,0.50\niface_entry_proportion_1=0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33\niface_entry_proportion_2=0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33\niface_entry_proportion_3=0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33\niface_entry_proportion_4=1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00\nf_distribution_local=0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0002,0.0003,0.0035,0.0357,0.3695,2.5852,12.297,35.948,48.76,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\nf_distribution_non_local=48.867,35.85,12.286,2.5795,0.3753,0.0385,0.0026,0.0003,0.0002,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\nf_r_distribution=6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\nmK3X9eGxu*:w",
+			"file": "test/configs/evaluation/vanilla/r15/vanilla-1-15.scn",
+			"file_size": 1595,
+			"file_write_time": 1469475208000000,
+			"settings":
+			{
+				"buffer_size": 1608,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/adamiaonr/workbench/dns-performance/src/dns-performance.cpp",
+			"settings":
+			{
+				"buffer_size": 11376,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
+			"settings":
+			{
+				"buffer_size": 13905,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "test/configs/fdist/10.fdist",
+			"settings":
+			{
+				"buffer_size": 515,
 				"line_ending": "Unix"
 			}
 		}
@@ -648,14 +651,21 @@
 	},
 	"file_history":
 	[
+		"/Users/adamiaonr/workbench/rid-analytics/run-sanity.sh",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-9-15.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-7-15.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-5-15.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-3-15.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-1-15.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r10/no-caching-1-10.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-1-10.scn",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-no-caching-fx.py",
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/fdist/15.fdist",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-no-caching-fx",
+		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-no-caching.py",
+		"/Users/adamiaonr/workbench/devops-stats/scripts/devops-stats.py",
 		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-on-path.py",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-9-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-3-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-5-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-7-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-9-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-1-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/run-sanity.sh",
 		"/Users/adamiaonr/workbench/rid-analytics/src/run-sanity.sh",
 		"/Users/adamiaonr/workbench/rid-analytics/sanity-check",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r10/no-caching-3-10.scn",
@@ -663,25 +673,21 @@
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r10/no-caching-7-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r10/no-caching-9-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-3-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/fdist/15.fdist",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r5/no-caching-9-5.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r5/no-caching-7-5.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r5/no-caching-5-5.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r5/no-caching-3-5.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r5/no-caching-1-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r10/no-caching-1-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/fdist/5.fdist",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/fdist/10.fdist",
 		"/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check/no-caching/r10/no-caching-9-10-320.csv",
 		"/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check/no-caching/r15/no-caching-5-15-320.csv",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-1-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-2-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-4-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-5-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-6-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-7-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r10/on-path-8-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-no-caching.py",
 		"/Users/adamiaonr/workbench/rid-analytics/scripts/plot-nearest-replica.py",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r10/nearest-replica-5-10.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r10/nearest-replica-7-10.scn",
@@ -772,10 +778,7 @@
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r10/os-7-10-ll-nls.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-1-5-ll-nls.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-3-5-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-5-5-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-7-5-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/os-1-10-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/os-3-10-ll-nls.scn"
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-5-5-ll-nls.scn"
 	],
 	"find":
 	{
@@ -795,6 +798,8 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"0,2,0",
+			"calc_cumulative_prob",
 			"9,0",
 			"7,0",
 			"5,0",
@@ -920,9 +925,7 @@
 			"forward(",
 			"calc_joint_log_prob",
 			"calc_joint_lpm_pmf",
-			"forward(",
-			"total_joint_prob",
-			"total_"
+			"forward("
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -930,6 +933,7 @@
 		"regex": false,
 		"replace_history":
 		[
+			"0,1,0",
 			"0,2",
 			"0,1,",
 			"0,2",
@@ -1056,8 +1060,7 @@
 			"CONTENT_SOURCE_DIST",
 			"DataParser",
 			"data-parser",
-			"data_filename",
-			"DataParser"
+			"data_filename"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1068,7 +1071,6 @@
 	"groups":
 	[
 		{
-			"selected": 10,
 			"sheets":
 			[
 				{
@@ -1093,7 +1095,7 @@
 							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 125.0,
+						"translation.y": 181.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1126,7 +1128,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 8101.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1158,7 +1160,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 909.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1168,15 +1170,15 @@
 					"file": "src/sanity-check.cpp",
 					"settings":
 					{
-						"buffer_size": 12446,
+						"buffer_size": 12578,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								12242,
+								12242
 							]
 						],
 						"settings":
@@ -1201,15 +1203,15 @@
 					"file": "src/rid-router.cpp",
 					"settings":
 					{
-						"buffer_size": 52944,
+						"buffer_size": 53149,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								22178,
+								22178
 							]
 						],
 						"settings":
@@ -1223,8 +1225,8 @@
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": 2.0,
-						"translation.y": 0.0,
+						"translation.x": 0.0,
+						"translation.y": 8006.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1256,45 +1258,130 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1838.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 6,
-					"file": "scripts/plot-no-caching.py",
+					"file": ".todos",
 					"settings":
 					{
-						"buffer_size": 15855,
+						"buffer_size": 1199,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								5718,
-								5721
+								377,
+								377
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
+							"rulers":
+							[
+								80
+							],
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2789.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 7,
-					"file": "scripts/plot-no-caching-fx",
+					"file": "test/configs/evaluation/vanilla/r15/vanilla-1-15.scn",
 					"settings":
 					{
-						"buffer_size": 0,
+						"buffer_size": 1608,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1596,
+								1605
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "/Users/adamiaonr/workbench/dns-performance/src/dns-performance.cpp",
+					"settings":
+					{
+						"buffer_size": 11376,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								10775,
+								10840
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 3622.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "/Users/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
+					"settings":
+					{
+						"buffer_size": 13905,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								8583,
+								8583
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 3500.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "test/configs/fdist/10.fdist",
+					"settings":
+					{
+						"buffer_size": 515,
 						"regions":
 						{
 						},
@@ -1311,91 +1398,6 @@
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "test/configs/fdist/15.fdist",
-					"settings":
-					{
-						"buffer_size": 681,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								139,
-								242
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 9,
-					"file": "scripts/plot-no-caching-fx.py",
-					"settings":
-					{
-						"buffer_size": 6287,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4872,
-								4872
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1863.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 10,
-					"file": ".todos",
-					"settings":
-					{
-						"buffer_size": 5818,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								5817,
-								5817
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-								80
-							],
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 1385.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
