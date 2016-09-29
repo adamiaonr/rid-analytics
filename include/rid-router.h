@@ -20,25 +20,43 @@
 // interface events
 #define EVENT_NUM           0x04
 
-#define EVENT_NIS           0x00
-#define EVENT_MIS           0x01
-#define EVENT_LI            0x02
-#define EVENT_EI            0x03
+#define EVENT_NO_MATCHES                0x00
+#define EVENT_MULTIPLE_IFACE_MATCHES    0x01
+#define EVENT_LOCAL_IFACE_MATCH         0x02
+#define EVENT_SINGLE_IFACE_MATCH        0x03
 //#define EVENT_UNKNOWN       0x04
 
 // modes for calc_cumulative_prob()
-#define MODE_EI             0x00
+#define MODE_EI_EXCLUSIVE   0x00
 #define MODE_MIS            0x01
 #define MODE_LI             0x02
+#define MODE_EI_INCLUSIVE   0x03
+
+// modes for handling multiple matches
+#define MODE_MM_FLOOD       0x00
+#define MODE_MM_RANDOM      0x01
+#define MODE_MM_FALLBACKS   0x02
 
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
+
+#include <map>
+#include <set>
+#include <algorithm>
+#include <iostream>
 
 class RID_Router {
 
     public:
+
+        struct nw_address
+        {
+            RID_Router * router;
+            int iface;
+        };
 
         struct lpm_pmf_row
         {
@@ -71,34 +89,49 @@ class RID_Router {
             // nr. of prefixes associated with this iface
             uint64_t num_entries;
 
-            // the RID_Router object at the other end of this iface
-            RID_Router * next_hop;
+            // pointer to an RID router (including the ingress iface on the 
+            // other end)
+            RID_Router::nw_address next_hop;
         };
 
         RID_Router() {}
+        RID_Router(uint8_t access_tree_index, uint8_t access_tree_height) {
+            this->access_tree_index = access_tree_index;
+            this->access_tree_height = access_tree_height;
+            this->initialized = false;
+        };
+
         RID_Router(
             uint8_t access_tree_index, 
+            uint8_t access_tree_height,
             uint8_t height, 
             uint8_t width,
             uint64_t fwd_table_size,
             uint8_t iface_num,
             uint8_t f_max,
-            uint8_t f_min_annc,
             uint16_t bf_size);
         ~RID_Router();
+
+        int init(
+            uint8_t height, 
+            uint8_t width,
+            uint64_t fwd_table_size,
+            uint8_t iface_num,
+            uint8_t f_max,
+            uint16_t bf_size);
 
         int add_fwd_table_entry(
             int iface, 
             __float080 iface_proportion, 
-            __float080 * f_distribution,
-            int f_min,
-            int expand_factor);
-        void set_fwd_table_next_hop(uint8_t iface, RID_Router * next_hop_router);
-        RID_Router * get_fwd_table_next_hop(uint8_t iface);
+            std::map<int, __float080> size_dist,
+            RID_Router * next_hop_router,
+            int next_hop_iface);
         void set_fwd_table(RID_Router::fwd_table_row * fwd_table);
         RID_Router::fwd_table_row * get_fwd_table();
         uint64_t get_fwd_table_size();
+        RID_Router::nw_address get_next_hop(uint8_t iface);
 
+        std::string get_id() { return this->id; }
         uint8_t get_iface_num();
         uint8_t get_f_max();
         uint8_t get_access_tree_index();
@@ -112,7 +145,8 @@ class RID_Router {
             uint8_t request_size,
             uint8_t ingress_iface,                   
             int * tp_sizes,     
-            __float080 * ingress_probs,          
+            __float080 ingress_prob,
+            __float080 * ingress_ptree_prob,          
             __float080 * f_r_distribution);
 
         void print_lpm_pmf(uint8_t iface);
@@ -120,8 +154,11 @@ class RID_Router {
         __float080 get_iface_events_prob(uint8_t event);
         void print_iface_events_pmf();
 
-        __float080 get_egress_size_prob(uint8_t iface, uint8_t f);
-        void print_egress_size_pmf();
+        __float080 * get_egress_ptree_prob(uint8_t iface);
+        void print_egress_ptree_prob();
+
+        __float080 get_egress_iface_prob(uint8_t iface);
+        void print_egress_iface_prob();
 
     private:
 
@@ -131,7 +168,6 @@ class RID_Router {
         __float080 get_lpm_prob(uint8_t iface, uint8_t ptree_size, uint8_t f);
         int calc_lpm_pmf(
             uint8_t request_size, 
-            uint8_t ingress_iface, 
             int * tp_sizes, 
             __float080 * f_r_distribution);
 
@@ -143,7 +179,7 @@ class RID_Router {
         int calc_joint_lpm_pmf(__float080 * joint_prob_matrix, uint8_t ptree_size, uint8_t ptree_iface);
 
         // computation of iface event & egress size probabilities
-        int calc_iface_events_pmf(__float080 * joint_prob_matrix, __float080 * iface_probs);
+        int calc_iface_events_pmf(__float080 * joint_prob_matrix);
 
         int get_log_fp_rates(
             __float080 m, 
@@ -177,32 +213,48 @@ class RID_Router {
         // probability of interface events (NIS, MIS, LI)
         __float080 * iface_events_pmf;
 
-        // ingress size probabilities
-        __float080 * ingress_size_pmf;
-        // probability of having iface i output associated with the longest 
-        // match of size L
-        __float080 ** egress_size_pmf;
+        // // probability 
+        // __float080 * ingress_size_pmf;
+        // // probability of having iface i associated with the longest 
+        // // match of size f.
+        // __float080 ** egress_size_pmf;
 
+        // probability of having a packet get in this router
+        __float080 ingress_prob;
+        // probability of choosing iface i as the LPM
+        __float080 ** egress_iface_prob;
+
+        // probability of having a packet bound to a prefix tree of size s. 
+        // egress probs are indexed by iface and size. note that these 
+        // probabilities do not account with TP information, only trees of 
+        // FPs.
+        __float080 * ingress_ptree_prob;
+        __float080 ** egress_ptree_prob;
+
+        // router id follows the format <tree_index>.<height>.<width>
+        std::string id;
         // a scenario is composed by n access trees
         uint8_t access_tree_index;  
+        uint8_t access_tree_height;
         // each router as (x, y) coordinates in the access tree
         uint8_t height;             
         uint8_t width;
-        // if this is the starting router, set it to TRUE
-        bool starting_router;
-
         // number of interfaces (at least 2 : LOCAL & // UPSTREAM)    
-        uint8_t iface_num;          
-        uint8_t iface_ingress;
+        uint8_t iface_num;
+        // keep track of interfaces over which a router CAN'T forward packets 
+        // (e.g. ingress iface, upstream ifaces for valley-free routing, etc.)
+        std::set<int> no_forwarding;
         // max. possible size of a forwarding entry 
         uint8_t f_max;
-        uint8_t f_min_annc;
         uint16_t bf_size;              
         // size of forwarding table (important for some calculations)
         uint64_t fwd_table_size;
-
         // the forwarding table : an array of fwd_table_row structs
         RID_Router::fwd_table_row * fwd_table;
+        // if the RID router is initialized
+        bool initialized;
+        // multiple match handling mode
+        uint8_t mm_mode;
 };
 
 #endif

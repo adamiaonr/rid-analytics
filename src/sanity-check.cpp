@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "argvparser.h"
-#include "dataparser.h"
 #include "rid-analytics.h"
 
 #define MAX_ARRAY_SIZE      256
@@ -79,28 +78,6 @@ ArgvParser * create_argv_parser() {
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
-            OPTION_FWD_TABLE_SIZE,
-            "size of forwarding table (in # of entries)",
-            ArgvParser::OptionRequiresValue);
-
-    cmds->defineOption(
-            OPTION_F_MIN,
-            "the min. size of forwarding entries (in # of URL elements) "\
-            "allowed in the forwarding table. all existing entries with size "\
-            "f < f-min are 'expanded' to entries of size f-min.",
-            ArgvParser::OptionRequiresValue);
-
-    cmds->defineOption(
-            OPTION_EXPAND_FACTOR,
-            "expanding entries of size f to size (f + a) creates f * (expand-factor)^(a) new entries",
-            ArgvParser::OptionRequiresValue);
-
-    cmds->defineOption(
-            OPTION_F_MIN_ANNC,
-            "shortest possible prefix announcement",
-            ArgvParser::OptionRequiresValue);
-
-    cmds->defineOption(
             OPTION_VERBOSE,
             "print stats during the model run. default: not verbose",
             ArgvParser::NoOptionAttribute);
@@ -120,18 +97,13 @@ int main (int argc, char **argv) {
     char data_dir[MAX_ARRAY_SIZE];
     // output file name for this run
     char output_file[MAX_ARRAY_SIZE];
-    // keeps track of verbose mode (no verbosity by default)
+    // verbose mode (no verbosity by default)
     bool verbose = false;
     // evaluation parameters
-    int request_size = 0;       // request size (also largest possible |F|) 
-                                // in # of URL parameters
-    int bf_size = 0;            // bloom filter size (in bit)
-    int fwd_table_size = 0;     // forwarding table size (# of entries)
-    int f_min = 0;              // min. forwarding entry size allowed in the 
-                                // table
-    int expand_factor = 0;
-    int f_min_annc = 0;
-
+    // request size (also largest possible |F|) in # of URL parameters
+    int request_size = 0;       
+    // bloom filter size (in bit)
+    int bf_size = 0;
 
     // parse() takes the arguments to main() and parses them according to 
     // ArgvParser rules
@@ -201,33 +173,12 @@ int main (int argc, char **argv) {
             request_size = std::stoi(cmds->optionValue(OPTION_REQUEST_SIZE));
         }
 
-        if (cmds->foundOption(OPTION_FWD_TABLE_SIZE)) {
-
-            fwd_table_size = std::stoi(cmds->optionValue(OPTION_FWD_TABLE_SIZE));
-        }
-
-        if (cmds->foundOption(OPTION_F_MIN)) {
-
-            f_min = std::stoi(cmds->optionValue(OPTION_F_MIN));
-        }
-
-        if (cmds->foundOption(OPTION_EXPAND_FACTOR)) {
-
-            expand_factor = std::stoi(cmds->optionValue(OPTION_EXPAND_FACTOR));
-        }
-
-        if (cmds->foundOption(OPTION_F_MIN_ANNC)) {
-
-            f_min_annc = std::stoi(cmds->optionValue(OPTION_F_MIN_ANNC));
-        }
-
         if (cmds->foundOption(OPTION_VERBOSE)) {
             verbose = true;
         }
     }
 
-    printf("rid-analytics : request_size = %d, bf_size = %d, fwd_table_size = %d\n", 
-        request_size, bf_size, fwd_table_size);
+    printf("rid-analytics : request_size = %d, bf_size = %d\n", request_size, bf_size);
 
     if (result == ArgvParser::ParserHelpRequested) {
 
@@ -235,97 +186,10 @@ int main (int argc, char **argv) {
         return -1;
     }
 
-    DataParser * scn_parser = new DataParser(scn_file);
-
-    // if the following parameters haven't been specified via the CLI, get them 
-    // from the .scn file
-    if (request_size == 0)
-        scn_parser->get_int_property_value(REQUEST_SIZE, request_size);
-
-    if (bf_size == 0)
-        scn_parser->get_int_property_value(BF_SIZE, bf_size);
-
-    if (fwd_table_size == 0)
-        scn_parser->get_int_property_value(FWD_TABLE_SIZE, fwd_table_size);
-
-    // the following parameters are taken from the .scn file, only
-    int access_tree_height = 0;
-    scn_parser->get_int_property_value(ACCESS_TREE_HEIGHT, access_tree_height);
-
-    int iface_num = 0;
-    scn_parser->get_int_property_value(IFACE_NUM, iface_num);
-
-    // fetch the TP list for each network router
-    int tp_sizes_size = (int) pow(2, access_tree_height - 1);
-    tp_sizes_size *= access_tree_height * iface_num;
-
-    int * tp_sizes = (int *) calloc(tp_sizes_size, sizeof(int));
-    int dims[3] = {access_tree_height, (int) pow(2.0, access_tree_height - 1), iface_num};
-
-    scn_parser->get_int_property_3d_array(TP_SIZES, tp_sizes, dims);
-
-    // fetch the iface_entry_proportion for each network router
-    long double * iface_entry_proportion = 
-        (long double *) calloc(
-                                ((int) pow(2.0, access_tree_height - 1)) * access_tree_height * iface_num, 
-                                sizeof(long double)
-                            );
-
-    scn_parser->get_double_property_3d_array(IFACE_ENTRY_PROPORTION, iface_entry_proportion, dims);
-
-    // fetch an f_distribution and f_r_distribution set the iface info 
-    // on rid_vanilla_rtr
-    __float080 * f_distribution_local = (__float080 *) calloc(MAX_ARRAY_SIZE, sizeof(__float080));
-    scn_parser->get_double_property_array(F_DISTRIBUTION_LOCAL, f_distribution_local);
-
-    __float080 * f_distribution_non_local = (__float080 *) calloc(MAX_ARRAY_SIZE, sizeof(__float080));
-    scn_parser->get_double_property_array(F_DISTRIBUTION_NON_LOCAL, f_distribution_non_local);
-
-    __float080 * f_r_distribution = (__float080 *) calloc(MAX_ARRAY_SIZE, sizeof(__float080));
-    scn_parser->get_double_property_array(F_R_DISTRIBUTION, f_r_distribution);    
-
-    // FIXME: adjust f_distribution
-    for (int f = 0; f < request_size; f++) {
-        f_distribution_local[f] = f_distribution_local[f] / 100.0;
-        f_distribution_non_local[f] = f_distribution_non_local[f] / 100.0;
-        f_r_distribution[f] = f_r_distribution[f] / 100.0;    
-    }
-
-    if (f_min == 0) {
-
-        printf("rid-analytics : invalid f_min value (%d). changing f_min = 1\n", 
-            f_min);
-        f_min = 1;
-    }
-
-    if (expand_factor <= 0) {
-
-        printf("rid-analytics : invalid expand_factor value (%d). changing expand_factor = 1\n", 
-            expand_factor);
-        expand_factor = 1;
-    }
-
-    __float080 ** f_distributions = (__float080 **) calloc(2, sizeof(__float080 *));
-    f_distributions[0] = f_distribution_local;
-    f_distributions[1] = f_distribution_non_local;
-
-    // create an rid simulation w/ the parameters given as input and in the 
-    // red .scn file
-    RID_Analytics * rid_analytics = new RID_Analytics(
-                                                1,
-                                                access_tree_height,
-                                                iface_num,
-                                                request_size,
-                                                f_min_annc,
-                                                f_min,
-                                                expand_factor,
-                                                bf_size,
-                                                fwd_table_size,
-                                                iface_entry_proportion,
-                                                f_distributions);
-
-    // ... and run the simulation
-    rid_analytics->run(request_size, tp_sizes, f_r_distribution);
+    // create an rid model environment (according to the specs on nw_filename)
+    RID_Analytics * rid_analytics_env = new RID_Analytics(std::string(scn_file), request_size, bf_size);
+    // ... and run the model
+    rid_analytics_env->run(std::string(scn_file));
 
     char output_file_path[MAX_ARRAY_SIZE] = {0};
     snprintf(output_file_path, MAX_ARRAY_SIZE, "%s/%s.csv", data_dir, output_file);
@@ -337,18 +201,10 @@ int main (int argc, char **argv) {
     if (verbose)
         mode = (mode | MODE_VERBOSE);
 
-    rid_analytics->view_results(mode, output_file_path);
+    rid_analytics_env->view_results(mode, output_file_path);
 
     // clean up after yourself...
-    delete scn_parser;
-    delete rid_analytics;
-
-    free(tp_sizes);
-    free(iface_entry_proportion);
-    free(f_distribution_local);
-    free(f_distribution_non_local);
-    free(f_distributions);
-    free(f_r_distribution);
+    delete rid_analytics_env;
 
     return 0;
 }

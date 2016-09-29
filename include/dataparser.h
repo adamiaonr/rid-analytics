@@ -40,6 +40,11 @@ class DataParser {
         DataParser(const char * dat_filename);
         ~DataParser() {}
 
+        static int split_string(
+            std::string line, 
+            const char * delimiter, 
+            std::vector<std::string> & split_string);
+
         int get_int_property_value(const char * property_name, int &int_value);
         int get_int_property_array(const char * property_name, int * int_array);
         int get_int_property_3d_array(

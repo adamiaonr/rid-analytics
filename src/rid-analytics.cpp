@@ -2,77 +2,34 @@
 #include <cfloat>
 #include <algorithm>
 #include <string>
+#include <fstream>  // reading .nw files
+#include <map>
+#include <list>
 
 #include "graph.h"
 #include "rid-analytics.h"
+#include "dataparser.h"
+#include "pugixml.hpp"
 
 RID_Analytics::RID_Analytics(
-    uint8_t access_tree_num,
-    uint8_t access_tree_height,
-    uint8_t iface_num,
-    uint8_t f_max,
-    int f_min_annc,
-    int f_min,
-    int expand_factor,
-    uint16_t bf_size,
-    uint64_t fwd_table_size,
-    __float080 * iface_entry_proportion,
-    __float080 ** f_distributions) {
+    std::string nw_filename,
+    uint8_t request_size,
+    uint16_t bf_size) {
 
-    // initialize the network parameters
-    this->access_tree_num = access_tree_num;
-    this->access_tree_height = access_tree_height;
-    this->iface_num = iface_num;
-    this->f_max = f_max;
-    this->fwd_table_size = fwd_table_size;
-    this->iface_entry_proportion = iface_entry_proportion;
-    this->f_distribution_local = f_distributions[LOCAL];
-    this->f_distribution_non_local = f_distributions[NON_LOCAL];
-
-    // initialize the forward() parameters
-    this->request_size = f_max;
+    // initialize the scenario parameters set at runtime (e.g. BF size, request 
+    // size, TP sizes, F\R distributions)
+    this->request_size = request_size;
+    this->f_max = request_size;
     this->bf_size = bf_size;
-    this->tp_sizes = NULL;
     this->f_r_distribution = NULL;
 
-    this->f_min_annc = f_min_annc;
-
-    this->f_min = f_min;
-    this->expand_factor = expand_factor;
-
-    // initialize the array of tree roots
-    this->root_routers = (RID_Router **) calloc(this->access_tree_num, sizeof(RID_Router *));
-
     // ... and build the network
-    this->build_network();    
-}
-
-int RID_Analytics::erase_access_tree_rec(RID_Router * router) {
-
-    uint8_t _iface_num = router->get_iface_num();
-    uint8_t _height = router->get_height();
-
-    // recursion ends if we get to the bottom of the access tree
-    if (_height >= (this->access_tree_height - 1)) {
-
-        delete router;
-
-        return 0;
-    }
-
-    for (int iface = IFACE_DOWNSTREAM; iface < _iface_num; iface++) {
-
-        erase_access_tree_rec(router->get_fwd_table_next_hop(iface));
-    }
-
-    delete router;
-
-    return 0;
+    this->build_network(nw_filename);
 }
 
 RID_Analytics::~RID_Analytics() {
 
-    // basically erase the path state tree
+    // erase the path state tree
     tree<Path_State *>::post_order_iterator post_itr = this->path_state_tree.begin_post();
     tree<Path_State *>::post_order_iterator end_post_itr = this->path_state_tree.end_post();
 
@@ -85,145 +42,41 @@ RID_Analytics::~RID_Analytics() {
         ++post_itr;
     }
 
-    for (int i = 0; i < this->access_tree_num; i++)
-        erase_access_tree_rec(this->root_routers[i]);  
+    // erase the routers in the topology. use the router map for that (see the 
+    // advantage of using modern C++ features you dummy?)
+    for(RID_RouterMap::iterator rit = this->routers.begin(); 
+        rit != this->routers.end(); 
+        ++rit) {
 
-    free(this->root_routers); 
-}
-
-int RID_Analytics::print_tp_sizes() {
-
-    if (this->tp_sizes == NULL) {
-
-        fprintf(
-            stderr, 
-            "RID_Analytics::print_tp_sizes() : tp_sizes is NULL.\n");
-
-        return -1;
+        delete (*rit).second;
     }
-
-    uint32_t _offset_h = 0, _offset_w = 0;
-
-    for (int h = 0; h < this->access_tree_height; h++) {
-
-        _offset_h = h * (pow(2.0, this->access_tree_height - 1) * this->iface_num);
-
-        printf("\nTP SIZES P/ LAYER %d\n", h);
-
-        // top line
-        printf("\n-------------");
-        for (uint8_t i = 0; i < (this->iface_num); i++)
-            printf("-------------");
-
-        printf("\n[ I ] :     |");
-        for (uint8_t i = 0; i < (this->iface_num); i++)
-            printf(" %-11d|", i);
-
-        printf("\n-------------");
-        for (uint8_t i = 0; i < (this->iface_num); i++)
-            printf("-------------");
-
-        for (uint8_t w = 0; w < ((int) pow(2.0, h)); w++) {
-
-            printf("\n WIDTH = %-3d|", w);
-
-            _offset_w = w * this->iface_num;
-
-            for (uint8_t i = 0; i < (this->iface_num); i++) {
-
-                printf(" %-11d|", this->tp_sizes[_offset_h + _offset_w + i]);
-            }
-        }
-
-        printf("\n-------------");
-        for (uint8_t i = 0; i < (this->iface_num); i++)
-            printf("-------------");
-
-        printf("\n");
-    }
-
-    return 0;
-}
-
-int RID_Analytics::print_iface_entry_proportions() {
-
-    if (this->iface_entry_proportion == NULL) {
-
-        fprintf(
-            stderr, 
-            "RID_Analytics::print_iface_entry_proportions() : iface_entry_proportion is NULL.\n");
-
-        return -1;
-    }
-
-    uint32_t _offset_h = 0, _offset_w = 0;
-
-    for (int h = 0; h < this->access_tree_height; h++) {
-
-        _offset_h = h * (pow(2.0, this->access_tree_height - 1) * this->iface_num);
-
-        printf("\nFWD ENTRY PROPORTIONS PER IFACE, LAYER %d\n", h);
-
-        // top line
-        printf("\n-------------");
-        for (uint8_t i = 0; i < (this->iface_num); i++)
-            printf("-------------");
-
-        printf("\n[ I ] :     |");
-        for (uint8_t i = 0; i < (this->iface_num); i++)
-            printf(" %-11d|", i);
-
-        printf("\n-------------");
-        for (uint8_t i = 0; i < (this->iface_num); i++)
-            printf("-------------");
-
-        for (uint8_t w = 0; w < ((int) pow(2.0, h)); w++) {
-
-            printf("\n WIDTH = %-3d|", w);
-
-            _offset_w = w * this->iface_num;
-
-            for (uint8_t i = 0; i < (this->iface_num); i++) {
-
-                printf(" %-.5LE|", this->iface_entry_proportion[_offset_h + _offset_w + i]);
-            }
-        }
-
-        printf("\n-------------");
-        for (uint8_t i = 0; i < (this->iface_num); i++)
-            printf("-------------");
-
-        printf("\n");
-    }
-
-    return 0;
 }
 
 int RID_Analytics::get_tp_distance_rec(RID_Router * from_router) {
 
-    int _tp_distance = 0;
-    int _height = from_router->get_height();
-    int _width = from_router->get_width();
-    uint32_t _tp_size_offset = 
-        _height * (((int) pow(2.0, this->access_tree_height - 1)) * this->iface_num) 
-        + _width * this->iface_num;
+    int tp_distance = 0;
 
-    // we found it, it's right here under your nose...
-    if (this->tp_sizes[_tp_size_offset + IFACE_LOCAL] > 0)
+    // we first check if a TP is present at the cache of from_router
+    if (this->tp_sizes[from_router->get_id()][IFACE_LOCAL] > 0)
         return 1;
 
-    // check if it is below you
-    RID_Router * child_router = NULL;
+    // check if it is in a router below from_router
+    RID_Router * adj_router = NULL;
 
-    for (int _iface = IFACE_DOWNSTREAM; _iface < from_router->get_iface_num(); _iface++) {
+    for (int iface = (IFACE_LOCAL + 1); iface < from_router->get_iface_num(); iface++) {
 
-        child_router = from_router->get_fwd_table_next_hop(_iface);
+        adj_router = from_router->get_next_hop(iface).router;
 
-        if (child_router != NULL) {
+        // if the height of the next router is less than or equal to 
+        // the current, abort.
+        if (adj_router->get_height() < from_router->get_height())
+            continue;
 
-            if ((_tp_distance = get_tp_distance_rec(child_router)) > 0) {
+        if (adj_router != NULL) {
 
-                return _tp_distance + 1;
+            if ((tp_distance = get_tp_distance_rec(adj_router)) > 0) {
+
+                return tp_distance + 1;
             }
         }
     }
@@ -235,46 +88,65 @@ int RID_Analytics::get_tp_distance(RID_Router * from_router) {
 
     // find the offset of this router's TP size info in the true positive 
     // array
-    int _height = from_router->get_height();
-    int _width = from_router->get_width();
-    uint32_t _tp_size_offset = 
-        _height * (((int) pow(2.0, this->access_tree_height - 1)) * this->iface_num) 
-        + _width * this->iface_num;
+    int height = from_router->get_height();
 
-    // 1st, check if the true positive is here
-    if (this->tp_sizes[_tp_size_offset + IFACE_LOCAL] > 0)
+    // we first check if a TP is present at the cache of from_router
+    if (this->tp_sizes[from_router->get_id()][IFACE_LOCAL] > 0)
         return 1;
 
-    // if not here, check if it is below this router or its parents. 
+    // keep a list of visited routers
+    std::vector<std::string> visited;
+
+    // if not, check if it is below this router or below its parents. 
     // we start by checking if the true positive lies directly below this 
     // router. if not, we go up one level, and check if it is on another 
-    // subtree
-    int _tp_distance = 0, _go_up = 0;
+    // subtree.
+    int tp_distance = 0, go_up = 0;
     RID_Router * parent_router = from_router;
-    RID_Router * child_router = NULL;
+    RID_Router * adj_router = NULL;
 
-    for (_go_up = 0; (_height - _go_up) >= 0; _go_up++) {
+    for (go_up = 0; (height - go_up) >= 0; go_up++) {
 
-        // if the parent router doesn't exist anymore, we're screwed... it's 
-        // like there is no true positive in the topology.
-        if (parent_router == NULL)
+        // if no more parent routers, abort and return -1 (no TPs in the 
+        // topology)
+        if (parent_router->get_height() == 0)
             break;
 
-        for (int _iface = IFACE_DOWNSTREAM; _iface < parent_router->get_iface_num(); _iface++) {
+        for (int iface = (IFACE_LOCAL + 1); iface < parent_router->get_iface_num(); iface++) {
 
-            child_router = parent_router->get_fwd_table_next_hop(_iface);
+            adj_router = parent_router->get_next_hop(iface).router;
 
-            if (child_router != NULL) {
+            // if the height of the next router is less than the current, abort. 
+            // notice that by setting iface = IFACE_LOCAL + 1 we avoid looking 
+            // into the local cache and by '<' instead of '<=' we consider 
+            // peering relationships.
+            if (adj_router->get_height() < parent_router->get_height())
+                continue;
 
-                if ((_tp_distance = get_tp_distance_rec(child_router)) > 0) {
+            // we've already been on this child, don't go down that road again
+            if (std::find(visited.begin(), visited.end(), adj_router->get_id()) != visited.end())
+                continue;
 
-                    return _go_up + _tp_distance + 1;
+            if (adj_router != NULL) {
+                if ((tp_distance = get_tp_distance_rec(adj_router)) > 0) {
+                    return go_up + tp_distance + 1;
                 }
             }
         }
 
-        parent_router = parent_router->get_fwd_table_next_hop(IFACE_UPSTREAM);
-        _tp_distance = 0;
+        // looking at this router's subtree didn't yield results. add it to 
+        // the list of visited subtrees.
+        visited.push_back(parent_router->get_id());
+        visited.push_back(adj_router->get_id());
+        // update parent_router to its parent
+        for (int iface = (IFACE_LOCAL + 1); iface < parent_router->get_iface_num(); iface++) {
+            if ((adj_router = parent_router->get_next_hop(iface).router)->get_height() < parent_router->get_height()) {
+                parent_router = adj_router;
+                break;
+            }
+        }
+
+        tp_distance = 0;
     }
 
     // this should never happen (?) this means there are no true positives in 
@@ -282,136 +154,159 @@ int RID_Analytics::get_tp_distance(RID_Router * from_router) {
     return -1;
 }
 
-int RID_Analytics::build_network_rec(RID_Router * parent_router) {
+int RID_Analytics::build_network(std::string nw_filename) {
 
-    uint8_t access_tree = parent_router->get_access_tree_index();
-    uint8_t prev_height = parent_router->get_height();
-    uint8_t prev_width = parent_router->get_width();
+    // read .scn file, structured as an xml file
+    pugi::xml_document nw_doc;
+    if (!(nw_doc.load_file(nw_filename.c_str()))) {
 
-    // recursion ends if we get to the bottom of the access tree
-    if (prev_height >= (this->access_tree_height - 1)) {
+        std::cerr << "RID_Analytics::get_network() : [ERROR] .scn file (" 
+            << nw_filename << ") not found." << std::endl;
 
-        // set the bottom-left router of access tree 0 as the starting point 
-        // for an RID analytics run
-        if (access_tree == 0 && prev_width == 0)
-            this->start_router = parent_router;
-
-        return 0;
+        return -1;
     }
 
-    uint32_t _offset_h = 0;
-    uint32_t _offset_w = 0;
+    pugi::xml_node trees = nw_doc.child("trees");
 
-    uint8_t _iface_num = this->iface_num;
-    // 'leaf' routers only have IFACE_LOCAL and IFACE_UPSTREAM ifaces. others 
-    // will have a full set of ifaces.
-    if ((prev_height + 1) == (this->access_tree_height - 1))
-        _iface_num = 2;
+    // ***
+    // *** cycle through each access tree
+    // ***
+    for (pugi::xml_node tree = trees.child("tree"); 
+        tree; 
+        tree = tree.next_sibling("tree")) {
 
-    // create (this->iface_num - 2) routers below, i.e. for each iface 
-    // except IFACE_LOCAL and IFACE_UPSTREAM
-    for (uint8_t o = 0; o < (this->iface_num - 2); o++) {
+        int tree_index = tree.attribute("index").as_uint();
+        this->access_tree_height = tree.attribute("height").as_uint();
 
-        RID_Router * child_router = 
-            new RID_Router(
-                access_tree, 
-                prev_height + 1,
-                (prev_width * (this->iface_num - 2)) + o,
-                this->fwd_table_size,
-                _iface_num, 
-                this->f_max,
-                this->f_min_annc,
-                this->bf_size);
-            
-        // FIXME: ugly hack to pinpoint the router on which a request starts
-        // (bottom-leftmost...)
-        if (prev_height + 1 == (this->access_tree_height - 1) && ((prev_width * (this->iface_num - 2)) + o) == 0)
-            child_router->set_as_starting_router();
+        // ***
+        // *** extract table sizes, per tier of the access tree
+        // ***
+        std::cout << "RID_Analytics::build_network() : [INFO] table sizes: ";
+        // table sizes saved in a std::map
+        std::map<int, __float080> table_sizes;
+        for (pugi::xml_node table_size = tree.child("fwd_table_sizes").child("tier"); 
+            table_size; 
+            table_size = table_size.next_sibling("tier")) {  
 
-        _offset_h = child_router->get_height() * (pow(2.0, this->access_tree_height - 1) * this->iface_num);
-        _offset_w = child_router->get_width() * this->iface_num;
+            table_sizes[table_size.attribute("tier").as_uint()] = table_size.text().as_uint();
 
-        // initialize the ifaces : add a 'local' P(|F|_i) distribution to  
-        // IFACE_LOCAL, and a 'non-local' to ifaces > IFACE_LOCAL
-        child_router->add_fwd_table_entry(
-                IFACE_LOCAL, 
-                this->iface_entry_proportion[_offset_h + _offset_w + IFACE_LOCAL], 
-                this->f_distribution_local,
-                f_min,
-                expand_factor);
-
-        for (uint8_t i = IFACE_LOCAL + 1; i < _iface_num; i++) {
-            
-            child_router->add_fwd_table_entry(
-                i, 
-                this->iface_entry_proportion[_offset_h + _offset_w + i], 
-                this->f_distribution_non_local,
-                f_min,
-                expand_factor);
-
-            // printf("RID_Analytics::build_network_rec() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
-            //     "\n\t[iface] = %d"\
-            //     "\n\t[iface_proportion] = %-.5LE\n", 
-            //     child_router->get_height(),  child_router->get_width(), 
-            //     _offset_h + _offset_w + i,
-            //     i, child_router->get_fwd_table()[i].iface_proportion);
+            std::cout << "\n\tTIER = " << table_size.attribute("tier").as_uint()
+                << ", SIZE = " << table_size.text().as_uint() 
+                    << " (" << table_sizes[table_size.attribute("tier").as_uint()] << ")";
         }
+        std::cout << std::endl;
 
-        // we can now set the DOWNSTREAM next hops of the parent router
-        parent_router->set_fwd_table_next_hop(IFACE_DOWNSTREAM + o, child_router);
-        // set the upstream next hop of the child router
-        child_router->set_fwd_table_next_hop(IFACE_UPSTREAM, parent_router);
+        // ***
+        // *** start building the topology by reading the info for each router
+        // ***
+        for (pugi::xml_node router = tree.child("topology").child("router"); 
+            router; 
+            router = router.next_sibling("router")) {
 
-        build_network_rec(child_router);
-    }
+            int tier = router.attribute("tier").as_uint();
+            int tier_index = router.attribute("index").as_uint();
+            // the router id follows the format <tree index>.<tier>.<tier index>
+            std::string router_id = std::string(tree.attribute("index").value())
+                + std::string(".")
+                + std::string(router.attribute("id").value());
 
-    return 0;
-}
+            // ***
+            // *** extract iface nr. & entry distr. per iface
+            // ***
+            std::cout << "RID_Analytics::build_network() : [INFO] \% of entries per iface: ";
+            // extract the nr. of ifaces by counting the number of fwd_dist xml nodes
+            int iface_num = 0;
+            // extract iface <-> map
+            std::map<int, __float080> fwd_dist;
+            for (pugi::xml_node dist = router.child("fwd_dist"); 
+                dist; 
+                dist = dist.next_sibling("fwd_dist")) {
 
-int RID_Analytics::build_network() {
+                fwd_dist[(int) dist.attribute("iface").as_int()] = ((__float080) dist.text().as_double());
+                // increment the number of ifaces here
+                iface_num++;
 
-    for (uint8_t t = 0; t < this->access_tree_num; t++) {
+                std::cout << "\n\tIFACE = " << dist.attribute("iface").as_int()
+                    << ", DISTR. = " << (__float080) dist.text().as_double() 
+                        << " (" << fwd_dist[(int) dist.attribute("iface").as_int()] << ")";
+            }
+            std::cout << std::endl;
 
-        RID_Router * root_router = 
-            new RID_Router(
-                t, 0, 0, 
-                this->fwd_table_size,
-                this->iface_num,        // since IFACE_UPSTREAM is null, we do '-1' 
-                this->f_max,
-                this->f_min_annc,
-                this->bf_size);
+            // ***
+            // *** create or initialize new RID router
+            // ***
+            RID_Router * new_router = NULL;
+            RID_RouterMap::iterator rit;
+            if ((rit = this->routers.find(router_id)) != this->routers.end()) {
 
-        root_router->add_fwd_table_entry(
-                IFACE_LOCAL, 
-                this->iface_entry_proportion[IFACE_LOCAL], 
-                this->f_distribution_local,
-                f_min,
-                expand_factor);
+                new_router = (*rit).second;
+                new_router->init(
+                    tier, tier_index,           // (tier, left-to-right index) coordinates
+                    table_sizes[tier],          // nr. of table entries for tier
+                    iface_num,                  // nr. of ifaces equals nr. of adjacencies
+                    this->f_max,                // max. request & forwarding entry size
+                    this->bf_size);             // BF size (of both requests and entries, in bit)
 
-        for (uint8_t _iface = IFACE_LOCAL + 1; _iface < iface_num; _iface++) {
-            
-            root_router->add_fwd_table_entry(
-                _iface, 
-                this->iface_entry_proportion[_iface], 
-                this->f_distribution_non_local,
-                f_min,
-                expand_factor);
+            } else {
 
-            // printf("RID_Analytics::build_network() : added fwd entry to r[%d][%d] (offset [%d] ?):"\
-            //     "\n\t[iface] = %d"\
-            //     "\n\t[iface_proportion] = %-.5LE\n", 
-            //     root_router->get_height(),  root_router->get_width(), 
-            //     i,
-            //     i, root_router->get_fwd_table()[i].iface_proportion);
+                new_router = 
+                    new RID_Router(
+                        tree_index,
+                        this->access_tree_height,
+                        tier, tier_index,
+                        table_sizes[tier],
+                        iface_num,
+                        this->f_max,
+                        this->bf_size);
+
+                // add the router to the router map
+                this->routers[router_id] = new_router;
+            }
+
+            // ***
+            // *** initialize router ifaces & add fwd entries
+            // ***
+            for (pugi::xml_node link = router.child("link"); 
+                link; 
+                link = link.next_sibling("link")) {
+
+                // ***
+                // *** extract fwd entry size distributions
+                // ***
+                std::map<int, __float080> size_dist;
+                for (pugi::xml_node s_dist = link.child("fwd_size_dist"); 
+                    s_dist; 
+                    s_dist = s_dist.next_sibling("fwd_size_dist")) {
+
+                    size_dist[s_dist.attribute("size").as_uint()] = s_dist.text().as_double();
+                }
+
+                RID_Router * adjacent_router = NULL;
+                RID_RouterMap::iterator arit;
+                // if adjacent router is already in the router map, fetch its 
+                // pointer. otherwise, create a new RID_Router object.
+                std::string adjacent_router_id = std::string(tree.attribute("index").value())
+                    + std::string(".") 
+                    + std::string(link.attribute("rrouter").value());
+
+                if ((arit = this->routers.find(adjacent_router_id)) != this->routers.end()) {
+
+                    adjacent_router = (*arit).second;
+
+                } else {
+
+                    adjacent_router = new RID_Router(tree_index, this->access_tree_height);
+                    // add adj. router to the router map
+                    this->routers[adjacent_router_id] = adjacent_router;
+                }
+
+                new_router->add_fwd_table_entry(
+                    link.attribute("local").as_uint(),
+                    fwd_dist[link.attribute("local").as_uint()],
+                    size_dist,
+                    adjacent_router, link.attribute("remote").as_uint());
+            }
         }
-
-        // for now, set the IFACE_UPSTREAM of a root router to NULL 
-        root_router->set_fwd_table_next_hop(IFACE_UPSTREAM, NULL);
-
-        // add it to the list of root routers
-        this->root_routers[t] = root_router;
-
-        build_network_rec(root_router);
     }
 
     return 0;
@@ -423,23 +318,17 @@ int RID_Analytics::run_rec(
     tree<Path_State *>::iterator prev_path_state_itr) {
 
     // local vars for quick access to router attributes
-    uint8_t _iface_num = router->get_iface_num();
-    uint8_t _height = router->get_height();
-    uint8_t _width = router->get_width();
-    uint8_t _ingress_iface = 0;
+    uint8_t iface_num = router->get_iface_num();
+    uint8_t height = router->get_height();
+    uint8_t width = router->get_width();
 
-    // index to cycle through the TP info given as an argument to the 
-    // RID_Analytics object
-    uint32_t _tp_size_offset = 
-        _height * (((int) pow(2.0, this->access_tree_height - 1)) * this->iface_num) 
-        + _width * this->iface_num;
-
-    __float080 _event_prob = 0.0, _cumulative_event_prob = 0.0;
+    __float080 event_prob = 0.0;
+    __float080 ingress_prob = (*prev_path_state_itr)->get_ingress_iface_prob();
     __float080 * ingress_ptree_prob = (*prev_path_state_itr)->get_ingress_ptree_prob();
 
-    // next hop router pointer
-    RID_Router * _router_next_hop = NULL;
-    tree<Path_State *>::iterator _path_state_itr;
+    // next hop information
+    RID_Router::nw_address next_hop;
+    tree<Path_State *>::iterator path_state_itr;
 
     // run the forward() operation on this router : this will determine the 
     // following info:
@@ -447,133 +336,161 @@ int RID_Analytics::run_rec(
     //  2) egress size probabilities
     //
     // we then use this info to determine the path state
-    printf("\nRID_Analytics::run_rec() : FORWARD() BY ROUTER[%d][%d]\n", _height, _width);
+    printf("\nRID_Analytics::run_rec() : FORWARD() BY ROUTER[%d][%d]\n", height, width);
 
     router->forward(
         this->request_size, 
         ingress_iface,
-        &(this->tp_sizes[_tp_size_offset]),
+        this->tp_sizes[router->get_id()],
+        ingress_prob,
         ingress_ptree_prob,
         this->f_r_distribution);
 
     // we now cycle through all possible interface events and set the possible 
     // path states and probabilities
-    for (int _event = EVENT_NIS; _event < EVENT_NUM; _event++) {
+    for (int event = EVENT_NO_MATCHES; event < EVENT_NUM; event++) {
 
         // we differentiate the establishment of states by iface events:
-        //  1) if EVENT_NIS, EVENT_MIS or EVENT_LI the path ends
-        //  2) if EVENT_EI, the path continues, and so we have additional 
-        //     work : setting ingress 'prefix tree' probabilities, determining 
-        //     the intermediate state (TP or FP), calling run_rec() again, etc.
-        Path_State * _path_state = NULL;
+        //  1) if EVENT_NO_MATCHES, EVENT_MULTIPLE_IFACE_MATCHES 
+        //     or EVENT_LOCAL_IFACE_MATCH the path ends
+        //  2) if EVENT_SINGLE_IFACE_MATCH, the path continues, and so we have 
+        //     additional work : setting ingress 'prefix tree' probabilities, 
+        //     determining the intermediate state (TP or FP), calling run_rec() 
+        //     again, etc.
+        Path_State * path_state = NULL;
 
-        if (_event < EVENT_EI) {
+        if (event < EVENT_SINGLE_IFACE_MATCH) {
 
-            _path_state = new Path_State(router, this->request_size);
-            _path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, _path_state);
+            path_state = new Path_State(router, this->request_size);
+            path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
 
-            _path_state->set_final_prob(router->get_iface_events_prob(_event));
-            _path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+            // all events < EVENT_SINGLE_IFACE_MATCH are 'ends of the line' 
+            // in a way.
+            path_state->set_final_prob(router->get_iface_events_prob(event));
+            path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
 
-            if (_event > EVENT_NIS) {
+            if (event > EVENT_NO_MATCHES) {
 
-                // as long as the event is EVENT_MIS or EVENT_LI, the path 
-                // ends here...
-                _path_state->set_eop();
+                // as long as the event is EVENT_MULTIPLE_IFACE_MATCHES or
+                // EVENT_LOCAL_IFACE_MATCH, the path ends here...
+                // FIXME: this is bound to change.
+                path_state->set_eop();
 
-                if (_event == EVENT_MIS) {
+                if (event == EVENT_MULTIPLE_IFACE_MATCHES) {
 
-                    _path_state->set_outcome(OUTCOME_FALLBACK_DELIVERY);
-                    _path_state->set_path_length(
-                        (*prev_path_state_itr)->get_path_length() + 1
-                        + get_tp_distance(_path_state->get_router()));
+                    path_state->set_outcome(OUTCOME_FALLBACK_DELIVERY);
+                    path_state->set_path_length(
+                        (*prev_path_state_itr)->get_path_length() + 1);
+                        // + get_tp_distance(path_state->get_router()));
 
                     printf("\nRID_Analytics::run_rec() : Event 'MIS' at ROUTER[%d][%d] : latency = %d\n", 
-                        _height, _width, _path_state->get_path_length());
+                        height, width, path_state->get_path_length());
 
-                } else if (_event == EVENT_LI) {
+                } else if (event == EVENT_LOCAL_IFACE_MATCH) {
 
-                    if (this->tp_sizes[_tp_size_offset + IFACE_LOCAL] > 0) {
+                    // if we hit a cache, and there's a TP at iface local, 
+                    // we get a correct delivery, otherwise an incorrect delivery
+                    if (this->tp_sizes[router->get_id()][IFACE_LOCAL] > 0) {
 
-                        _path_state->set_outcome(OUTCOME_CORRECT_DELIVERY);
+                        path_state->set_outcome(OUTCOME_CORRECT_DELIVERY);
 
                     } else {
 
-                        _path_state->set_outcome(OUTCOME_INCORRECT_DELIVERY);
-                        _path_state->set_path_length(
-                            (*prev_path_state_itr)->get_path_length() + 1
-                            + get_tp_distance(_path_state->get_router()));
+                        path_state->set_outcome(OUTCOME_INCORRECT_DELIVERY);
+                        // this is the fancy TP distance thing (in fact, not 
+                        // that fancy and/or useful)
+                        path_state->set_path_length(
+                            (*prev_path_state_itr)->get_path_length() + 1);
+                            // + get_tp_distance(path_state->get_router()));
                     }
                 }
 
             } else {
 
-                // EVENT_NIS leads to the relay of the packet
+                // EVENT_NO_MATCHES leads to the relay of the packet
                 if (ingress_iface != IFACE_UPSTREAM 
                     && (router->get_height() > 0 && router->get_width() > 0)) {
-                    _path_state->set_final_prob(0.0);
+                    path_state->set_final_prob(0.0);
                 }
 
-                _path_state->set_outcome(OUTCOME_FALLBACK_RELAY);
-                _path_state->set_path_length(
-                    (*prev_path_state_itr)->get_path_length() + 1
-                    + get_tp_distance(_path_state->get_router()));
+                path_state->set_outcome(OUTCOME_FALLBACK_RELAY);
+                path_state->set_path_length(
+                    (*prev_path_state_itr)->get_path_length() + 1);
+                    // + get_tp_distance(path_state->get_router()));
             }
 
         } else {
 
-            // if EVENT_EI, the request paths continue to be built. therefore, 
-            // we cycle through all egress interfaces
-            for (int _iface = IFACE_LOCAL + 1; _iface < _iface_num; _iface++) {
+            // if EVENT_SINGLE_IFACE_MATCH, the request paths continue to be 
+            // built. therefore, we cycle through all egress interfaces
+            for (int iface = IFACE_LOCAL + 1; iface < iface_num; iface++) {
 
-                _cumulative_event_prob = 0.0;
+                // create a new PathState object for each egress iface
+                path_state = new Path_State(router, this->request_size);
+                path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
 
-                // note how we now add a new Path_State object for each egress 
-                // iface
-                _path_state = new Path_State(router, this->request_size);
-                _path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, _path_state);
+                // increment the path length by +1 hop
+                path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
 
-                _path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+                // now, we deal with probabilities:
+                //  -# ingress_ptree_probs : the prob of having the packet 
+                //     bound to a prefix tree of size s (no TP info)
+                //
+                //  -# ingress_iface_probs : the prob of having a packet 
+                //     flow through iface i (takes TPs into account)
+                //
+                path_state->set_ingress_ptree_prob(router->get_egress_ptree_prob(iface), this->f_max);
 
-                // set the ingress 'prefix tree' probabilities
-                for (int _f = 0; _f < this->f_max + 1; _f++) {
+                event_prob = router->get_egress_iface_prob(iface);
+                path_state->set_ingress_iface_prob(event_prob);
+                path_state->set_final_prob(event_prob);
 
-                    _event_prob = router->get_egress_size_prob(_iface, _f);
-                    _cumulative_event_prob += _event_prob;
+                // for (int f = 0; f < this->f_max + 1; f++) {
+                //     event_prob = router->get_egress_iface_prob(iface, f);
+                //     cumulative_event_prob += event_prob;
+                //     path_state->set_ingress_ptree_prob(f, router->get_egress_ptree_prob(iface, f));
+                //     path_state->set_ingress_prob(f, cumulative_event_prob);
+                // }
 
-                    _path_state->set_ingress_ptree_prob(_f, _event_prob);
-                }
+                // determine the correctness of the forwarding decision
+                if (this->tp_sizes[router->get_id()][iface] > 0) {
 
-                // just because, set this overall probability too...
-                _path_state->set_final_prob(_cumulative_event_prob);
-
-                // determine the correctness of the decision
-                if (this->tp_sizes[_tp_size_offset + _iface] > 0) {
-
-                    _path_state->set_outcome(OUTCOME_INTERMEDIATE_TP); 
+                    // if router has a TP on iface, set the even as 
+                    // an intermediate TP, i.e. "we're on the right path"
+                    path_state->set_outcome(OUTCOME_INTERMEDIATE_TP); 
 
                 } else {
 
-                    _path_state->set_outcome(OUTCOME_INTERMEDIATE_FP);
+                    // else, an 'unlucky' FP happened: we're on the wrong path 
+                    // now (a FP match occurred, in an iface which does not 
+                    // have TP entries)
+                    path_state->set_outcome(OUTCOME_INTERMEDIATE_FP);
                 }
 
                 // finally, we continue with the request path
                 // get the next hop router by iface
-                _router_next_hop = router->get_fwd_table_next_hop(_iface);
+                next_hop = router->get_next_hop(iface);
 
                 // this can still happen (or can it?)
-                if (_router_next_hop == NULL || _iface == ingress_iface)
+                // FIXME: this subtle condition is the one that actually 
+                // terminates the run. this could be the source of trouble.
+                if (next_hop.router == router || iface == ingress_iface)
                     continue;
 
-                // recursively call run_rec() for router_next_hop : its ingress 
-                // iface depends on 'iface' (i.e. the egress iface of 'router'):
-                //  * if iface == IFACE_UPSTREAM : ingress iface will be 
-                //      IFACE_DOWNSTREAM
-                //  * else (i.e. if iface > IFACE_UPSTREAM) : ingress iface 
-                //      will be IFACE_UPSTREAM
-                _ingress_iface = ((_iface == IFACE_UPSTREAM) ? IFACE_DOWNSTREAM : IFACE_UPSTREAM);
+                // if the RID packet came from upwards or a peer router, 
+                // make sure to ONLY forward downwards.
+                if ((router->get_next_hop(ingress_iface).router->get_height() <= router->get_height())
+                        && (router->get_id() != "0.3.0")) {
 
-                run_rec(_router_next_hop, _ingress_iface, _path_state_itr);
+                    if(next_hop.router->get_height() <= router->get_height())
+                        continue;
+                }
+
+                std::cout << "RID_Analytics::run_rec() : [INFO] on router[" << router->get_id() 
+                    << "], forwarding to router[" << next_hop.router->get_id() 
+                    << "]" << std::endl;
+
+                run_rec(next_hop.router, next_hop.iface, path_state_itr);
             }
         }
     }
@@ -581,37 +498,77 @@ int RID_Analytics::run_rec(
     return 0;
 }
 
-int RID_Analytics::run(
-    uint8_t request_size,
-    int * tp_sizes,
-    __float080 * f_r_distribution) {
+int RID_Analytics::run(std::string nw_filename) {
 
-    this->request_size = request_size;
-    this->tp_sizes = tp_sizes;
-    this->f_r_distribution = f_r_distribution;
+    // extract the TP size map and |F\R| distr. from nw_filename
+    // read .scn file, structured as an xml file
+    pugi::xml_document nw_doc;
+    if (!(nw_doc.load_file(nw_filename.c_str()))) {
 
-    tree<Path_State *>::iterator _path_state_tree_itr;
-    _path_state_tree_itr = this->path_state_tree.begin();
+        std::cerr << "RID_Analytics::run() : [ERROR] .scn file (" 
+            << nw_filename << ") not found." << std::endl;
+
+        return -1;
+    }
+
+    pugi::xml_node trees = nw_doc.child("trees");
+    for (pugi::xml_node tree = trees.child("tree"); 
+        tree; 
+        tree = tree.next_sibling("tree")) {
+
+        // tp sizes per router
+        for (pugi::xml_node router = tree.child("topology").child("router"); 
+            router; 
+            router = router.next_sibling("router")) {
+
+            std::string router_id = std::string(tree.attribute("index").value()) 
+                + std::string(".") 
+                + std::string(router.attribute("id").value());
+
+            int * _tp_sizes = (int *) calloc(routers[router_id]->get_iface_num(), sizeof(int));
+            for (pugi::xml_node tp = router.child("tp"); 
+                tp; 
+                tp = tp.next_sibling("tp")) {
+
+                _tp_sizes[tp.attribute("iface").as_uint()] = tp.text().as_uint();
+            }
+
+            // we keep tp sizes in a map router_id <-> tp sizes (per iface)
+            this->tp_sizes[router_id] = _tp_sizes;
+        }
+
+        this->f_r_distribution = (__float080 *) calloc(this->f_max, sizeof(__float080));
+        for (pugi::xml_node f_r_dist = tree.child("topology").child("f_r_dist"); 
+            f_r_dist; 
+            f_r_dist = f_r_dist.next_sibling("f_r_dist")) {
+
+            this->f_r_distribution[f_r_dist.attribute("diff").as_uint()] = f_r_dist.text().as_uint();
+        }
+    }
+
+    tree<Path_State *>::iterator path_state_tree_itr;
+    path_state_tree_itr = this->path_state_tree.begin();
 
     // FIXME: not sure if it is ok to set the rid_router arg on Path_State() 
     // as NULL
-    Path_State * _initial_state = new Path_State(NULL, request_size);
-    _initial_state->set_path_length(0);
+    Path_State * initial_state = new Path_State(NULL, request_size);
+    initial_state->set_path_length(0);
 
-    _path_state_tree_itr = this->path_state_tree.insert(
-                                                    _path_state_tree_itr, 
-                                                    _initial_state);
+    path_state_tree_itr = this->path_state_tree.insert(
+                                                    path_state_tree_itr, 
+                                                    initial_state);
 
-    // set the initial ingress probabilities: _ptree_size = 0 gets 1.0 
+    // set the initial ingress probabilities: ptree_size = 0 gets 1.0 
     // probability, i.e. initially the request isn't bound to any prefix tree
-    _initial_state->set_ingress_ptree_prob(0, 1.0);
+    initial_state->set_ingress_ptree_prob(0, 1.0);
+    initial_state->set_ingress_iface_prob(1.0);
 
     // all other prefix tree sizes get 0.0 probability
-    for (uint8_t _ptree_size = 1; _ptree_size < (request_size + 1); _ptree_size++)
-        _initial_state->set_ingress_ptree_prob(_ptree_size, 0.0);
+    for (uint8_t ptree_size = 1; ptree_size <= this->request_size; ptree_size++)
+        initial_state->set_ingress_ptree_prob(ptree_size, 0.0);
 
     // ingress iface is the IFACE_DOWNSTREAM of upstream router
-    run_rec(this->start_router, IFACE_DOWNSTREAM, _path_state_tree_itr);
+    run_rec(this->routers["0.3.0"], 2, path_state_tree_itr);
 
     return 0;
 }
@@ -660,14 +617,12 @@ int RID_Analytics::view_results(
             // format : 
             // <rtr.hght>,<rtr.wdth>,<prob>,<path_length>,<outcome>
             fprintf(_output_file, 
-                "%d,%d,%-.5LE,%d,%d,%d,%d\n", 
+                "%d,%d,%-.5LE,%d,%d\n", 
                 (*_leaf_itr)->get_router()->get_height(),
                 (*_leaf_itr)->get_router()->get_width(),
                 (*_leaf_itr)->get_final_prob(),
                 (*_leaf_itr)->get_path_length(),
-                (*_leaf_itr)->get_outcome(),
-                this->f_min,
-                this->expand_factor);
+                (*_leaf_itr)->get_outcome());
         }
 
         _checksum += (*_leaf_itr)->get_final_prob();

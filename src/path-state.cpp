@@ -22,9 +22,20 @@ __float080 Path_State::get_final_prob() {
     return this->final_prob;
 }
 
-void Path_State::set_ingress_ptree_prob(uint8_t f, __float080 prob) {
+void Path_State::set_ingress_ptree_prob(__float080 * prob, int prob_size) {
+
+    for (int f = 0; f < prob_size + 1; f++)
+        this->ingress_ptree_prob[f] = prob[f];
+}
+
+void Path_State::set_ingress_ptree_prob(int f, __float080 prob) {
 
     this->ingress_ptree_prob[f] = prob;
+}
+
+void Path_State::set_ingress_iface_prob(__float080 prob) {
+
+    this->ingress_iface_prob = prob;
 }
 
 __float080 * Path_State::get_ingress_ptree_prob() {
@@ -35,6 +46,11 @@ __float080 * Path_State::get_ingress_ptree_prob() {
 __float080 Path_State::get_ingress_ptree_prob(uint8_t f) {
 
     return this->ingress_ptree_prob[f];
+}
+
+__float080 Path_State::get_ingress_iface_prob() {
+
+    return this->ingress_iface_prob;
 }
 
 void Path_State::set_eop() { 

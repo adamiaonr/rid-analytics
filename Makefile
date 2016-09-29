@@ -14,7 +14,7 @@ OBJECTS_SANITY := $(filter-out $(BUILDDIR)/$(TARGET_SENSITIVITY).o, $(OBJECTS))
 #OBJECTS_SENSITIVITY := $(filter-out $(BUILDDIR)/$(TARGET_SANITY).o, $(OBJECTS))
 
 # use -ggdb for GNU debugger
-CFLAGS := -g -ggdb -gdwarf-2 -Wall -std=c++11
+CFLAGS := -g -ggdb -gdwarf-2 -Wall -Wno-comment -std=c++11
 
 LIB := -lm
 INC := -Iinclude

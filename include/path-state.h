@@ -31,9 +31,13 @@ class Path_State {
         void set_final_prob(__float080 prob);
         __float080 get_final_prob();
 
-        void set_ingress_ptree_prob(uint8_t f, __float080 prob);
+        void set_ingress_ptree_prob(__float080 * prob, int prob_size);
+        void set_ingress_ptree_prob(int f, __float080 prob);
+        void set_ingress_iface_prob(__float080 prob);
+        
         __float080 * get_ingress_ptree_prob();
         __float080 get_ingress_ptree_prob(uint8_t f);
+        __float080 get_ingress_iface_prob();
 
         void set_eop();
         bool get_eop();
@@ -73,6 +77,7 @@ class Path_State {
         // ingress probabilities : prob of a router receiving a request 
         // over a 'prefix tree' of size p
         __float080 * ingress_ptree_prob;
+        __float080 ingress_iface_prob;
 };
 
 #endif

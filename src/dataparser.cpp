@@ -7,6 +7,39 @@ DataParser::DataParser(const char * dat_filename)
     this->dat_filename = std::string(dat_filename);
 }
 
+int DataParser::split_string(
+    std::string line, 
+    const char * delimiter, 
+    std::vector<std::string> & split_string) {
+
+    char buffer[MAX_CHARS_PER_LINE];
+    char * token;
+
+    // the line is mangled by strtok(), so we copy line into a buffer which 
+    // can be mangled 
+    strncpy(buffer, line.c_str(), MAX_CHARS_PER_LINE);
+
+    // start popin' them tokens
+    token = strtok(buffer, delimiter);
+    while (token != NULL) {
+
+        // std::cout << "DataParser::split_string() : [INFO] token = " 
+        //     << token << std::endl;
+        split_string.push_back(std::string(token));
+        token = strtok(NULL, delimiter);
+    }
+
+    if (split_string.size() > 0) {
+
+        return 0;
+
+    } else {
+
+        std::cerr << "DataParser::split_string() : [ERROR] no tokens gathered" << std::endl;
+        return -1;
+    }
+}
+
 int DataParser::get_int_property_value(const char * property_name, int &int_value) 
 {
     std::ifstream ifs;
