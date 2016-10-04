@@ -21,6 +21,10 @@
 #define MODE_SAVE_GRAPH     0x04
 #define MODE_SAVE_OUTCOMES  0x08
 
+// indexes for output file array
+#define FILE_EVENTS         0
+#define FILE_PATHS          1
+
 // P(|F|_i) distributions (for IFACE_LOCAL and otherwise)
 #define LOCAL       0x00
 #define NON_LOCAL   0x01
@@ -56,7 +60,7 @@ class RID_Analytics {
         ~RID_Analytics();
 
         int run(std::string scn_filename);
-        int view_results(uint8_t mode, char * output_file_path);
+        int view_results(uint8_t mode, std::string output_dir);
 
     private:
 

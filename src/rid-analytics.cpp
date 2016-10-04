@@ -2,6 +2,7 @@
 #include <cfloat>
 #include <algorithm>
 #include <string>
+#include <sstream>
 #include <fstream>  // reading .nw files
 #include <map>
 #include <list>
@@ -30,16 +31,24 @@ RID_Analytics::RID_Analytics(
 RID_Analytics::~RID_Analytics() {
 
     // erase the path state tree
-    tree<Path_State *>::post_order_iterator post_itr = this->path_state_tree.begin_post();
-    tree<Path_State *>::post_order_iterator end_post_itr = this->path_state_tree.end_post();
+    tree<Path_State *>::iterator dfs_itr = this->path_state_tree.begin();
+    // tree<Path_State *>::post_order_iterator post_itr = this->path_state_tree.begin_post();
+    // tree<Path_State *>::post_order_iterator end_post_itr = this->path_state_tree.end_post();
 
-    while (post_itr != end_post_itr) {
+    while (dfs_itr != this->path_state_tree.end()) {
+
+        if ((*dfs_itr)->get_router()) {
+            std::cout << "RID_Analytics::get_network() : [INFO] deleting {"
+                << (*dfs_itr)->get_path_length() << ", "
+                << (*dfs_itr)->get_router()->get_id() << ", "
+                << (*dfs_itr)->get_path_status() << ", "
+                << (*dfs_itr)->get_path_prob() << "}" << std::endl;
+        }
 
         // delete the Path_State object associated with the tree node (not the 
         // node itself)
-        delete (*post_itr);
-
-        ++post_itr;
+        delete(*dfs_itr);
+        ++dfs_itr;
     }
 
     // erase the routers in the topology. use the router map for that (see the 
@@ -322,7 +331,7 @@ int RID_Analytics::run_rec(
     uint8_t height = router->get_height();
     uint8_t width = router->get_width();
 
-    __float080 event_prob = 0.0;
+    __float080 path_prob = 0.0;
     __float080 ingress_prob = (*prev_path_state_itr)->get_ingress_iface_prob();
     __float080 * ingress_ptree_prob = (*prev_path_state_itr)->get_ingress_ptree_prob();
 
@@ -336,8 +345,8 @@ int RID_Analytics::run_rec(
     //  2) egress size probabilities
     //
     // we then use this info to determine the path state
-    printf("\nRID_Analytics::run_rec() : FORWARD() BY ROUTER[%d][%d]\n", height, width);
-
+    std::cout << "\nRID_Analytics::run_rec() : FORWARD() BY ROUTER[" 
+        << (int) height << "][" << (int) width << "]\n";
     router->forward(
         this->request_size, 
         ingress_iface,
@@ -351,23 +360,32 @@ int RID_Analytics::run_rec(
     for (int event = EVENT_NO_MATCHES; event < EVENT_NUM; event++) {
 
         // we differentiate the establishment of states by iface events:
+        //
         //  1) if EVENT_NO_MATCHES, EVENT_MULTIPLE_IFACE_MATCHES 
-        //     or EVENT_LOCAL_IFACE_MATCH the path ends
+        //     or EVENT_LOCAL_IFACE_MATCH, the path ends
+        //
         //  2) if EVENT_SINGLE_IFACE_MATCH, the path continues, and so we have 
-        //     additional work : setting ingress 'prefix tree' probabilities, 
+        //     additional work : setting FP tree probabilities, 
         //     determining the intermediate state (TP or FP), calling run_rec() 
         //     again, etc.
-        Path_State * path_state = NULL;
-
+        //
         if (event < EVENT_SINGLE_IFACE_MATCH) {
 
-            path_state = new Path_State(router, this->request_size);
+            Path_State * path_state = new Path_State(router, this->request_size);
             path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
 
+            // set the event & event probability
+            path_state->set_event(event, router->get_iface_events_prob(event));
             // all events < EVENT_SINGLE_IFACE_MATCH are 'ends of the line' 
             // in a way.
-            path_state->set_final_prob(router->get_iface_events_prob(event));
+            path_state->set_path_prob(router->get_iface_events_prob(event));
             path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+
+            std::cout << "RID_Analytics::run_rec() : [INFO] ADDED NODE TO PATH STATE TREE: "
+                << "\n\tEVENT : " << event << " EVENT PROB. : " << path_state->get_event_prob()
+                << "\n\tPROB : " << router->get_iface_events_prob(event)
+                << "\n\tPATH LATENCY : " << (*prev_path_state_itr)->get_path_length() + 1
+                << std::endl;
 
             if (event > EVENT_NO_MATCHES) {
 
@@ -378,13 +396,10 @@ int RID_Analytics::run_rec(
 
                 if (event == EVENT_MULTIPLE_IFACE_MATCHES) {
 
-                    path_state->set_outcome(OUTCOME_FALLBACK_DELIVERY);
+                    path_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
                     path_state->set_path_length(
                         (*prev_path_state_itr)->get_path_length() + 1);
                         // + get_tp_distance(path_state->get_router()));
-
-                    printf("\nRID_Analytics::run_rec() : Event 'MIS' at ROUTER[%d][%d] : latency = %d\n", 
-                        height, width, path_state->get_path_length());
 
                 } else if (event == EVENT_LOCAL_IFACE_MATCH) {
 
@@ -392,11 +407,11 @@ int RID_Analytics::run_rec(
                     // we get a correct delivery, otherwise an incorrect delivery
                     if (this->tp_sizes[router->get_id()][IFACE_LOCAL] > 0) {
 
-                        path_state->set_outcome(OUTCOME_CORRECT_DELIVERY);
+                        path_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
 
                     } else {
 
-                        path_state->set_outcome(OUTCOME_INCORRECT_DELIVERY);
+                        path_state->set_path_status(OUTCOME_INCORRECT_DELIVERY);
                         // this is the fancy TP distance thing (in fact, not 
                         // that fancy and/or useful)
                         path_state->set_path_length(
@@ -410,10 +425,10 @@ int RID_Analytics::run_rec(
                 // EVENT_NO_MATCHES leads to the relay of the packet
                 if (ingress_iface != IFACE_UPSTREAM 
                     && (router->get_height() > 0 && router->get_width() > 0)) {
-                    path_state->set_final_prob(0.0);
+                    path_state->set_path_prob(0.0);
                 }
 
-                path_state->set_outcome(OUTCOME_FALLBACK_RELAY);
+                path_state->set_path_status(OUTCOME_FALLBACK_RELAY);
                 path_state->set_path_length(
                     (*prev_path_state_itr)->get_path_length() + 1);
                     // + get_tp_distance(path_state->get_router()));
@@ -421,12 +436,20 @@ int RID_Analytics::run_rec(
 
         } else {
 
+            bool event_added = false;
+
             // if EVENT_SINGLE_IFACE_MATCH, the request paths continue to be 
             // built. therefore, we cycle through all egress interfaces
             for (int iface = IFACE_LOCAL + 1; iface < iface_num; iface++) {
 
+                // don't add a state for a blocked iface
+                std::set<int> blocked_ifaces = router->get_blocked_ifaces();
+                std::set<int>::iterator it = blocked_ifaces.find((int) iface);
+                if (it != blocked_ifaces.end())
+                    continue;
+
                 // create a new PathState object for each egress iface
-                path_state = new Path_State(router, this->request_size);
+                Path_State * path_state = new Path_State(router, this->request_size);
                 path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
 
                 // increment the path length by +1 hop
@@ -441,30 +464,37 @@ int RID_Analytics::run_rec(
                 //
                 path_state->set_ingress_ptree_prob(router->get_egress_ptree_prob(iface), this->f_max);
 
-                event_prob = router->get_egress_iface_prob(iface);
-                path_state->set_ingress_iface_prob(event_prob);
-                path_state->set_final_prob(event_prob);
+                path_prob = router->get_egress_iface_prob(iface);
+                path_state->set_path_prob(path_prob);
+                path_state->set_ingress_iface_prob(path_prob);
 
-                // for (int f = 0; f < this->f_max + 1; f++) {
-                //     event_prob = router->get_egress_iface_prob(iface, f);
-                //     cumulative_event_prob += event_prob;
-                //     path_state->set_ingress_ptree_prob(f, router->get_egress_ptree_prob(iface, f));
-                //     path_state->set_ingress_prob(f, cumulative_event_prob);
-                // }
+                // set the event & event probability
+                if (!event_added) {
+                    path_state->set_event(event, router->get_iface_events_prob(event));
+                    event_added = true;
+                } else {
+                    path_state->set_event(event, 0.0);
+                }
+
+                std::cout << "RID_Analytics::run_rec() : [INFO] ADDED NODE TO PATH STATE TREE: "
+                    << "\n\tEVENT : " << event << " EVENT PROB. : " << path_state->get_event_prob()
+                    << "\n\tPATH PROB. : " << path_prob
+                    << "\n\tPATH LATENCY : " << (*prev_path_state_itr)->get_path_length() + 1
+                    << std::endl;
 
                 // determine the correctness of the forwarding decision
                 if (this->tp_sizes[router->get_id()][iface] > 0) {
 
                     // if router has a TP on iface, set the even as 
                     // an intermediate TP, i.e. "we're on the right path"
-                    path_state->set_outcome(OUTCOME_INTERMEDIATE_TP); 
+                    path_state->set_path_status(OUTCOME_INTERMEDIATE_TP); 
 
                 } else {
 
                     // else, an 'unlucky' FP happened: we're on the wrong path 
                     // now (a FP match occurred, in an iface which does not 
                     // have TP entries)
-                    path_state->set_outcome(OUTCOME_INTERMEDIATE_FP);
+                    path_state->set_path_status(OUTCOME_INTERMEDIATE_FP);
                 }
 
                 // finally, we continue with the request path
@@ -473,7 +503,8 @@ int RID_Analytics::run_rec(
 
                 // this can still happen (or can it?)
                 // FIXME: this subtle condition is the one that actually 
-                // terminates the run. this could be the source of trouble.
+                // terminates the run. 
+                // FIXME: this could be the source of trouble.
                 if (next_hop.router == router || iface == ingress_iface)
                     continue;
 
@@ -573,66 +604,82 @@ int RID_Analytics::run(std::string nw_filename) {
     return 0;
 }
 
+std::string get_unix_timestamp() {
+
+    std::stringstream strm;
+    strm << time(NULL);
+
+    return strm.str();
+}
+
 int RID_Analytics::view_results(
     uint8_t modes,
-    char * output_file_path) {
+    std::string output_dir) {
 
-    // iterate through the path_tree leafs to learn 
-    // a bit about latencies for this scenario
-    tree<Path_State *>::leaf_iterator _leaf_itr = this->path_state_tree.begin_leaf();
-    tree<Path_State *>::leaf_iterator _end_leaf_itr = this->path_state_tree.end_leaf();
+    __float080 checksum = 0.0;
+    char * path_state_str = NULL;
 
-    __float080 _checksum = 0.0;
-
-    char * _path_state_str = NULL;
-
-    // print some results for quick checking
+    // if verbose mode is on, print results in stdout
     if ((modes & MODE_VERBOSE))
-        printf("\n*** RESULTS ***\n\n");
+        std::cout << "\n*** RESULTS ***\n" << std::endl;
 
-    // if requested, save outcomes in the path given as arg
-    FILE * _output_file;
-
-    if ((modes & MODE_SAVE_OUTCOMES)) {
-
-        _output_file = fopen(output_file_path, "w");
+    // we create x .tsv files, each for different
+    //  -# events.tsv       : probabilities of events (LIM, SIM, NIM, MIM) per AS
+    //  -# outcomes.tsv     : outcomes (correct/incorrect delivery, etc.) per AS
+    //  -# latencies.tsv    : final path latencies (nr. of hops)
+    ofstream output_file[2];  
+    // file names follow the convention <type>.<unix-timestamp>.tsv
+    std::string output_filename[2] = {"events", "path"};
+    for (int i = 0; i < 2; i++) {
+        output_filename[i] += std::string(".") + get_unix_timestamp() + std::string(".tsv");
+        output_file[i].open(output_dir + std::string("/") + output_filename[i]);
     }
 
-    while (_leaf_itr != _end_leaf_itr) {
+    // add column lines to .tsv files
+    output_file[FILE_EVENTS] << "AS\tTIER-Y\tTIER-X\tEVENT\tPROB\n";
+    output_file[FILE_PATHS] << "AS\tTIER-Y\tTIER-X\tSTATUS\tLATENCY\tPROB\n";
+
+    // gather event stats (DFS iterator traverses the whole path state tree)
+    tree<Path_State *>::iterator dfs_itr = this->path_state_tree.begin();
+    while(dfs_itr != this->path_state_tree.end()) {
+
+        if ((*dfs_itr)->get_router())
+            output_file[FILE_EVENTS] << (*dfs_itr)->get_router()->get_id() << "\t"
+                << (int) (*dfs_itr)->get_router()->get_height() << "\t" << (int) (*dfs_itr)->get_router()->get_width() << "\t" 
+                << (int) (*dfs_itr)->get_event() << "\t"
+                << (*dfs_itr)->get_event_prob() << "\n";
+
+        ++dfs_itr;
+    }
+
+    // gather outcome and latency stats (by only looking at leafs of path state 
+    // tree)
+    tree<Path_State *>::leaf_iterator leaf_itr      = this->path_state_tree.begin_leaf();
+    tree<Path_State *>::leaf_iterator end_leaf_itr  = this->path_state_tree.end_leaf();
+    while (leaf_itr != end_leaf_itr) {
 
         if ((modes & MODE_VERBOSE)) {
 
-            _path_state_str = (*_leaf_itr)->to_string();
+            path_state_str = (*leaf_itr)->to_string();
+            std::cout << "[PATH_TREE DEPTH " 
+                << (int) this->path_state_tree.depth(leaf_itr)
+                << " : " << path_state_str << std::endl;
 
-            printf("[PATH_TREE DEPTH %d] : %s\n", 
-                this->path_state_tree.depth(_leaf_itr), 
-                _path_state_str);
-
-            free(_path_state_str);
+            free(path_state_str);
         }
 
-        if ((modes & MODE_SAVE_OUTCOMES)) {
+        output_file[FILE_PATHS] << (*leaf_itr)->get_router()->get_id() << "\t"
+            << (int) (*leaf_itr)->get_router()->get_height() << "\t" << (int) (*leaf_itr)->get_router()->get_width() << "\t" 
+            << (int) (*leaf_itr)->get_path_status() << "\t"
+            << (int) (*leaf_itr)->get_path_length() << "\t"
+            << (*leaf_itr)->get_path_prob() << "\n";
 
-            // append a line in the output file, with the following 
-            // format : 
-            // <rtr.hght>,<rtr.wdth>,<prob>,<path_length>,<outcome>
-            fprintf(_output_file, 
-                "%d,%d,%-.5LE,%d,%d\n", 
-                (*_leaf_itr)->get_router()->get_height(),
-                (*_leaf_itr)->get_router()->get_width(),
-                (*_leaf_itr)->get_final_prob(),
-                (*_leaf_itr)->get_path_length(),
-                (*_leaf_itr)->get_outcome());
-        }
-
-        _checksum += (*_leaf_itr)->get_final_prob();
-        ++_leaf_itr;
+        checksum += (*leaf_itr)->get_path_prob();
+        ++leaf_itr;
     }
 
-    if ((modes & MODE_VERBOSE)) {
-
-        printf("\n[CHECKSUM : %-.5LE]\n", _checksum);
-    }
+    if ((modes & MODE_VERBOSE)) 
+        std::cout << "\n[CHECKSUM : " << checksum << std::endl;
 
     return 0;
 }

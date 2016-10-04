@@ -191,17 +191,13 @@ int main (int argc, char **argv) {
     // ... and run the model
     rid_analytics_env->run(std::string(scn_file));
 
-    char output_file_path[MAX_ARRAY_SIZE] = {0};
-    snprintf(output_file_path, MAX_ARRAY_SIZE, "%s/%s.csv", data_dir, output_file);
+    printf("rid-analytics : output dir = %s\n", data_dir);
 
-    printf("rid-analytics : output_file_path = %s\n", output_file_path);
-
-    uint8_t mode = MODE_SAVE_OUTCOMES;
-
+    uint8_t mode = 0x00;
     if (verbose)
         mode = (mode | MODE_VERBOSE);
 
-    rid_analytics_env->view_results(mode, output_file_path);
+    rid_analytics_env->view_results(mode, std::string(data_dir));
 
     // clean up after yourself...
     delete rid_analytics_env;

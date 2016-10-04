@@ -164,6 +164,8 @@ int RID_Router::forward(
     __float080 * ingress_ptree_prob,
     __float080 * f_r_distribution) {
 
+    // clear the no forwarding list 
+    this->no_forwarding.clear();
     // take note of the ingress iface for further use. bottom line: we don't 
     // want to forward over it again and create a loop.
     this->no_forwarding.insert(ingress_iface);
@@ -248,6 +250,15 @@ int RID_Router::forward(
     __float080 * joint_lpm_matrix = NULL;
     init_joint_lpm_pmf(&(joint_lpm_matrix));
 
+    // initialize iface_events_pmf
+    for (int i = 0; i < EVENT_NUM; i++)
+        this->iface_events_pmf[i] = 0.0;
+    // initialize egress iface probs
+    for (int i = 0; i < this->iface_num; i++)
+        for (int f = 0; f < this->f_max; f++)
+            this->egress_iface_prob[i][f] = 0.0;
+
+
     // 2.3) compute the joint distr. for p, considering each diff. iface 
     // as the iface associated with the prefix tree of a certain size
     for (int ptree_size = 0; ptree_size <= this->f_max; ptree_size++) {
@@ -314,7 +325,6 @@ int RID_Router::forward(
 
     // think it's safe to do this? think again...
     free(joint_lpm_matrix);
-    this->no_forwarding.clear();
 
     return 0;
 }
@@ -806,6 +816,10 @@ int RID_Router::calc_lpm_pmf(
         //
         // FIXME: this could be a source of trouble...
 
+        // FIXME: initialize the egress FP tree probs
+        for (int f = 0; f <= this->f_max; f++)
+            this->egress_ptree_prob[_iface][f] = 0.0;
+
         for (int f = 0; f <= this->f_max; f++) {
 
             this->egress_ptree_prob[_iface][f] +=
@@ -1143,6 +1157,25 @@ __float080 RID_Router::calc_joint_log_prob(
     return log_prob;
 }
 
+int pivot_to_int(int * pivots, int pivot_size) {
+
+    int pivot = 0;
+
+    for (int p = 0; p < pivot_size; p++) {
+
+        pivot += pivots[p] * pow(10, p);
+
+        std::cout << "pivot_to_int() : [INFO] added pivot " << pivot << " from array ";
+
+        for (int i = 0; i < pivot_size; i++)
+            std::cout << "[" << pivots[i] << "]";
+
+        std::cout << std::endl;
+    }
+
+    return pivot;
+}
+
 __float080 RID_Router::calc_cumulative_prob(
     __float080 * joint_prob_matrix,
     uint8_t iface, 
@@ -1244,6 +1277,18 @@ __float080 RID_Router::calc_cumulative_prob(
                     // update the |F| size pivot for iface i 
                     iface_pivots[this->iface_num - 1] = _f;
                     _prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
+
+                    // if (mode == MODE_EI_INCLUSIVE && _prob > 0.0) {
+
+                    //     int pivot = pivot_to_int(iface_pivots, this->iface_num);
+
+                    //     std::set<int>::iterator it = this->added_pivots.find(pivot);
+                    //     if (it != this->added_pivots.end())
+                    //         _prob = 0.0;
+                    //     else
+                    //         this->added_pivots.insert(pivot);
+                    // }
+
                     _cumulative_prob += _prob;
 
                     if (_prob > 0.0) {
@@ -1260,6 +1305,18 @@ __float080 RID_Router::calc_cumulative_prob(
             } else {
 
                 _prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
+
+                // if (mode == MODE_EI_INCLUSIVE && _prob > 0.0) {
+
+                //     int pivot = pivot_to_int(iface_pivots, this->iface_num);
+
+                //     std::set<int>::iterator it = this->added_pivots.find(pivot);
+                //     if (it != this->added_pivots.end())
+                //         _prob = 0.0;
+                //     else
+                //         this->added_pivots.insert(pivot);
+                // }
+
                 _cumulative_prob += _prob;
                 going_up = 0x00;
 

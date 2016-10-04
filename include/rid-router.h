@@ -24,7 +24,7 @@
 #define EVENT_MULTIPLE_IFACE_MATCHES    0x01
 #define EVENT_LOCAL_IFACE_MATCH         0x02
 #define EVENT_SINGLE_IFACE_MATCH        0x03
-//#define EVENT_UNKNOWN       0x04
+#define EVENT_UNKNOWN                   0x04
 
 // modes for calc_cumulative_prob()
 #define MODE_EI_EXCLUSIVE   0x00
@@ -160,6 +160,10 @@ class RID_Router {
         __float080 get_egress_iface_prob(uint8_t iface);
         void print_egress_iface_prob();
 
+        std::set<int> get_blocked_ifaces() {
+            return this->no_forwarding;
+        }
+
     private:
 
         // computation of LPM match distributions (L_{i,p})
@@ -255,6 +259,7 @@ class RID_Router {
         bool initialized;
         // multiple match handling mode
         uint8_t mm_mode;
+        std::set<int> added_pivots;
 };
 
 #endif

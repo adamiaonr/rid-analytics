@@ -4,13 +4,13 @@
 #define MAX_PATH_STATE_STRING_SIZE 128
 
 // possible outcomes
-#define OUTCOME_CORRECT_DELIVERY    0x00
-#define OUTCOME_INCORRECT_DELIVERY  0x01
-#define OUTCOME_FALLBACK_DELIVERY   0x02
-#define OUTCOME_FALLBACK_RELAY      0x03
-#define OUTCOME_INTERMEDIATE_TP     0x04
-#define OUTCOME_INTERMEDIATE_FP     0x05
-#define OUTCOME_UNDEF               0x06
+#define OUTCOME_CORRECT_DELIVERY    (int) 0x00
+#define OUTCOME_INCORRECT_DELIVERY  (int) 0x01
+#define OUTCOME_FALLBACK_DELIVERY   (int) 0x02
+#define OUTCOME_FALLBACK_RELAY      (int) 0x03
+#define OUTCOME_INTERMEDIATE_TP     (int) 0x04
+#define OUTCOME_INTERMEDIATE_FP     (int) 0x05
+#define OUTCOME_UNDEF               (int) 0x06
 
 //const char * OUTCOME_STR[] = { "correct dest.", "wrong dest. > orig. server", "fp detect. > orig. server", "dropped"};
 
@@ -25,55 +25,47 @@ class Path_State {
     public:
 
         Path_State() {}
-        Path_State(RID_Router * rid_router, int request_size);
+        Path_State(RID_Router * router, int request_size);
         ~Path_State() {}
-
-        void set_final_prob(__float080 prob);
-        __float080 get_final_prob();
 
         void set_ingress_ptree_prob(__float080 * prob, int prob_size);
         void set_ingress_ptree_prob(int f, __float080 prob);
         void set_ingress_iface_prob(__float080 prob);
-        
+
         __float080 * get_ingress_ptree_prob();
         __float080 get_ingress_ptree_prob(uint8_t f);
         __float080 get_ingress_iface_prob();
 
         void set_eop();
-        bool get_eop();
+        bool is_eop();
 
-        void set_path_length(int path_length);
+        void set_path_length(int length);
+        void set_path_status(int status);
+        void set_path_prob(__float080 prob);
         int get_path_length();
+        int get_path_status();
+        __float080 get_path_prob();
 
-        void set_outcome(uint8_t outcome);
-        uint8_t get_outcome();
+        void set_event(int event, __float080 prob);
+        int get_event();
+        __float080 get_event_prob();
 
         RID_Router * get_router();
-
         char * to_string();
 
     private:
 
         // a pointer to the RID router associated with this path state
-        RID_Router * rid_router;
-
-        // request sizes used for this run
-        int request_size;
-
-        // is this the end of an RID packet path?
-        bool is_eop;
-
-        // length of the path, in hops
+        RID_Router * router;
+        // is this the end of a path (EOP)?
+        bool eop;
+        // path status, path length (in hops) and path prob
         int path_length;
-
-        // outcome
-        uint8_t outcome;
-
-        // single probability for the state, i.e. interface event. in the 
-        // case of a EI event, this probability is the sum of the ingress 
-        // 'prefix tree' probabilities for all sizes
-        __float080 final_prob;
-
+        int path_status;
+        __float080 path_prob;
+        // event & event prob
+        int event;
+        __float080 event_prob;
         // ingress probabilities : prob of a router receiving a request 
         // over a 'prefix tree' of size p
         __float080 * ingress_ptree_prob;
