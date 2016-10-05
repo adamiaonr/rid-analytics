@@ -9,6 +9,7 @@
 
 #define OPTION_SCN_FILE             (char *) "scn-file"
 #define OPTION_DATA_DIR             (char *) "data-dir"
+#define OPTION_OUTPUT_LABEL         (char *) "output-label"
 #define OPTION_VERBOSE              (char *) "verbose"
 // eval parameters can be specified directly through the CLI and overwrite any 
 // parameters set in .scn files
@@ -62,6 +63,11 @@ ArgvParser * create_argv_parser() {
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
+            OPTION_OUTPUT_LABEL,
+            "label to add to output .tsv files (will be created in <data-dir>)",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
             OPTION_BF_SIZE,
             "size of RID or Bloom filter (in bits)",
             ArgvParser::OptionRequiresValue);
@@ -89,6 +95,8 @@ int main (int argc, char **argv) {
     char scn_file[MAX_ARRAY_SIZE];
     // dir where all .csv files with output data will be saved
     char data_dir[MAX_ARRAY_SIZE];
+    // output file name for this run
+    char output_label[MAX_ARRAY_SIZE];
     // verbose mode (no verbosity by default)
     bool verbose = false;
     // evaluation parameters
@@ -142,6 +150,19 @@ int main (int argc, char **argv) {
             return -1;
         }
 
+        if (cmds->foundOption(OPTION_OUTPUT_LABEL)) {
+
+            strncpy(output_label, (char *) cmds->optionValue(OPTION_OUTPUT_LABEL).c_str(), MAX_ARRAY_SIZE);
+
+        } else {
+
+            fprintf(stderr, "no output .csv file name specified. use "\
+                "option -h for help.\n");
+
+            delete cmds;
+            return -1;
+        }
+
         if (cmds->foundOption(OPTION_BF_SIZE)) {
 
             bf_size = std::stoi(cmds->optionValue(OPTION_BF_SIZE));   
@@ -170,13 +191,14 @@ int main (int argc, char **argv) {
     // ... and run the model
     rid_analytics_env->run(std::string(scn_file));
 
-    printf("rid-analytics : output dir = %s\n", data_dir);
+    printf("rid-analytics : output dir = %s, output label = %s\n", data_dir, output_label);
 
-    uint8_t mode = 0x00;
+    uint8_t mode = MODE_SAVE_OUTCOMES;
+
     if (verbose)
         mode = (mode | MODE_VERBOSE);
 
-    rid_analytics_env->view_results(mode, std::string(data_dir));
+    rid_analytics_env->view_results(mode, std::string(data_dir), std::string(output_label));
 
     // clean up after yourself...
     delete rid_analytics_env;

@@ -60,7 +60,7 @@ class RID_Analytics {
         ~RID_Analytics();
 
         int run(std::string scn_filename);
-        int view_results(uint8_t mode, std::string output_dir);
+        int view_results(uint8_t mode, std::string output_dir, std::string output_label);
 
     private:
 

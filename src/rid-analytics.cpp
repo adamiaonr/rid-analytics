@@ -648,7 +648,8 @@ std::string get_unix_timestamp() {
 
 int RID_Analytics::view_results(
     uint8_t modes,
-    std::string output_dir) {
+    std::string output_dir,
+    std::string output_label) {
 
     __float080 checksum = 0.0;
     char * path_state_str = NULL;
@@ -662,10 +663,10 @@ int RID_Analytics::view_results(
     //  -# outcomes.tsv     : outcomes (correct/incorrect delivery, etc.) per AS
     //  -# latencies.tsv    : final path latencies (nr. of hops)
     ofstream output_file[2];  
-    // file names follow the convention <type>.<unix-timestamp>.tsv
+    // file names follow the convention <type>.<label>.<unix-timestamp>.tsv
     std::string output_filename[2] = {"events", "path"};
     for (int i = 0; i < 2; i++) {
-        output_filename[i] += std::string(".") + get_unix_timestamp() + std::string(".tsv");
+        output_filename[i] += std::string(".") + output_label + std::string(".") + get_unix_timestamp() + std::string(".tsv");
         output_file[i].open(output_dir + std::string("/") + output_filename[i]);
     }
 
