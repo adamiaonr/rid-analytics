@@ -255,9 +255,10 @@ int RID_Router::forward(
         this->iface_events_pmf[i] = 0.0;
     // initialize egress iface probs
     for (int i = 0; i < this->iface_num; i++)
-        for (int f = 0; f < this->f_max; f++)
+        for (int f = 0; f < (this->f_max + 1); f++)
             this->egress_iface_prob[i][f] = 0.0;
-
+    // reset the tracker of added joint events
+    this->added_pivots.clear();
 
     // 2.3) compute the joint distr. for p, considering each diff. iface 
     // as the iface associated with the prefix tree of a certain size
@@ -298,13 +299,13 @@ int RID_Router::forward(
         }
 
         // 3) calc the prob distribution for ifaces, for each ptree_size
-        if (calc_iface_events_pmf(joint_lpm_matrix) < 0)
+        if (calc_iface_events_pmf(joint_lpm_matrix, ptree_size) < 0)
             return -1;
     }
 
     // we now deduct the probability of exclusive iface matches to correctly 
     // calculate the probability of multiple matches
-    this->iface_events_pmf[EVENT_MULTIPLE_IFACE_MATCHES] -= this->iface_events_pmf[EVENT_SINGLE_IFACE_MATCH];
+//    this->iface_events_pmf[EVENT_MULTIPLE_IFACE_MATCHES] -= this->iface_events_pmf[EVENT_SINGLE_IFACE_MATCH];
 
     std::cout << "RID_Router::forward() :"
         << "\n\t P('SIM') = " << this->iface_events_pmf[EVENT_SINGLE_IFACE_MATCH]
@@ -1157,13 +1158,19 @@ __float080 RID_Router::calc_joint_log_prob(
     return log_prob;
 }
 
-int pivot_to_int(int * pivots, int pivot_size) {
+int pivot_to_int(int * pivots, int pivot_size, long int pivot_init) {
 
-    int pivot = 0;
+    long int pivot = pivot_init;
+    int p = 1, pp = p;
 
-    for (int p = 0; p < pivot_size; p++) {
+    std::cout << "pivot_to_int() : [INFO] initial pivot : " << pivot << std::endl;
 
-        pivot += pivots[p] * pow(10, p);
+    for ( ; p < (pivot_size + 1); p++) {
+
+        if (pivots[p - 1] > 9)
+            pp++;
+
+        pivot += ((long int) pivots[p - 1]) * ((long int) pow(10, pp++));
 
         std::cout << "pivot_to_int() : [INFO] added pivot " << pivot << " from array ";
 
@@ -1180,7 +1187,8 @@ __float080 RID_Router::calc_cumulative_prob(
     __float080 * joint_prob_matrix,
     uint8_t iface, 
     uint8_t f,
-    uint8_t mode) {
+    uint8_t mode,
+    long int & pivot) {
 
     // printf("RID_Router::calc_cumulative_prob() : [IFACE : %d][|F| : %d][MODE : %s]\n", 
     //     iface, f, CUMULATIVE_PROB_MODE_STR[mode]);
@@ -1199,6 +1207,9 @@ __float080 RID_Router::calc_cumulative_prob(
 
     // we fix the column (or row?) f for iface, and don't change it
     iface_pivots[iface] = f;
+
+    // 
+    int ptree_size = pivot;
 
     // the mode argument specifies the upper limit for |F| during the cumulative 
     // probability: 
@@ -1278,16 +1289,14 @@ __float080 RID_Router::calc_cumulative_prob(
                     iface_pivots[this->iface_num - 1] = _f;
                     _prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
-                    // if (mode == MODE_EI_INCLUSIVE && _prob > 0.0) {
-
-                    //     int pivot = pivot_to_int(iface_pivots, this->iface_num);
-
-                    //     std::set<int>::iterator it = this->added_pivots.find(pivot);
-                    //     if (it != this->added_pivots.end())
-                    //         _prob = 0.0;
-                    //     else
-                    //         this->added_pivots.insert(pivot);
-                    // }
+                    // convert the pivot array to an int and add it to a set. 
+                    // this will keep track of events which are covered by 
+                    // cumulative probabilities, and avoid the duplicate sum 
+                    // of probability events
+                    // FIXME: this could be a source of trouble
+                    if (mode == MODE_EI_INCLUSIVE && _prob > 0.0) {
+                        pivot = pivot_to_int(iface_pivots, this->iface_num, ptree_size);
+                    }
 
                     _cumulative_prob += _prob;
 
@@ -1306,16 +1315,9 @@ __float080 RID_Router::calc_cumulative_prob(
 
                 _prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
-                // if (mode == MODE_EI_INCLUSIVE && _prob > 0.0) {
-
-                //     int pivot = pivot_to_int(iface_pivots, this->iface_num);
-
-                //     std::set<int>::iterator it = this->added_pivots.find(pivot);
-                //     if (it != this->added_pivots.end())
-                //         _prob = 0.0;
-                //     else
-                //         this->added_pivots.insert(pivot);
-                // }
+                if (mode == MODE_EI_INCLUSIVE && _prob > 0.0) {
+                    pivot = pivot_to_int(iface_pivots, this->iface_num, ptree_size);
+                }
 
                 _cumulative_prob += _prob;
                 going_up = 0x00;
@@ -1403,14 +1405,16 @@ __float080 RID_Router::calc_cumulative_prob(
     return _cumulative_prob;
 }
 
-int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix) {
+int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_size) {
+
+    long int pivot = 0;
 
     // LOCAL MATCH : call calc_cumulative_prob in MODE_LI mode
     for (uint8_t _f = this->f_max; _f > 0; _f--) {
 
         // printf("RID_Router::calc_iface_events_pmf() : calc_cumulative_prob(..., %d, %d, %s)\n", 
         //     IFACE_LOCAL, _f, CUMULATIVE_PROB_MODE_STR[MODE_LI]);
-        this->iface_events_pmf[EVENT_LOCAL_IFACE_MATCH] += this->calc_cumulative_prob(joint_prob_matrix, IFACE_LOCAL, _f, MODE_LI);
+        this->iface_events_pmf[EVENT_LOCAL_IFACE_MATCH] += this->calc_cumulative_prob(joint_prob_matrix, IFACE_LOCAL, _f, MODE_LI, pivot);
     }
 
     // NO MATCHES : just call get_joint_lpm_prob() with iface_pivots = {0, 0, ..., 0}
@@ -1424,25 +1428,28 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix) {
     for (uint8_t iface = 1; iface < this->iface_num; iface++) {
         for (uint8_t f = this->f_max; f > 0; f--) {
 
+            // reset the pivot 'value-result' arg for calc_cumulative_prob()
+            pivot = ptree_size;
+
             // probability of choosing iface being *over others*, with an entry 
             // of size f.
-            prob_single = this->calc_cumulative_prob(joint_prob_matrix, iface, f, MODE_EI_EXCLUSIVE);
+            prob_single = this->calc_cumulative_prob(joint_prob_matrix, iface, f, MODE_EI_EXCLUSIVE, pivot);
             // in some cases, we may want the probability of iface being chosen, 
             // even if together with any other iface (e.g. if a flooding strategy 
             // is in place). 
-            prob_multiple = this->calc_cumulative_prob(joint_prob_matrix, iface, f, MODE_EI_INCLUSIVE);
+            prob_multiple = this->calc_cumulative_prob(joint_prob_matrix, iface, f, MODE_EI_INCLUSIVE, pivot);
 
             // keep track of the total EI probability as well (sanity check)
             if (prob_single > 0.0) {
 
-                std::cout << "RID_Router::calc_iface_events_pmf() :"
+                std::cout << "RID_Router::calc_iface_events_pmf() : [INFO]"
                     << "\n\t P('EI_EXCLUSIVE' [" << (int) iface << "][" << (int) f << "]') = " << prob_single
                     << std::endl;
             }
 
             if (prob_multiple > 0.0) {
 
-                std::cout << "RID_Router::calc_iface_events_pmf() :"
+                std::cout << "RID_Router::calc_iface_events_pmf() : [INFO]"
                     << "\n\t P('EI_INCLUSIVE' [" << (int) iface << "][" << (int) f << "]') = " << prob_multiple
                     << std::endl;
             }
@@ -1470,14 +1477,29 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix) {
             // regardless of the way multiple matches are handled, we track 
             // the probability of an exclusive iface choice event correctly
             this->iface_events_pmf[EVENT_SINGLE_IFACE_MATCH] += prob_single;
-            if (prob_single > 0.0) {
-                this->iface_events_pmf[EVENT_MULTIPLE_IFACE_MATCHES] += prob_multiple;
+
+            if (prob_multiple > 0.0) {
+
+                std::set<long int>::iterator it = this->added_pivots.find(pivot);
+                if (it != this->added_pivots.end()) {
+
+                    std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] event " 
+                        << pivot << " has been considered before." << std::endl;
+
+                } else {
+
+                    this->added_pivots.insert(pivot);
+
+                    std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] added event " 
+                        << pivot << "." << std::endl;
+                    this->iface_events_pmf[EVENT_MULTIPLE_IFACE_MATCHES] += (prob_multiple - prob_single);
+                }
             }
 
             // keep track of the total EI probability as well (sanity check)
             if (prob_single > 0.0 || prob_multiple > 0.0) {
 
-                std::cout << "RID_Router::calc_iface_events_pmf() :"
+                std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] "
                     << "\n\t P('[" << (int) iface << "][" << (int) f << "]') = " << this->egress_iface_prob[iface][f]
                     << std::endl;
             }

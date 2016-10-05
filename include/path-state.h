@@ -12,6 +12,11 @@
 #define OUTCOME_INTERMEDIATE_FP     (int) 0x05
 #define OUTCOME_UNDEF               (int) 0x06
 
+// path status
+#define STATUS_TP   0
+#define STATUS_FP   0
+#define STATUS_TN   0
+
 //const char * OUTCOME_STR[] = { "correct dest.", "wrong dest. > orig. server", "fp detect. > orig. server", "dropped"};
 
 #include <math.h>

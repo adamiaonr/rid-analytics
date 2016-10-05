@@ -26,6 +26,7 @@ RID_Analytics::RID_Analytics(
 
     // ... and build the network
     this->build_network(nw_filename);
+    this->read_scn(nw_filename);
 }
 
 RID_Analytics::~RID_Analytics() {
@@ -346,7 +347,21 @@ int RID_Analytics::run_rec(
     //
     // we then use this info to determine the path state
     std::cout << "\nRID_Analytics::run_rec() : FORWARD() BY ROUTER[" 
-        << (int) height << "][" << (int) width << "]\n";
+        << (int) height << "][" << (int) width << "]" << std::endl;
+
+    if (this->tp_sizes.empty())
+        std::cout << "RID_Analytics::run_rec() : [INFO] TP sizes is empty!";
+    else {
+
+        std::cout << "RID_Analytics::run_rec() : [INFO] TP sizes keys : " << std::endl;
+        RID_TPMap::iterator itr;
+        for (itr = this->tp_sizes.begin(); itr != this->tp_sizes.end(); itr++)
+            std::cout << "\tTP[" << itr->first << "]" << std::endl;
+    }
+
+    // for (int i = 0; i < routers[router->get_id()]->get_iface_num(); i++)
+    //     std::cout << "\tTP[" << i << "] = " << (int) this->tp_sizes[router->get_id()][i] << std::endl;       
+
     router->forward(
         this->request_size, 
         ingress_iface,
@@ -529,14 +544,14 @@ int RID_Analytics::run_rec(
     return 0;
 }
 
-int RID_Analytics::run(std::string nw_filename) {
+int RID_Analytics::read_scn(std::string nw_filename) {
 
     // extract the TP size map and |F\R| distr. from nw_filename
     // read .scn file, structured as an xml file
     pugi::xml_document nw_doc;
     if (!(nw_doc.load_file(nw_filename.c_str()))) {
 
-        std::cerr << "RID_Analytics::run() : [ERROR] .scn file (" 
+        std::cerr << "RID_Analytics::read_scn() : [ERROR] .scn file (" 
             << nw_filename << ") not found." << std::endl;
 
         return -1;
@@ -573,8 +588,27 @@ int RID_Analytics::run(std::string nw_filename) {
             f_r_dist; 
             f_r_dist = f_r_dist.next_sibling("f_r_dist")) {
 
-            this->f_r_distribution[f_r_dist.attribute("diff").as_uint()] = f_r_dist.text().as_uint();
+            int i = (f_r_dist.attribute("diff").as_int() - 1);
+            this->f_r_distribution[i] = (__float080) f_r_dist.text().as_double();
+
+            std::cout << "RID_Analytics::read_scn() : [INFO] |F\\R|[" 
+                << i << "] = " << this->f_r_distribution[i] << std::endl;
         }
+    }
+
+    return 0;
+}
+
+int RID_Analytics::run(std::string nw_filename) {
+
+    if (this->tp_sizes.empty())
+        std::cout << "RID_Analytics::run() : [INFO] TP sizes is empty!";
+    else {
+
+        std::cout << "RID_Analytics::run() : [INFO] TP sizes keys : " << std::endl;
+        RID_TPMap::iterator itr;
+        for (itr = this->tp_sizes.begin(); itr != this->tp_sizes.end(); itr++)
+            std::cout << "\tTP[" << itr->first << "]" << std::endl;
     }
 
     tree<Path_State *>::iterator path_state_tree_itr;

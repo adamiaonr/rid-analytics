@@ -65,6 +65,7 @@ class RID_Analytics {
     private:
 
         int build_network(std::string scn_filename);
+        int read_scn(std::string scn_filename);
         int run_rec(
                 RID_Router * router, 
                 uint8_t ingress_iface,

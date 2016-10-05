@@ -9,7 +9,6 @@
 
 #define OPTION_SCN_FILE             (char *) "scn-file"
 #define OPTION_DATA_DIR             (char *) "data-dir"
-#define OPTION_OUTPUT_FILE          (char *) "output-file"
 #define OPTION_VERBOSE              (char *) "verbose"
 // eval parameters can be specified directly through the CLI and overwrite any 
 // parameters set in .scn files
@@ -63,11 +62,6 @@ ArgvParser * create_argv_parser() {
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
-            OPTION_OUTPUT_FILE,
-            "name of .csv file to gather analysis data (will be created in <data-dir>)",
-            ArgvParser::OptionRequiresValue);
-
-    cmds->defineOption(
             OPTION_BF_SIZE,
             "size of RID or Bloom filter (in bits)",
             ArgvParser::OptionRequiresValue);
@@ -95,8 +89,6 @@ int main (int argc, char **argv) {
     char scn_file[MAX_ARRAY_SIZE];
     // dir where all .csv files with output data will be saved
     char data_dir[MAX_ARRAY_SIZE];
-    // output file name for this run
-    char output_file[MAX_ARRAY_SIZE];
     // verbose mode (no verbosity by default)
     bool verbose = false;
     // evaluation parameters
@@ -144,19 +136,6 @@ int main (int argc, char **argv) {
         } else {
 
             fprintf(stderr, "no data directory path specified. use "\
-                "option -h for help.\n");
-
-            delete cmds;
-            return -1;
-        }
-
-        if (cmds->foundOption(OPTION_OUTPUT_FILE)) {
-
-            strncpy(output_file, (char *) cmds->optionValue(OPTION_OUTPUT_FILE).c_str(), MAX_ARRAY_SIZE);
-
-        } else {
-
-            fprintf(stderr, "no output .csv file name specified. use "\
                 "option -h for help.\n");
 
             delete cmds;

@@ -1,6 +1,0 @@
-fp_prob=0.1,0.5
-alpha=0.001,0.5
-domains=4,4,4,4
-tier_depth=4
-content_sources=1,1,1,1
-latencies=1.0,1.0,1.0,1.0

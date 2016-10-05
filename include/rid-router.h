@@ -183,7 +183,7 @@ class RID_Router {
         int calc_joint_lpm_pmf(__float080 * joint_prob_matrix, uint8_t ptree_size, uint8_t ptree_iface);
 
         // computation of iface event & egress size probabilities
-        int calc_iface_events_pmf(__float080 * joint_prob_matrix);
+        int calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_size);
 
         int get_log_fp_rates(
             __float080 m, 
@@ -194,7 +194,7 @@ class RID_Router {
             __float080 * f_r_distribution,
             __float080 * log_fp_rates);
 
-        __float080 calc_cumulative_prob(__float080 * joint_prob_matrix, uint8_t iface, uint8_t f, uint8_t mode);
+        __float080 calc_cumulative_prob(__float080 * joint_prob_matrix, uint8_t iface, uint8_t f, uint8_t mode, long int & pivot);
         __float080 calc_joint_log_prob(uint8_t ptree_size, uint8_t in_ptree_iface, int * iface_pivots);
 
         // pmf for random variables L_i : size of the longest 
@@ -259,7 +259,7 @@ class RID_Router {
         bool initialized;
         // multiple match handling mode
         uint8_t mm_mode;
-        std::set<int> added_pivots;
+        std::set<long int> added_pivots;
 };
 
 #endif
