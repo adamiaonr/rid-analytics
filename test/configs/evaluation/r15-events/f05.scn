@@ -160,10 +160,10 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <fwd_dist iface="0">0.00</fwd_dist>
-                <fwd_dist iface="1">0.25</fwd_dist>
-                <fwd_dist iface="2">0.25</fwd_dist>
-                <fwd_dist iface="3">0.25</fwd_dist>
-                <fwd_dist iface="4">0.25</fwd_dist>
+                <fwd_dist iface="1">0.33</fwd_dist>
+                <fwd_dist iface="2">0.33</fwd_dist>
+                <fwd_dist iface="3">0.33</fwd_dist>
+                <fwd_dist iface="4">0.00</fwd_dist>
                 <tp iface="1">5</tp>
             </router>
             <router id="1.1" tier="1" index="1">
@@ -253,10 +253,10 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <fwd_dist iface="0">0.00</fwd_dist>
-                <fwd_dist iface="1">0.25</fwd_dist>
-                <fwd_dist iface="2">0.25</fwd_dist>
-                <fwd_dist iface="3">0.25</fwd_dist>
-                <fwd_dist iface="4">0.25</fwd_dist>
+                <fwd_dist iface="1">0.33</fwd_dist>
+                <fwd_dist iface="2">0.33</fwd_dist>
+                <fwd_dist iface="3">0.33</fwd_dist>
+                <fwd_dist iface="4">0.00</fwd_dist>
                 <tp iface="3">5</tp>
             </router>
             <router id="2.0" tier="2" index="0">

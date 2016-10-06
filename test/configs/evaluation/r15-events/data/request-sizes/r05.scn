@@ -1,25 +1,15 @@
 <trees n="1">
     <tree index="0" height="3">
         <topology>
-            <f_r_dist diff="1">0.0001</f_r_dist>
-            <f_r_dist diff="2">0.0001</f_r_dist>
-            <f_r_dist diff="3">0.0001</f_r_dist>
-            <f_r_dist diff="4">0.0001</f_r_dist>
-            <f_r_dist diff="5">0.0001</f_r_dist>
-            <f_r_dist diff="6">0.0001</f_r_dist>
-            <f_r_dist diff="7">0.0002</f_r_dist>
-            <f_r_dist diff="8">0.0003</f_r_dist>
-            <f_r_dist diff="9">0.0035</f_r_dist>
-            <f_r_dist diff="10">0.0357</f_r_dist>
-            <f_r_dist diff="11">0.3695</f_r_dist>
-            <f_r_dist diff="12">2.5852</f_r_dist>
-            <f_r_dist diff="13">12.297</f_r_dist>
-            <f_r_dist diff="14">35.948</f_r_dist>
-            <f_r_dist diff="15">48.760</f_r_dist>
+            <f_r_dist diff="1">0.0004</f_r_dist>
+            <f_r_dist diff="2">0.0458</f_r_dist>
+            <f_r_dist diff="3">1.3624</f_r_dist>
+            <f_r_dist diff="4">17.141</f_r_dist>
+            <f_r_dist diff="5">81.450</f_r_dist>
             <router id="0.0" tier="0" index="0">
                 <link local="0" remote="0" rrouter="0.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -35,8 +25,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="1" rrouter="1.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -52,8 +42,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="2" remote="1" rrouter="1.1">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -71,12 +61,12 @@
                 <fwd_dist iface="0">0.00</fwd_dist>
                 <fwd_dist iface="1">0.50</fwd_dist>
                 <fwd_dist iface="2">0.50</fwd_dist>
-                <tp iface="2">2</tp>
+                <tp iface="2">1</tp>
             </router>
             <router id="1.0" tier="1" index="0">
                 <link local="0" remote="0" rrouter="1.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -92,8 +82,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="1" rrouter="0.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -109,8 +99,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="2" remote="1" rrouter="2.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -126,8 +116,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="3" remote="1" rrouter="2.1">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -143,8 +133,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="4" remote="4" rrouter="1.1">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -164,12 +154,12 @@
                 <fwd_dist iface="2">0.33</fwd_dist>
                 <fwd_dist iface="3">0.33</fwd_dist>
                 <fwd_dist iface="4">0.00</fwd_dist>
-                <tp iface="1">2</tp>
+                <tp iface="1">1</tp>
             </router>
             <router id="1.1" tier="1" index="1">
                 <link local="0" remote="0" rrouter="1.1">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -185,8 +175,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="2" rrouter="0.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -202,8 +192,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="2" remote="1" rrouter="2.2">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -219,8 +209,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="3" remote="1" rrouter="2.3">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -236,8 +226,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="4" remote="4" rrouter="1.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -257,12 +247,12 @@
                 <fwd_dist iface="2">0.33</fwd_dist>
                 <fwd_dist iface="3">0.33</fwd_dist>
                 <fwd_dist iface="4">0.00</fwd_dist>
-                <tp iface="3">2</tp>
+                <tp iface="3">1</tp>
             </router>
             <router id="2.0" tier="2" index="0">
                 <link local="0" remote="0" rrouter="2.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -278,8 +268,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="2" rrouter="1.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -295,8 +285,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="2" remote="1" rrouter="3.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -312,8 +302,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="3" remote="1" rrouter="3.1">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -332,12 +322,12 @@
                 <fwd_dist iface="1">0.33</fwd_dist>
                 <fwd_dist iface="2">0.33</fwd_dist>
                 <fwd_dist iface="3">0.33</fwd_dist>
-                <tp iface="1">2</tp>
+                <tp iface="1">1</tp>
             </router>
             <router id="2.1" tier="2" index="1">
                 <link local="0" remote="0" rrouter="2.1">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -353,8 +343,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="3" rrouter="1.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -370,8 +360,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="2" remote="1" rrouter="3.2">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -387,8 +377,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="3" remote="1" rrouter="3.3">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -410,8 +400,8 @@
             </router>
             <router id="2.2" tier="2" index="2">
                 <link local="0" remote="0" rrouter="2.2">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -427,8 +417,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="2" rrouter="1.1">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -444,8 +434,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="2" remote="1" rrouter="3.4">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -461,8 +451,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="3" remote="1" rrouter="3.5">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -484,8 +474,8 @@
             </router>
             <router id="2.3" tier="2" index="3">
                 <link local="0" remote="0" rrouter="2.3">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -501,8 +491,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="3" rrouter="1.1">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -518,8 +508,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="2" remote="1" rrouter="3.6">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -535,8 +525,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="3" remote="1" rrouter="3.7">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -555,7 +545,7 @@
                 <fwd_dist iface="1">0.33</fwd_dist>
                 <fwd_dist iface="2">0.33</fwd_dist>
                 <fwd_dist iface="3">0.33</fwd_dist>
-                <tp iface="3">2</tp>
+                <tp iface="3">1</tp>
             </router>
             <router id="3.0" tier="3" index="0">
                 <link local="0" remote="0" rrouter="3.0">
@@ -576,8 +566,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="2" rrouter="2.0">
-                    <fwd_size_dist size="1">0.00</fwd_size_dist>
-                    <fwd_size_dist size="2">1.00</fwd_size_dist>
+                    <fwd_size_dist size="1">1.00</fwd_size_dist>
+                    <fwd_size_dist size="2">0.00</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -612,7 +602,7 @@
                 <fwd_dist iface="0">0.00</fwd_dist>
                 <fwd_dist iface="1">1.00</fwd_dist>
                 <fwd_dist iface="2">0.00</fwd_dist>
-                <tp iface="1">2</tp>
+                <tp iface="1">1</tp>
             </router>
             <router id="3.1" tier="3" index="1">
                 <link local="0" remote="0" rrouter="3.1">
@@ -879,7 +869,7 @@
                 </link>
                 <fwd_dist iface="0">1.00</fwd_dist>
                 <fwd_dist iface="1">0.00</fwd_dist>
-                <tp iface="0">15</tp>
+                <tp iface="0">5</tp>
             </router>
         </topology>
         <fwd_table_sizes>
