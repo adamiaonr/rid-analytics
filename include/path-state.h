@@ -8,16 +8,16 @@
 #define OUTCOME_INCORRECT_DELIVERY  (int) 0x01
 #define OUTCOME_FALLBACK_DELIVERY   (int) 0x02
 #define OUTCOME_FALLBACK_RELAY      (int) 0x03
-#define OUTCOME_INTERMEDIATE_TP     (int) 0x04
-#define OUTCOME_INTERMEDIATE_FP     (int) 0x05
-#define OUTCOME_UNDEF               (int) 0x06
+#define OUTCOME_PACKET_DROP         (int) 0x04
+#define OUTCOME_UNDEF               (int) 0x05
 
 // path status
-#define STATUS_TP   0
-#define STATUS_FP   0
-#define STATUS_TN   0
+#define STATUS_TP     (int) 0x06
+#define STATUS_FP     (int) 0x07
+#define STATUS_TN     (int) 0x08
+#define STATUS_UNDEF  (int) 0x09
 
-//const char * OUTCOME_STR[] = { "correct dest.", "wrong dest. > orig. server", "fp detect. > orig. server", "dropped"};
+//const char * STATUS_STR[] = { "correct dest.", "wrong dest. > orig. server", "fp detect. > orig. server", "dropped"};
 
 #include <math.h>
 #include <stdlib.h>

@@ -25,6 +25,10 @@
 #define FILE_EVENTS         0
 #define FILE_PATHS          1
 
+// error handling mode
+#define EH_DEFAULT      0x00
+#define EH_FALLBACK     0x01
+
 // P(|F|_i) distributions (for IFACE_LOCAL and otherwise)
 #define LOCAL       0x00
 #define NON_LOCAL   0x01
@@ -56,7 +60,10 @@ class RID_Analytics {
         RID_Analytics(
             std::string nw_filename,
             uint8_t request_size,
-            uint16_t bf_size);
+            uint16_t bf_size,
+            std::string origin_server,
+            int mm_mode,
+            int eh_mode);
         ~RID_Analytics();
 
         int run(std::string scn_filename);
@@ -72,8 +79,8 @@ class RID_Analytics {
                 tree<Path_State *>::iterator prev_path_state_itr);
         int erase_access_tree_rec(RID_Router * router);
 
-        int get_tp_distance(RID_Router * from_router);
-        int get_tp_distance_rec(RID_Router * from_router);
+        int get_origin_distance(RID_Router * from_router);
+        int get_origin_distance_rec(RID_Router * from_router);
 
         // NETWORK PARAMETERS : 
 
@@ -86,14 +93,16 @@ class RID_Analytics {
         // RID router
         uint8_t request_size;
         uint16_t bf_size;
+        int mm_mode;
+        int eh_mode;
         RID_TPMap tp_sizes;
         __float080 * f_r_distribution;
-
         // path state tree
         tree<Path_State *> path_state_tree;
-
         // for quick access to RID_Router * in the topology, via id strings 
         RID_RouterMap routers;
+        // AS associated w/ origin server
+        RID_Router * origin_server;
 };
 
 #endif

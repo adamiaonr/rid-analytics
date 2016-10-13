@@ -115,11 +115,17 @@ char * Path_State::to_string() {
         case OUTCOME_FALLBACK_RELAY:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "FALLBACK_RELAY");
             break;
-        case OUTCOME_INTERMEDIATE_TP:
-            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "INTERMEDIATE_TP");
+        case OUTCOME_PACKET_DROP:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "PACKET_DROP");
             break;
-        case OUTCOME_INTERMEDIATE_FP:
-            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "INTERMEDIATE_FP");
+        case STATUS_TP:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "STATUS_TP");
+            break;
+        case STATUS_FP:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "STATUS_FP");
+            break;
+        case STATUS_TN:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "STATUS_TN");
             break;
         default:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "UNKNOWN");

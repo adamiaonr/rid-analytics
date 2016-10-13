@@ -11,33 +11,14 @@
 #define OPTION_DATA_DIR             (char *) "data-dir"
 #define OPTION_OUTPUT_LABEL         (char *) "output-label"
 #define OPTION_VERBOSE              (char *) "verbose"
+
 // eval parameters can be specified directly through the CLI and overwrite any 
 // parameters set in .scn files
 #define OPTION_REQUEST_SIZE         (char *) "request-size"
 #define OPTION_BF_SIZE              (char *) "bf-size"
-#define OPTION_FWD_TABLE_SIZE       (char *) "fwd-table-size"
-#define OPTION_F_MIN_ANNC           (char *) "f-min-annc"
-// special eval options : 
-//  * --f-min : the min. length of forwarding entries allowed in the forwarding 
-//              table
-//  * --expand-factor : expanding entries of length f to (f + a) creates 
-//                      f * (expand-factor)^(a) new entries
-#define OPTION_F_MIN                (char *) "f-min"
-#define OPTION_EXPAND_FACTOR        (char *) "expand-factor"
-
-#define REQUEST_SIZE                (char *) "request_size"
-#define BF_SIZE                     (char *) "bf_size"
-#define IFACE_ENTRY_PROPORTION      (char *) "iface_entry_proportion_"
-#define F_DISTRIBUTION_LOCAL        (char *) "f_distribution_local"
-#define F_DISTRIBUTION_NON_LOCAL    (char *) "f_distribution_non_local"
-#define F_R_DISTRIBUTION            (char *) "f_r_distribution"
-#define ACCESS_TREE_HEIGHT          (char *) "access_tree_height"
-#define TP_SIZES                    (char *) "tp_size_"
-#define IFACE_NUM                   (char *) "iface_num"
-#define FWD_TABLE_SIZE              (char *) "fwd_table_size"
-
-#define NON_LOCAL_FRACTION          (__float080) 0.75
-#define LOCAL_FRACTION              (__float080) 0.25
+#define OPTION_MM_MODE              (char *) "mm-mode"
+#define OPTION_EH_MODE              (char *) "eh-mode"
+#define OPTION_ORIGIN_SERVER        (char *) "origin-server"
 
 using namespace std;
 using namespace CommandLineProcessing;
@@ -78,6 +59,21 @@ ArgvParser * create_argv_parser() {
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
+            OPTION_MM_MODE,
+            "mult. match mode. 0 for 'FLOOD', 1 for 'RANDOM', 2 for 'FALLBACK'. default is 'FLOOD'.",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
+            OPTION_EH_MODE,
+            "incorrect delivery handling mode. 0 for 'FEEDBACK', 1 for 'FALLBACK'. default is 'FEEDBACK'.",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
+            OPTION_ORIGIN_SERVER,
+            "id of origin server. default is '0.3.7'.",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
             OPTION_VERBOSE,
             "print stats during the model run. default: not verbose",
             ArgvParser::NoOptionAttribute);
@@ -104,6 +100,14 @@ int main (int argc, char **argv) {
     int request_size = 0;       
     // bloom filter size (in bit)
     int bf_size = 0;
+    // multiple match resolve mode
+    int mm_mode = 0;
+    // incorrect delivery handling mode
+    int eh_mode = 0;
+    // origin server location
+    char origin_server[MAX_ARRAY_SIZE];
+    // default is "0.3.7"
+    strncpy(origin_server, "0.3.7", MAX_ARRAY_SIZE);
 
     // parse() takes the arguments to main() and parses them according to 
     // ArgvParser rules
@@ -173,6 +177,21 @@ int main (int argc, char **argv) {
             request_size = std::stoi(cmds->optionValue(OPTION_REQUEST_SIZE));
         }
 
+        if (cmds->foundOption(OPTION_MM_MODE)) {
+
+            mm_mode = std::stoi(cmds->optionValue(OPTION_MM_MODE));
+        }
+
+        if (cmds->foundOption(OPTION_EH_MODE)) {
+
+            eh_mode = std::stoi(cmds->optionValue(OPTION_EH_MODE));
+        }
+
+        if (cmds->foundOption(OPTION_ORIGIN_SERVER)) {
+
+            strncpy(origin_server, (char *) cmds->optionValue(OPTION_ORIGIN_SERVER).c_str(), MAX_ARRAY_SIZE);
+        }
+
         if (cmds->foundOption(OPTION_VERBOSE)) {
             verbose = true;
         }
@@ -187,7 +206,13 @@ int main (int argc, char **argv) {
     }
 
     // create an rid model environment (according to the specs on nw_filename)
-    RID_Analytics * rid_analytics_env = new RID_Analytics(std::string(scn_file), request_size, bf_size);
+    RID_Analytics * rid_analytics_env = 
+        new RID_Analytics(
+            std::string(scn_file),          // .scn file w/ topology info
+            request_size, bf_size,          // parameters for FP rate calculation
+            std::string(origin_server),     // origin server location: useful for latency
+            mm_mode, eh_mode);              // how to handle (1) multiple matches; and (2) wrong deliveries
+
     // ... and run the model
     rid_analytics_env->run(std::string(scn_file));
 

@@ -1,10 +1,10 @@
 #include "rid-router.h"
 
 const char * EVENT_STR[] = { 
-    "EVENT_NM", 
-    "EVENT_MIM", 
-    "EVENT_LIM", 
-    "EVENT_SIM"};
+    "EVENT_NLM", 
+    "EVENT_MLM", 
+    "EVENT_LLM", 
+    "EVENT_SLM"};
 
 const char * CUMULATIVE_PROB_MODE_STR[] = { 
     "MODE_EI_EXCLUSIVE", 
@@ -20,7 +20,8 @@ RID_Router::RID_Router(
     uint64_t fwd_table_size,
     uint8_t iface_num,
     uint8_t f_max,
-    uint16_t bf_size) {
+    uint16_t bf_size,
+    int mm_mode) {
 
     // <tree index>.<height>.<width>
     this->id = std::to_string(access_tree_index) 
@@ -64,7 +65,7 @@ RID_Router::RID_Router(
         this->egress_iface_prob[_iface] = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
 
     this->initialized = true;
-    this->mm_mode = MODE_MM_FLOOD;
+    this->mm_mode = mm_mode;
 }
 
 RID_Router::~RID_Router() {
@@ -107,7 +108,8 @@ int RID_Router::init(
     uint64_t fwd_table_size,
     uint8_t iface_num,
     uint8_t f_max,
-    uint16_t bf_size) {
+    uint16_t bf_size,
+    int mm_mode) {
 
     if (this->initialized)
         return 0;
@@ -152,7 +154,7 @@ int RID_Router::init(
         this->egress_iface_prob[_iface] = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
 
     this->initialized = true;
-    this->mm_mode = MODE_MM_FLOOD;
+    this->mm_mode = mm_mode;
     return 0;
 }
 
@@ -305,11 +307,11 @@ int RID_Router::forward(
 
     // we now deduct the probability of exclusive iface matches to correctly 
     // calculate the probability of multiple matches
-//    this->iface_events_pmf[EVENT_MULTIPLE_IFACE_MATCHES] -= this->iface_events_pmf[EVENT_SINGLE_IFACE_MATCH];
+//    this->iface_events_pmf[EVENT_MLM] -= this->iface_events_pmf[EVENT_SLM];
 
     std::cout << "RID_Router::forward() :"
-        << "\n\t P('SIM') = " << this->iface_events_pmf[EVENT_SINGLE_IFACE_MATCH]
-        << "\n\t P('MIM') = " << this->iface_events_pmf[EVENT_MULTIPLE_IFACE_MATCHES]
+        << "\n\t P('SIM') = " << this->iface_events_pmf[EVENT_SLM]
+        << "\n\t P('MIM') = " << this->iface_events_pmf[EVENT_MLM]
         << std::endl;
 
     // FIXME : i don't know if this is the correct way of doing this...
@@ -318,7 +320,7 @@ int RID_Router::forward(
     // a 'fallback' to origin
     if (this->get_next_hop(ingress_iface).router->get_height() > this->height
         && (this->height > 0 && this->width > 0)) {
-        this->egress_iface_prob[1][0] += this->iface_events_pmf[EVENT_NO_MATCHES];
+        this->egress_iface_prob[1][0] += this->iface_events_pmf[EVENT_NLM];
     }
 
     this->print_iface_events_pmf();
@@ -368,6 +370,10 @@ RID_Router::nw_address RID_Router::get_next_hop(uint8_t iface) {
 RID_Router::fwd_table_row * RID_Router::get_fwd_table() {
 
     return this->fwd_table;
+}
+
+int RID_Router::get_num_entries(uint8_t iface) {
+    return (int) this->fwd_table[iface].num_entries;
 }
 
 uint64_t RID_Router::get_fwd_table_size() { 
@@ -1133,6 +1139,14 @@ __float080 RID_Router::calc_joint_log_prob(
 
     int valid_ifaces = (int) this->iface_num - this->no_forwarding.size();
 
+    // if the local iface is not in the 'no forwarding' list, don't consider it
+    std::set<int>::iterator it = this->no_forwarding.find((int) IFACE_LOCAL);
+    if (it == this->no_forwarding.end())
+        valid_ifaces -= 1;
+
+    if (valid_ifaces < 1)
+        valid_ifaces = 1;
+
     // scale the calculated probabilities by the probability of having a 
     // request - of any size - enter this router
     __float080 log_prob = log(this->ingress_prob);
@@ -1414,12 +1428,16 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_
 
         // printf("RID_Router::calc_iface_events_pmf() : calc_cumulative_prob(..., %d, %d, %s)\n", 
         //     IFACE_LOCAL, _f, CUMULATIVE_PROB_MODE_STR[MODE_LI]);
-        this->iface_events_pmf[EVENT_LOCAL_IFACE_MATCH] += this->calc_cumulative_prob(joint_prob_matrix, IFACE_LOCAL, _f, MODE_LI, pivot);
+        this->iface_events_pmf[EVENT_LLM] += this->calc_cumulative_prob(joint_prob_matrix, IFACE_LOCAL, _f, MODE_LI, pivot);
     }
+
+    std::cout << "RID_Router::calc_iface_events_pmf() : [INFO]"
+        << "\n\t P('EVENT_LLM' [" << (int) ptree_size << "]') = " << this->iface_events_pmf[EVENT_LLM]
+        << std::endl;
 
     // NO MATCHES : just call get_joint_lpm_prob() with iface_pivots = {0, 0, ..., 0}
     int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
-    this->iface_events_pmf[EVENT_NO_MATCHES] += this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
+    this->iface_events_pmf[EVENT_NLM] += this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
     // MULTIPLE & SINGLE IFACE MATCHES 
     __float080 prob_single = 0.0;
@@ -1456,18 +1474,23 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_
 
             // depending on the way RID routers handle multiple matches, we 
             // set the probability of choosing the iface differently.
-            if (this->mm_mode == MODE_MM_FLOOD) {
+            if (this->mm_mode == MMH_FLOOD) {
 
                 this->egress_iface_prob[iface][f] += prob_multiple;
 
-            } else if (this->mm_mode == MODE_MM_RANDOM) {
+            } else if (this->mm_mode == MMH_RANDOM) {
 
                 int valid_ifaces = (int) this->iface_num - this->no_forwarding.size();
+
+                // if the local iface is not in the 'no forwarding' list, don't consider it
+                std::set<int>::iterator it = this->no_forwarding.find((int) IFACE_LOCAL);
+                if (it == this->no_forwarding.end())
+                    valid_ifaces -= 1;
 
                 if (valid_ifaces < 1)
                     valid_ifaces = 1;
 
-                this->egress_iface_prob[iface][f] += ((1.0 / (__float080) valid_ifaces) * prob_multiple);
+                this->egress_iface_prob[iface][f] += (prob_single + ((1.0 / (__float080) valid_ifaces) * (prob_multiple - prob_single)));
 
             } else {
 
@@ -1476,7 +1499,7 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_
 
             // regardless of the way multiple matches are handled, we track 
             // the probability of an exclusive iface choice event correctly
-            this->iface_events_pmf[EVENT_SINGLE_IFACE_MATCH] += prob_single;
+            this->iface_events_pmf[EVENT_SLM] += prob_single;
 
             if (prob_multiple > 0.0) {
 
@@ -1492,7 +1515,7 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_
 
                     std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] added event " 
                         << pivot << "." << std::endl;
-                    this->iface_events_pmf[EVENT_MULTIPLE_IFACE_MATCHES] += (prob_multiple - prob_single);
+                    this->iface_events_pmf[EVENT_MLM] += (prob_multiple - prob_single);
                 }
             }
 
@@ -1514,7 +1537,7 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_
 
 __float080 RID_Router::get_iface_events_prob(uint8_t event) {
 
-    if (event < 0 || event > EVENT_SINGLE_IFACE_MATCH) {
+    if (event < 0 || event > EVENT_SLM) {
 
         fprintf(stderr, "RID_Router::get_iface_events_prob() : unknown event nr. (%d)\n", event);
 

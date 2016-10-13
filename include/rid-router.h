@@ -20,11 +20,11 @@
 // interface events
 #define EVENT_NUM           0x04
 
-#define EVENT_NO_MATCHES                0x00
-#define EVENT_MULTIPLE_IFACE_MATCHES    0x01
-#define EVENT_LOCAL_IFACE_MATCH         0x02
-#define EVENT_SINGLE_IFACE_MATCH        0x03
-#define EVENT_UNKNOWN                   0x04
+#define EVENT_NLM       0x00 // no link matches
+#define EVENT_MLM       0x01 // multiple link matches
+#define EVENT_LLM       0x02 // local link match
+#define EVENT_SLM       0x03 // single link match (other than local)
+#define EVENT_UNKNOWN   0x04
 
 // modes for calc_cumulative_prob()
 #define MODE_EI_EXCLUSIVE   0x00
@@ -33,9 +33,9 @@
 #define MODE_EI_INCLUSIVE   0x03
 
 // modes for handling multiple matches
-#define MODE_MM_FLOOD       0x00
-#define MODE_MM_RANDOM      0x01
-#define MODE_MM_FALLBACKS   0x02
+#define MMH_FLOOD           0x00
+#define MMH_RANDOM          0x01
+#define MMH_FALLBACK        0x02
 
 #include <math.h>
 #include <stdlib.h>
@@ -109,7 +109,8 @@ class RID_Router {
             uint64_t fwd_table_size,
             uint8_t iface_num,
             uint8_t f_max,
-            uint16_t bf_size);
+            uint16_t bf_size,
+            int mm_mode);
         ~RID_Router();
 
         int init(
@@ -118,7 +119,8 @@ class RID_Router {
             uint64_t fwd_table_size,
             uint8_t iface_num,
             uint8_t f_max,
-            uint16_t bf_size);
+            uint16_t bf_size,
+            int mm_mode);
 
         int add_fwd_table_entry(
             int iface, 
@@ -129,6 +131,7 @@ class RID_Router {
         void set_fwd_table(RID_Router::fwd_table_row * fwd_table);
         RID_Router::fwd_table_row * get_fwd_table();
         uint64_t get_fwd_table_size();
+        int get_num_entries(uint8_t iface);
         RID_Router::nw_address get_next_hop(uint8_t iface);
 
         std::string get_id() { return this->id; }

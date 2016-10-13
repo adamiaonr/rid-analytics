@@ -15,18 +15,26 @@
 RID_Analytics::RID_Analytics(
     std::string nw_filename,
     uint8_t request_size,
-    uint16_t bf_size) {
+    uint16_t bf_size,
+    std::string origin_server,
+    int mm_mode,
+    int eh_mode) {
 
     // initialize the scenario parameters set at runtime (e.g. BF size, request 
     // size, TP sizes, F\R distributions)
     this->request_size = request_size;
     this->f_max = request_size;
     this->bf_size = bf_size;
+    this->mm_mode = mm_mode;
+    this->eh_mode = eh_mode;
     this->f_r_distribution = NULL;
 
     // ... and build the network
     this->build_network(nw_filename);
     this->read_scn(nw_filename);
+
+    // after building the network, save the origin server pointer
+    this->origin_server = this->routers[origin_server];
 }
 
 RID_Analytics::~RID_Analytics() {
@@ -62,13 +70,13 @@ RID_Analytics::~RID_Analytics() {
     }
 }
 
-int RID_Analytics::get_tp_distance_rec(RID_Router * from_router) {
+int RID_Analytics::get_origin_distance_rec(RID_Router * from_router) {
 
     int tp_distance = 0;
 
-    // we first check if a TP is present at the cache of from_router
-    if (this->tp_sizes[from_router->get_id()][IFACE_LOCAL] > 0)
-        return 1;
+    // check if we're there yet
+    if (from_router->get_id() == this->origin_server->get_id())
+        return 0;
 
     // check if it is in a router below from_router
     RID_Router * adj_router = NULL;
@@ -82,51 +90,53 @@ int RID_Analytics::get_tp_distance_rec(RID_Router * from_router) {
         if (adj_router->get_height() < from_router->get_height())
             continue;
 
+        if (adj_router->get_id() == from_router->get_id())
+            continue;
+
         if (adj_router != NULL) {
 
-            if ((tp_distance = get_tp_distance_rec(adj_router)) > 0) {
+            if ((tp_distance = get_origin_distance_rec(adj_router)) >= 0) {
 
                 return tp_distance + 1;
             }
         }
     }
 
-    return 0;
+    return -1;
 }
 
-int RID_Analytics::get_tp_distance(RID_Router * from_router) {
+int RID_Analytics::get_origin_distance(RID_Router * from_router) {
 
-    // find the offset of this router's TP size info in the true positive 
-    // array
-    int height = from_router->get_height();
-
-    // we first check if a TP is present at the cache of from_router
-    if (this->tp_sizes[from_router->get_id()][IFACE_LOCAL] > 0)
-        return 1;
-
-    // keep a list of visited routers
-    std::vector<std::string> visited;
+    // check if we're there yet
+    if (from_router->get_id() == this->origin_server->get_id())
+        return 0;
 
     // if not, check if it is below this router or below its parents. 
     // we start by checking if the true positive lies directly below this 
     // router. if not, we go up one level, and check if it is on another 
     // subtree.
-    int tp_distance = 0, go_up = 0;
+    int tp_distance = 0, go_up = 0, height = from_router->get_height();
     RID_Router * parent_router = from_router;
     RID_Router * adj_router = NULL;
+    // keep a list of visited routers
+    std::vector<std::string> visited;
+    visited.push_back(from_router->get_id());
 
     for (go_up = 0; (height - go_up) >= 0; go_up++) {
 
-        // if no more parent routers, abort and return -1 (no TPs in the 
-        // topology)
-        if (parent_router->get_height() == 0)
-            break;
+        if ((height - go_up) == 0) {
+
+            std::cout << "RID_Analytics::get_origin_distance() : [INFO] dist. from " 
+                << from_router->get_id() << " to " << origin_server->get_id() << " is " << (int) (go_up + 3) << " hops" << std::endl;
+
+            return go_up + 3;
+        }
 
         for (int iface = (IFACE_LOCAL + 1); iface < parent_router->get_iface_num(); iface++) {
 
             adj_router = parent_router->get_next_hop(iface).router;
 
-            // if the height of the next router is less than the current, abort. 
+            // if the height of the next router is less than the current, skip. 
             // notice that by setting iface = IFACE_LOCAL + 1 we avoid looking 
             // into the local cache and by '<' instead of '<=' we consider 
             // peering relationships.
@@ -137,9 +147,19 @@ int RID_Analytics::get_tp_distance(RID_Router * from_router) {
             if (std::find(visited.begin(), visited.end(), adj_router->get_id()) != visited.end())
                 continue;
 
+            if (adj_router->get_id() == parent_router->get_id())
+                continue;
+
+            if (!(parent_router->get_num_entries(iface) > 0))
+                continue;
+
             if (adj_router != NULL) {
-                if ((tp_distance = get_tp_distance_rec(adj_router)) > 0) {
-                    return go_up + tp_distance + 1;
+                if ((tp_distance = get_origin_distance_rec(adj_router)) >= 0) {
+
+                    std::cout << "RID_Analytics::get_origin_distance() : [INFO] dist. from " 
+                        << from_router->get_id() << " to " << origin_server->get_id() << " is " << (int) (go_up + tp_distance + 1) << " hops" << std::endl;
+
+                    return go_up + tp_distance;
                 }
             }
         }
@@ -255,7 +275,8 @@ int RID_Analytics::build_network(std::string nw_filename) {
                     table_sizes[tier],          // nr. of table entries for tier
                     iface_num,                  // nr. of ifaces equals nr. of adjacencies
                     this->f_max,                // max. request & forwarding entry size
-                    this->bf_size);             // BF size (of both requests and entries, in bit)
+                    this->bf_size,              // BF size (of both requests and entries, in bit)
+                    this->mm_mode);
 
             } else {
 
@@ -267,7 +288,8 @@ int RID_Analytics::build_network(std::string nw_filename) {
                         table_sizes[tier],
                         iface_num,
                         this->f_max,
-                        this->bf_size);
+                        this->bf_size,
+                        this->mm_mode);
 
                 // add the router to the router map
                 this->routers[router_id] = new_router;
@@ -332,7 +354,7 @@ int RID_Analytics::run_rec(
     uint8_t height = router->get_height();
     uint8_t width = router->get_width();
 
-    __float080 path_prob = 0.0;
+    __float080 path_prob = 0.0, fallback_carry_prob = 0.0;
     __float080 ingress_prob = (*prev_path_state_itr)->get_ingress_iface_prob();
     __float080 * ingress_ptree_prob = (*prev_path_state_itr)->get_ingress_ptree_prob();
 
@@ -372,19 +394,18 @@ int RID_Analytics::run_rec(
 
     // we now cycle through all possible interface events and set the possible 
     // path states and probabilities
-    for (int event = EVENT_NO_MATCHES; event < EVENT_NUM; event++) {
+    for (int event = EVENT_NLM; event < EVENT_NUM; event++) {
 
         // we differentiate the establishment of states by iface events:
         //
-        //  1) if EVENT_NO_MATCHES, EVENT_MULTIPLE_IFACE_MATCHES 
-        //     or EVENT_LOCAL_IFACE_MATCH, the path ends
-        //
-        //  2) if EVENT_SINGLE_IFACE_MATCH, the path continues, and so we have 
+        //  1) if EVENT_SINGLE_IFACE_MATCH, the path continues, and so we have 
         //     additional work : setting FP tree probabilities, 
         //     determining the intermediate state (TP or FP), calling run_rec() 
         //     again, etc.
         //
-        if (event < EVENT_SINGLE_IFACE_MATCH) {
+        //  2) otherwise, the path may or may not end
+        //
+        if (event < EVENT_SLM) {
 
             Path_State * path_state = new Path_State(router, this->request_size);
             path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
@@ -402,21 +423,39 @@ int RID_Analytics::run_rec(
                 << "\n\tPATH LATENCY : " << (*prev_path_state_itr)->get_path_length() + 1
                 << std::endl;
 
-            if (event > EVENT_NO_MATCHES) {
+            if (event > EVENT_NLM) {
 
-                // as long as the event is EVENT_MULTIPLE_IFACE_MATCHES or
-                // EVENT_LOCAL_IFACE_MATCH, the path ends here...
-                // FIXME: this is bound to change.
                 path_state->set_eop();
 
-                if (event == EVENT_MULTIPLE_IFACE_MATCHES) {
+                if (event == EVENT_MLM) {
 
-                    path_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
-                    path_state->set_path_length(
-                        (*prev_path_state_itr)->get_path_length() + 1);
-                        // + get_tp_distance(path_state->get_router()));
+                    if (this->mm_mode == MMH_FALLBACK) {
 
-                } else if (event == EVENT_LOCAL_IFACE_MATCH) {
+                        path_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
+                        // path_state->set_path_length(
+                        //     (*prev_path_state_itr)->get_path_length() + 1 + get_origin_distance(router));
+
+                        //
+
+                        // if fallbacks are in effect, we copy the 
+                        // probability of multiple link matches to the egress link 
+                        // used to get to the origin server...
+                        fallback_carry_prob += router->get_iface_events_prob(event);
+
+                        // ... and set the path length of this state to 1.0, 
+                        // compensating for the added latency of detecting 
+                        // the MLM event and activating the fallback
+                        path_state->set_path_length(1.0);
+
+                    } else {
+
+                        // if other handling method other than MMH_FALLBACK, then 
+                        // the prob of EVENT_MLM will be transfered to STATUS_TP 
+                        // or STATUS_FP.
+                        path_state->set_path_prob(0.0);
+                    }
+
+                } else if (event == EVENT_LLM) {
 
                     // if we hit a cache, and there's a TP at iface local, 
                     // we get a correct delivery, otherwise an incorrect delivery
@@ -427,26 +466,66 @@ int RID_Analytics::run_rec(
                     } else {
 
                         path_state->set_path_status(OUTCOME_INCORRECT_DELIVERY);
-                        // this is the fancy TP distance thing (in fact, not 
-                        // that fancy and/or useful)
-                        path_state->set_path_length(
-                            (*prev_path_state_itr)->get_path_length() + 1);
-                            // + get_tp_distance(path_state->get_router()));
+
+                        // error handling mode, the path length penalty will 
+                        // be different
+                        int penalty = 0;
+                        if (this->mm_mode == MMH_FALLBACK) {
+
+                            // if fallbacks are in effect, we copy the 
+                            // probability of local link to the egress link 
+                            // used to get to the origin server
+                            fallback_carry_prob += router->get_iface_events_prob(event);
+
+                            // we set the penalty to 1 hop, which represents 
+                            // the time wasted to detect the incorrect 
+                            // cache delivery and relay the packet
+                            penalty = -((*prev_path_state_itr)->get_path_length() + 1) + 1;
+
+                        } else {
+
+                            // otherwise, the request source must receive 
+                            // feedback of the incorrect delivery, in addition 
+                            // to the time of having the request 
+                            // fetched from the origin server.
+                            penalty = (*prev_path_state_itr)->get_path_length() 
+                                + get_origin_distance(this->routers["0.3.0"]);
+
+                        }
+
+                        path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
                     }
                 }
 
             } else {
 
-                // EVENT_NO_MATCHES leads to the relay of the packet
+                // if EVENT_NLM happens as the packet is going up the topology, 
+                // then it is relayed to the upper tier of the topology. as 
+                // such, the probability of this event will transfer to 
+                // the SLM event. for this reason, we set P^{E}(NLM) = 0.0
                 if (ingress_iface != IFACE_UPSTREAM 
                     && (router->get_height() > 0 && router->get_width() > 0)) {
                     path_state->set_path_prob(0.0);
-                }
+                    path_state->set_path_status(STATUS_TN);
 
-                path_state->set_path_status(OUTCOME_FALLBACK_RELAY);
-                path_state->set_path_length(
-                    (*prev_path_state_itr)->get_path_length() + 1);
-                    // + get_tp_distance(path_state->get_router()));
+                } else {
+
+                    int outcome = 0, penalty = 0;
+                    if (this->mm_mode == MMH_FALLBACK || this->eh_mode == EH_FALLBACK) {
+
+                        penalty = get_origin_distance(router);
+                        outcome = OUTCOME_FALLBACK_RELAY;
+
+                    } else {
+
+                        penalty = (*prev_path_state_itr)->get_path_length() 
+                                    + get_origin_distance(this->routers["0.3.0"]);
+                        outcome = OUTCOME_PACKET_DROP;
+                    }
+
+                    path_state->set_path_status(outcome);
+                    path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                }
             }
 
         } else {
@@ -480,6 +559,12 @@ int RID_Analytics::run_rec(
                 path_state->set_ingress_ptree_prob(router->get_egress_ptree_prob(iface), this->f_max);
 
                 path_prob = router->get_egress_iface_prob(iface);
+
+                // // FIXME: this only works for the opportunistic caching 
+                // // scenario
+                // if (this->tp_sizes[router->get_id()][iface] > 0)
+                //     path_prob += fallback_carry_prob;
+
                 path_state->set_path_prob(path_prob);
                 path_state->set_ingress_iface_prob(path_prob);
 
@@ -502,14 +587,14 @@ int RID_Analytics::run_rec(
 
                     // if router has a TP on iface, set the even as 
                     // an intermediate TP, i.e. "we're on the right path"
-                    path_state->set_path_status(OUTCOME_INTERMEDIATE_TP); 
+                    path_state->set_path_status(STATUS_TP); 
 
                 } else {
 
                     // else, an 'unlucky' FP happened: we're on the wrong path 
                     // now (a FP match occurred, in an iface which does not 
                     // have TP entries)
-                    path_state->set_path_status(OUTCOME_INTERMEDIATE_FP);
+                    path_state->set_path_status(STATUS_FP);
                 }
 
                 // finally, we continue with the request path
