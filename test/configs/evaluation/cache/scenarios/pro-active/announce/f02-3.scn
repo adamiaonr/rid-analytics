@@ -126,8 +126,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="3" remote="1" rrouter="2.1">
-                    <fwd_size_dist size="1">1.00</fwd_size_dist>
-                    <fwd_size_dist size="2">0.00</fwd_size_dist>
+                    <fwd_size_dist size="1">0.997</fwd_size_dist>
+                    <fwd_size_dist size="2">0.003</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -278,8 +278,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="1" remote="2" rrouter="1.0">
-                    <fwd_size_dist size="1">1.00</fwd_size_dist>
-                    <fwd_size_dist size="2">0.00</fwd_size_dist>
+                    <fwd_size_dist size="1">0.97</fwd_size_dist>
+                    <fwd_size_dist size="2">0.03</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>
@@ -388,8 +388,8 @@
                     <fwd_size_dist size="15">0.00</fwd_size_dist>
                 </link>
                 <link local="3" remote="1" rrouter="3.3">
-                    <fwd_size_dist size="1">1.00</fwd_size_dist>
-                    <fwd_size_dist size="2">0.00</fwd_size_dist>
+                    <fwd_size_dist size="1">0.97</fwd_size_dist>
+                    <fwd_size_dist size="2">0.03</fwd_size_dist>
                     <fwd_size_dist size="3">0.00</fwd_size_dist>
                     <fwd_size_dist size="4">0.00</fwd_size_dist>
                     <fwd_size_dist size="5">0.00</fwd_size_dist>

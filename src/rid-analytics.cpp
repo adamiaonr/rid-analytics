@@ -12,6 +12,16 @@
 #include "dataparser.h"
 #include "pugixml.hpp"
 
+const char * PATH_TO_ORIGIN[] = { 
+    "0.3.0:1", 
+    "0.2.0:1", 
+    "0.1.0:1", 
+    "0.0.0:2", 
+    "0.1.1:3", 
+    "0.2.3:3", 
+    "0.3.7:0", };
+const int PATH_TO_ORIGIN_SIZE = 7;
+
 RID_Analytics::RID_Analytics(
     std::string nw_filename,
     uint8_t request_size,
@@ -35,6 +45,10 @@ RID_Analytics::RID_Analytics(
 
     // after building the network, save the origin server pointer
     this->origin_server = this->routers[origin_server];
+    // initialize the path to origin, useful for fallbacks
+    // FIXME: the path to origin is temporarily hardcoded
+    for (int i = 0; i < PATH_TO_ORIGIN_SIZE; i++)
+        this->origin_server_path.insert(std::string(PATH_TO_ORIGIN[i]));
 }
 
 RID_Analytics::~RID_Analytics() {
@@ -295,6 +309,9 @@ int RID_Analytics::build_network(std::string nw_filename) {
                 this->routers[router_id] = new_router;
             }
 
+            if (tier == this->access_tree_height && tier_index > 0)
+                new_router->set_leaf();
+
             // ***
             // *** initialize router ifaces & add fwd entries
             // ***
@@ -342,6 +359,30 @@ int RID_Analytics::build_network(std::string nw_filename) {
     }
 
     return 0;
+}
+
+int RID_Analytics::on_path_to_origin(RID_Router * router, int iface) {
+
+    if ((iface == -1)) {
+
+        for (std::set<std::string>::iterator it = this->origin_server_path.begin(); 
+            it != this->origin_server_path.end();
+            ++it) {
+
+            std::size_t found = (*it).find(router->get_id());
+            if (found != std::string::npos)
+                return 1;
+        }
+
+        return 0;
+    }
+
+    std::string the_situation = router->get_id() + std::string(":") + std::to_string(iface);
+    std::set<std::string>::iterator it = this->origin_server_path.find(the_situation);
+    if (it != this->origin_server_path.end())
+        return 1;
+    else
+        return 0;
 }
 
 int RID_Analytics::run_rec(
@@ -432,26 +473,52 @@ int RID_Analytics::run_rec(
                     if (this->mm_mode == MMH_FALLBACK) {
 
                         path_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
-                        // path_state->set_path_length(
-                        //     (*prev_path_state_itr)->get_path_length() + 1 + get_origin_distance(router));
 
-                        //
+                        // FIXME: this goes against the on-path resolution of 
+                        // fallbacks, but it helps in getting results ready. 
+                        // this should be revised in the future.
+                        if (on_path_to_origin(router, -1)) {
 
-                        // if fallbacks are in effect, we copy the 
-                        // probability of multiple link matches to the egress link 
-                        // used to get to the origin server...
-                        fallback_carry_prob += router->get_iface_events_prob(event);
+                            // if the router is on the path to origin, we copy the 
+                            // probability of multiple link matches to the egress link 
+                            // used to get to the origin server...
+                            fallback_carry_prob += router->get_iface_events_prob(event);
+                            // ... and set the path length of this state to 0.0
+                            // FIXME: this shouldn't be necessary
+                            path_state->set_path_length(0.0);
 
-                        // ... and set the path length of this state to 1.0, 
-                        // compensating for the added latency of detecting 
-                        // the MLM event and activating the fallback
-                        path_state->set_path_length(1.0);
+                        } else {
+
+                            // otherwise, we set the path length for this MLM 
+                            // event
+                            path_state->set_path_length(
+                                (*prev_path_state_itr)->get_path_length() + 1);
+
+                            // we add a new state representing the fallback 
+                            // delivery, appending it to the MLM event state
+                            //  -# the router of the resolution state should 
+                            //     be the origin server
+                            //  -# append it to 'path_state_itr'
+                            //  -# event should be EVENT_LLM 
+                            //  -# event prob should be the same as P(MLM)
+                            //  -# path status should be 'OUTCOME_FALLBACK_DELIVERY'
+                            //  -# path prob should be the same as P(MLM)
+                            //  -# path length is set to current length + 1 + distance to origin server
+                            Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
+                            this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
+
+                            resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
+                            resolution_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
+                            resolution_state->set_path_prob(router->get_iface_events_prob(event));
+                            resolution_state->set_path_length(
+                                (*prev_path_state_itr)->get_path_length() + 1 + get_origin_distance(router));
+                        }
 
                     } else {
 
                         // if other handling method other than MMH_FALLBACK, then 
                         // the prob of EVENT_MLM will be transfered to STATUS_TP 
-                        // or STATUS_FP.
+                        // or STATUS_FP
                         path_state->set_path_prob(0.0);
                     }
 
@@ -466,21 +533,30 @@ int RID_Analytics::run_rec(
                     } else {
 
                         path_state->set_path_status(OUTCOME_INCORRECT_DELIVERY);
+                        path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
 
-                        // error handling mode, the path length penalty will 
-                        // be different
                         int penalty = 0;
                         if (this->mm_mode == MMH_FALLBACK) {
 
-                            // if fallbacks are in effect, we copy the 
-                            // probability of local link to the egress link 
-                            // used to get to the origin server
-                            fallback_carry_prob += router->get_iface_events_prob(event);
+                            if (on_path_to_origin(router, -1)) {
 
-                            // we set the penalty to 1 hop, which represents 
-                            // the time wasted to detect the incorrect 
-                            // cache delivery and relay the packet
-                            penalty = -((*prev_path_state_itr)->get_path_length() + 1) + 1;
+                                fallback_carry_prob += router->get_iface_events_prob(event);
+                                // ... and set the path length of this state to 0.0
+                                // FIXME: this shouldn't be necessary
+                                path_state->set_path_length(0.0);
+
+                            } else {
+
+                                penalty = get_origin_distance(router);
+
+                                Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
+                                this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
+
+                                resolution_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
+                                resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
+                                resolution_state->set_path_prob(router->get_iface_events_prob(event));
+                                resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                            }
 
                         } else {
 
@@ -491,9 +567,14 @@ int RID_Analytics::run_rec(
                             penalty = (*prev_path_state_itr)->get_path_length() 
                                 + get_origin_distance(this->routers["0.3.0"]);
 
-                        }
+                            Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
+                            this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
 
-                        path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                            resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
+                            resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
+                            resolution_state->set_path_prob(router->get_iface_events_prob(event));
+                            resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                        }
                     }
                 }
 
@@ -505,26 +586,53 @@ int RID_Analytics::run_rec(
                 // the SLM event. for this reason, we set P^{E}(NLM) = 0.0
                 if (ingress_iface != IFACE_UPSTREAM 
                     && (router->get_height() > 0 && router->get_width() > 0)) {
+
                     path_state->set_path_prob(0.0);
                     path_state->set_path_status(STATUS_TN);
 
                 } else {
 
-                    int outcome = 0, penalty = 0;
-                    if (this->mm_mode == MMH_FALLBACK || this->eh_mode == EH_FALLBACK) {
+                    int penalty = 0;
+                    if (this->mm_mode == MMH_FALLBACK) {
 
-                        penalty = get_origin_distance(router);
-                        outcome = OUTCOME_FALLBACK_RELAY;
+                        if (on_path_to_origin(router, -1)) {
+
+                            fallback_carry_prob += router->get_iface_events_prob(event);
+                            // ... and set the path length of this state to 0.0
+                            // FIXME: this shouldn't be necessary, now to calculate 
+                            // avg. latencies you should only look into correct 
+                            // deliveries
+                            path_state->set_path_length(0.0);
+
+                        } else {
+
+                            penalty = get_origin_distance(router);
+
+                            Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
+                            this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
+
+                            resolution_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
+                            resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
+                            resolution_state->set_path_prob(router->get_iface_events_prob(event));
+                            resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                        }
 
                     } else {
 
                         penalty = (*prev_path_state_itr)->get_path_length() 
                                     + get_origin_distance(this->routers["0.3.0"]);
-                        outcome = OUTCOME_PACKET_DROP;
-                    }
 
-                    path_state->set_path_status(outcome);
-                    path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                        path_state->set_path_status(OUTCOME_PACKET_DROP);
+                        path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+
+                        Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
+                        this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
+
+                        resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
+                        resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
+                        resolution_state->set_path_prob(router->get_iface_events_prob(event));
+                        resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                    }
                 }
             }
 
@@ -560,17 +668,25 @@ int RID_Analytics::run_rec(
 
                 path_prob = router->get_egress_iface_prob(iface);
 
-                // // FIXME: this only works for the opportunistic caching 
-                // // scenario
-                // if (this->tp_sizes[router->get_id()][iface] > 0)
-                //     path_prob += fallback_carry_prob;
+                // FIXME: this only works for the opportunistic caching 
+                // scenario
+
+                if (on_path_to_origin(router, iface) && (this->mm_mode == MMH_FALLBACK)) {
+
+                    std::cout << "RID_Analytics::run_rec() : [INFO] router " 
+                        << router->get_id() << " is on the path to the origin "
+                        << ", adding " << fallback_carry_prob << " to P^E(SLM)[" 
+                        << iface << "] = " << path_prob << std::endl;
+
+                    path_prob += fallback_carry_prob;
+                }
 
                 path_state->set_path_prob(path_prob);
                 path_state->set_ingress_iface_prob(path_prob);
 
                 // set the event & event probability
                 if (!event_added) {
-                    path_state->set_event(event, router->get_iface_events_prob(event));
+                    path_state->set_event(event, router->get_iface_events_prob(event) + fallback_carry_prob);
                     event_added = true;
                 } else {
                     path_state->set_event(event, 0.0);

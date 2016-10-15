@@ -39,6 +39,8 @@ RID_Router::RID_Router(
     this->f_max = f_max;
     this->bf_size = bf_size;
 
+    this->leaf = false;
+
     // initialize forwarding table
     this->fwd_table = (RID_Router::fwd_table_row *) calloc(iface_num, sizeof(RID_Router::fwd_table_row)); 
     // to indicate an empty entry in the table, set iface to -1
@@ -127,6 +129,8 @@ int RID_Router::init(
     this->iface_num = iface_num;
     this->f_max = f_max;
     this->bf_size = bf_size;
+
+    this->leaf = false;
 
     // initialize forwarding table
     this->fwd_table = (RID_Router::fwd_table_row *) calloc(iface_num, sizeof(RID_Router::fwd_table_row)); 
@@ -294,7 +298,9 @@ int RID_Router::forward(
             // we'll never have a non-leaf router to be the origin of a 
             // prefix tree, so skip the local iface.
             // FIXME: this might be a source of problems...
-            if ((ptree_iface == IFACE_LOCAL) && (this->height < this->access_tree_height))
+            if ((ptree_iface == IFACE_LOCAL) 
+                && ((this->height < this->access_tree_height)
+                    || (this->id == "0.3.0")))
                 continue;
 
             calc_joint_lpm_pmf(joint_lpm_matrix, ptree_size, ptree_iface);
@@ -433,9 +439,7 @@ int RID_Router::get_log_fp_rates(
     for (int _f = 0; _f < this->f_max; _f++) {
 
         _f_entries = f_entries * f_distribution[_f];
-
-        // printf("RID_Router::get_log_fp_rates() : _f_entries[%d] = %-.5LE\n",
-        //     _f, _f_entries);        
+        // std::cout << "RID_Router::get_log_fp_rates() : _f_entries[" << _f << "] = " << _f_entries << " (out of " << f_entries << ")" << std::endl;
 
         if (_f == 0) {
 
@@ -454,25 +458,18 @@ int RID_Router::get_log_fp_rates(
                 _n_entries = (__float080) _f_entries * (f_r_distribution[_jf] / _subtotal_f_r);
                 log_fp_rates[_f] += _n_entries * log(1.0 - fp_rate(m, n, k, (__float080) (_jf + 1)));
 
-                // printf("RID_Router::get_log_fp_rates() : _f_entries[%d][%d] = %-.5LE\n",
-                //     _f, _jf, _n_entries);        
+                // std::cout << "RID_Router::get_log_fp_rates() : log_fp_rates[" 
+                //     << _f << "][" << _jf << "] = " 
+                //     << exp(_n_entries * log(1.0 - fp_rate(m, n, k, (__float080) (_jf + 1)))) << std::endl;
 
-                // printf("RID_Router::get_log_fp_rates() : _n_entries = %-.5LE *  %-.5LE[%d] = %-.5LE\n",
-                //     _f_entries, f_r_distribution[_jf], _jf, _n_entries);
-
-                // printf("RID_Router::get_log_fp_rates() :"\
-                //         "\n\tP(fp) = %-.5LE"\
-                //         "\n\tlog(1 - P(fp)) = %-.5LE (%-.5LE)"\
-                //         "\n\tlog_fp_rates[%d] += _n_entries * log(1 - P(fp)) = %-.5LE (%-.5LE)\n",
-                //         fp_rate(m, n, k, (__float080) (_jf + 1)),
-                //         (__float080) log(1.0 - fp_rate(m, n, k, (__float080) (_jf + 1))), 
-                //         (__float080) exp(log(1.0 - fp_rate(m, n, k, (__float080) (_jf + 1)))),
-                //         _f, log_fp_rates[_f], (__float080) exp(log_fp_rates[_f]));
+                // std::cout << "RID_Router::get_log_fp_rates() : log_fp_rates[" 
+                //     << _f << "][" << _jf << "] = " 
+                //     << exp(10 * log(1.0 - fp_rate(m, n, k, (__float080) (_jf + 1)))) << std::endl;
             }
         }
 
-        // printf("RID_Router::get_log_fp_rates() : log_fp_rates[%d] = %-.5LE\n",
-        //     _f, log_fp_rates[_f]);        
+        // std::cout << "RID_Router::get_log_fp_rates() : log_fp_rates[" 
+        //     << _f << "] = " << exp(log_fp_rates[_f]) << std::endl;
     }
 
     return 0;
@@ -725,6 +722,8 @@ int RID_Router::calc_lpm_pmf(
 
     __float080 _k = (log(2) * ((__float080) this->bf_size)) / ((__float080) request_size);
 
+    __float080 egress_ptree_prob_sum = 0.0;
+
     // FIXME: the iface is associated w/ a prefix tree at random, w/ 
     // probability 1 / <nr. of valid egress ifaces>
     int valid_ifaces = (int) this->iface_num - this->no_forwarding.size();
@@ -829,14 +828,30 @@ int RID_Router::calc_lpm_pmf(
 
         for (int f = 0; f <= this->f_max; f++) {
 
-            this->egress_ptree_prob[_iface][f] +=
+            __float080 aux = 1.0;
+            if (f > 0)
+                aux = ((this->fwd_table[_iface].f_distribution[f - 1] > 0.0) ? 1.0 : 0.0);
+
+            this->egress_ptree_prob[_iface][f] += 
                 this->ingress_ptree_prob[f]     // prob of _iface in prefix tree of size f
                 * exp(_log_prob_not_fp[0])      // not having a FP > 0 (i.e. not having FPs at all)
-                * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0);          // making sure that there are entries in this iface
+                * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0)   // making sure that there are entries in this iface
+                * aux;
 
-                // std::cout << "RID_Router::calc_lpm_pmf() : [INFO] EGRESS_PROB[" 
-                //     << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] 
-                //     << std::endl;
+            if (this->ingress_ptree_prob[f] > 0.0) {
+
+                if (exp(_log_prob_not_fp[0]) > 0.0)
+                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
+                        << (int) _iface << "][" << f << "] _log_prob_not_fp[0] = " << exp(_log_prob_not_fp[0]) << std::endl;
+
+                if (exp(_log_prob_not_fp[0]) > 0.0)
+                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
+                        << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << f << "] = " << this->fwd_table[_iface].f_distribution[f - 1] << std::endl;
+
+                if (exp(_log_prob_not_fp[0]) > 0.0)
+                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
+                        << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
+            }
         }
 
         for (int f = 1; f <= this->f_max; f++) {
@@ -848,7 +863,29 @@ int RID_Router::calc_lpm_pmf(
                         this->ingress_ptree_prob[p]     // prob of _iface in prefix tree of size p
                         * exp(_log_prob_not_fp[f])      // not having a FP > f
                         * (1.0 - exp(_log_fp_rates[f - 1]))                         // generating a FP of size f
-                        * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0);  // making sure that there are entries in this iface
+                        * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0)   // making sure that there are entries in this iface
+                        * ((this->fwd_table[_iface].f_distribution[f - 1] > 0.0) ? 1.0 : 0.0);
+
+                    if (this->ingress_ptree_prob[p] > 0.0) {
+
+                        if (exp(_log_prob_not_fp[f]) > 0.0) {
+
+                            if((1.0 - exp(_log_fp_rates[f - 1])) > 0.0) {             
+
+                                std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
+                                    << (int) _iface << "][" << f << "] _log_prob_not_fp[" << f << "] = " << exp(_log_prob_not_fp[f]) << std::endl;
+
+                                std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
+                                    << (int) _iface << "][" << f << "] 1.0 - exp(_log_fp_rates[" << f - 1 << "]) = " << (1.0 - exp(_log_fp_rates[f - 1])) << std::endl;
+
+                                std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
+                                    << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << f << "] = " << this->fwd_table[_iface].f_distribution[f - 1] << std::endl;
+
+                                std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
+                                    << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
+                            }
+                        }
+                    }
 
                 } else {
 
@@ -858,11 +895,42 @@ int RID_Router::calc_lpm_pmf(
                             this->ingress_ptree_prob[p]             // prob of _iface in prefix tree of size p
                             * exp(_log_prob_not_fp[g])              // not having a FP > f
                             * (1.0 - exp(_log_fp_rates[g - 1]))     // generating a FP of size f
-                            * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0);  // making sure that there are entries in this iface
+                            * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0)   // making sure that there are entries in this iface
+                            * ((this->fwd_table[_iface].f_distribution[f - 1] > 0.0) ? 1.0 : 0.0);
+
+                        if (this->ingress_ptree_prob[p] > 0.0) {
+
+                            if (exp(_log_prob_not_fp[g]) > 0.0) {
+
+                                if((1.0 - exp(_log_fp_rates[g - 1])) > 0.0) {      
+
+                                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
+                                        << (int) _iface << "][" << f << "] _log_prob_not_fp[" << g << "] = " << exp(_log_prob_not_fp[g]) << std::endl;
+
+                                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
+                                        << (int) _iface << "][" << f << "] 1.0 - exp(_log_fp_rates[" << g - 1 << "]) = " << (1.0 - exp(_log_fp_rates[g - 1])) << std::endl;
+
+                                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
+                                        << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << g << "] = " << this->fwd_table[_iface].f_distribution[g - 1] << std::endl;
+
+                                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
+                                        << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+
+        for (int f = 0; f <= this->f_max; f++)
+            egress_ptree_prob_sum += this->egress_ptree_prob[_iface][f];
+
+        for (int f = 0; f <= this->f_max; f++)
+            this->egress_ptree_prob[_iface][f] = (this->egress_ptree_prob[_iface][f] / egress_ptree_prob_sum);
+
+        egress_ptree_prob_sum = 0.0;
+
 
         // if (this->fwd_table[_iface].num_entries > 0) {
         //     this->egress_ptree_prob[_iface][0] *= exp(_log_prob_not_fp[0]);
@@ -1012,6 +1080,14 @@ int RID_Router::calc_lpm_pmf(
     return 0;
 }
 
+void RID_Router::set_leaf() {
+    this->leaf = true;
+}
+
+bool RID_Router::is_leaf() {
+    return this->leaf;
+}
+
 /*
  * \brief   compute the joint probability distribution of L_{i,p} x 
  *          L_{j,p} x ... x L_{n,p} RVs, between all ifaces in the router and 
@@ -1040,6 +1116,17 @@ int RID_Router::calc_joint_lpm_pmf(
 
     __float080 _log_prob = 0.0;
 
+    // we use the f_distributions to know at which ifaces ptrees of size 
+    // ptree_size can continue. e.g. if iface.f_distribution[ptree_size] = 0.0, 
+    // meaning that iface doesn't have any entries of size ptree_size 
+    // assigned to it, then it's not possible for a ptree to continue through 
+    // it.
+    __float080 f_dist = 0.0;
+    if (ptree_size > 0)
+        f_dist = this->fwd_table[ptree_iface].f_distribution[ptree_size - 1];
+    else
+        f_dist = 1.0;
+
     while (curr_i > -1) {
 
         // the inner loop is where all the work gets done
@@ -1055,7 +1142,15 @@ int RID_Router::calc_joint_lpm_pmf(
                 _log_prob = this->calc_joint_log_prob(ptree_size, ptree_iface, iface_pivots);
                 // _log_prob is scaled by P("having the 'prefix tree' of size 
                 // _ptree_size assigned to _iface")
-                _log_prob = exp(_log_prob) * this->ingress_ptree_prob[ptree_size];
+
+                // 2 ways for a ptree of size ptree_size to continue on iface:
+                //  1) iface.f_dist[ptree_size] > 0.0
+                //  2) OR the router is a leaf node (if the packet traveled 
+                //     all the way to a leaf node, then its delivery is mandatory)
+                if (f_dist > 0.0 || this->is_leaf())
+                    _log_prob = exp(_log_prob) * this->ingress_ptree_prob[ptree_size];
+                else
+                    _log_prob = 0.0;
 
                 // set this value in the joint_lpm_size_matrix 
                 // note that this function adds exp(log_prob) to the value 
@@ -1137,15 +1232,65 @@ __float080 RID_Router::calc_joint_log_prob(
     uint8_t ptree_iface, 
     int * iface_pivots) {
 
-    int valid_ifaces = (int) this->iface_num - this->no_forwarding.size();
+    // we now go through a(n over) complicated piece of (work) code to 
+    // determine the amount of valid egress ifaces for these inputs. 
+    int valid_ifaces = this->iface_num, i = 0;
 
-    // if the local iface is not in the 'no forwarding' list, don't consider it
+    // if the local iface is not in the 'no forwarding' list, don't consider 
+    // in the # of valid egress ifaces. why? the local iface is not an egress 
+    // iface.
     std::set<int>::iterator it = this->no_forwarding.find((int) IFACE_LOCAL);
-    if (it == this->no_forwarding.end())
+    if (it == this->no_forwarding.end()) {
         valid_ifaces -= 1;
+        i = IFACE_LOCAL + 1;
 
-    if (valid_ifaces < 1)
+        // std::cout << "RID_Router::calc_joint_log_prob() [INFO] local link not included. valid_ifaces = " << valid_ifaces << std::endl;
+    }
+
+    // subtract the ifaces in the forwarding list, as well as those which 
+    // don't have entries of size ptree_size
+    for (; i < this->iface_num; i++) {
+
+        it = this->no_forwarding.find(i);
+
+        // remove ifaces in the 'no forwarding' list (i.e. not valid egress 
+        // ifaces)
+        if (it != this->no_forwarding.end()) {
+
+            valid_ifaces--;
+
+            // std::cout << "RID_Router::calc_joint_log_prob() [INFO] link " << i << " included. valid_ifaces = " << valid_ifaces << std::endl;
+
+        } else {
+
+            // if ptree_iface.f_distribution[ptree_size] = 0.0, then it is not 
+            // possible for a ptree to continue on ptree_iface
+            __float080 f_dist = 0.0;
+            if (ptree_size > 0)
+                f_dist = this->fwd_table[i].f_distribution[ptree_size - 1];
+            else
+                f_dist = 1.0;
+
+            // remove ifaces for which it's impossible to be in ptree of size 
+            // ptree_size
+            if (!(f_dist > 0.0)) {
+                valid_ifaces--;
+
+                // std::cout << "RID_Router::calc_joint_log_prob() [INFO] LINK[" 
+                //     << i << "].f_dist[" << (int) ptree_size << "] = 0.0 (" << f_dist 
+                //     << "). valid_ifaces = " << valid_ifaces << std::endl;
+
+                // for (int j = 0; j < this->f_max; j++)
+                //     std::cout << "RID_Router::calc_joint_log_prob() [INFO] F_DIST[" 
+                //         << i << "].[" << j << "] = " << this->fwd_table[i].f_distribution[j] << std::endl;
+            }
+        }
+    }
+
+    // as a safety check, be sure valid_ifaces is at least 1.0
+    if (valid_ifaces < 1) {
         valid_ifaces = 1;
+    }
 
     // scale the calculated probabilities by the probability of having a 
     // request - of any size - enter this router

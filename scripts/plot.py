@@ -595,7 +595,7 @@ def plot_cdn_latencies(data):
 
     plt.savefig("cache-cdn-latencies.pdf", bbox_inches='tight', format = 'pdf')
 
-def plot_opportunistic_latencies(data):
+def plot_pro_active_announcements(data):
 
     latency_avgs    = defaultdict(list)
     event_avgs      = defaultdict(defaultdict)
@@ -606,36 +606,29 @@ def plot_opportunistic_latencies(data):
     event_colors = ['lightgrey', '#708090']
     event_hatches = ['x', 'o', '*']
     # labels and styles for lines (latency probs)
-    latency_labels = ['|F|:7', '|F|:15', 'Ideal']
-    latency_colors = ['black', 'black', 'black']
-    latency_styles = ['-', '--', '-.']
-    latency_markrs = ['x', 'v', 'o']
-    latency_markrs_size = [14, 10, 8]
+    latency_labels = ['Flood', 'Random', 'Fallback', 'Ideal']
+    latency_colors = ['black', 'black', 'black', 'black']
+    latency_styles = ['-', '--', '-.', ':']
+    latency_markrs = ['x', 'v', '^', 'o']
+    latency_markrs_size = [14, 10, 10, 8]
 
-    cache_distances = []
-    bf_sizes = []
-    probs_sum = defaultdict(list)
+    cache_anncs = []
 
     for key in data:
+
         for sub_key in data[key]:
 
-            # filenames follow the format: 
-            # <type>.<cache-distance>-<bf-size>:L<local-entry-size>.tsv
-
-            # extract local entry size
-            entry_size = int(sub_key.split(":", 1)[1].upper().lstrip("L").lstrip("0"))
+            # filenames follow the format <type>.BF<bf-size>-<mode>.tsv
+            # extract the mode
+            mode = int(sub_key.split("-", 1)[1])
 
             if key == "events":
 
-                # extract the cache dist and bf size
-                cache_distance = sub_key.split(":", 1)[0]
-                # bf_size = int((sub_key.split(":", 1)[0]).split("-", 1)[1].upper().lstrip("BF").lstrip("0"))
+                # strip any 'BF0' prefix
+                cache_annc = int(sub_key.split("-", 1)[0])
 
-                if cache_distance not in cache_distances:
-                    cache_distances.append(cache_distance)
-
-                # if bf_size not in bf_sizes:
-                #     bf_sizes.append(bf_size)
+                if cache_annc not in cache_anncs:
+                    cache_anncs.append(cache_annc)
 
                 # group by event number and sum the probabilities to get the 
                 # expected value (i.e. avg. nr. of events by type)
@@ -644,12 +637,195 @@ def plot_opportunistic_latencies(data):
                 print(sub_key)
                 print(event_probs)
 
-                for i, e in {0:2, 1:2}.iteritems():
+                for i in [0, 1]:
 
-                    if i not in event_avgs[entry_size]:
-                        event_avgs[entry_size][i] = []
+                    if i not in event_avgs[mode]:
+                        event_avgs[mode][i] = []
+
+                    event_avgs[mode][i].append(event_probs[2])
+
+            elif key == "path":
+
+                path_probs = data[key][sub_key].groupby(by = ["STATUS"])["PROB"].sum()
+
+                print(sub_key)
+                print(path_probs)
+
+                for i in [0, 1]:
+
+                    if i not in path_values[mode]:
+                        path_values[mode][i] = []
+
+                    path_values[mode][i].append(path_probs[i])
+
+                avg_latency = 0.0
+                latency_probs = data[key][sub_key][data[key][sub_key].STATUS == 0]
+                latency_probs = latency_probs.groupby(["LATENCY"])["PROB"].sum()
+                print(latency_probs)
+
+                # avg. latency is generally calculated as sum(latency * pron), 
+                # but if the MMH_MODE is 'Flood', we simply take the min() 
+                # of the keys for which prob > 0.0
+                if mode == 0:
+
+                    avg_latency = float(min(latency_probs.loc[latency_probs > 0.0].index.tolist()))
+
+                else:
+
+                    for lat, prob in latency_probs.iteritems():
+                        avg_latency += (lat * prob)
+
+                latency_avgs[mode].append(avg_latency)
+
+    # print("probabilities")
+    # for k in path_values:
+
+    #     path_values[k][0] = [(a - b) for a, b in zip(path_values[k][0], path_values[k][1])]
+    #     print(path_values[k][0])
+    #     print(path_values[k][1])
+
+    print(event_avgs[2][0])
+    print(event_avgs[2][1])
+
+    # scale the LLM avg. values by correctness
+    for mode in event_avgs:
+        for status in event_avgs[mode]:
+            for i in np.arange(len(event_avgs[mode][status])):
+
+                if mode == 0:
+                    event_avgs[mode][status][i] = path_values[mode][status][i]
+                else:
+                    event_avgs[mode][status][i] = event_avgs[mode][status][i] * path_values[mode][status][i]
+
+    # ideal latencies are the same as with the 'Flooding' case
+    for l in latency_avgs[0]:
+        latency_avgs[3].append(3.0)
+
+    print("latency")
+    print(latency_avgs)
+
+    print("events")
+    for k in event_avgs:
+        print(k)
+        print(event_avgs[k])
+
+    print("cache_anncs")
+    print(cache_anncs)
+
+    #matplotlib.style.use('ggplot')
+    fig = plt.figure(figsize=(5, 4))
+    ax1 = fig.add_subplot(111)
+    ax1.grid(True)
+    
+    # we have 3 modes and 2 correctness values per mode. hence 3 groups of 
+    # bars, each group with 2 bars.
+    bar_group_size = len(event_labels)
+    bar_group_num = 3
+
+    # assumes the inter bar group space is half a bar. also, for n bar groups 
+    # we have n - 1 inter bar group spaces
+    m = -(float(bar_group_num * bar_group_size) / 2.0) - ((bar_group_num - 1) / 2.0)
+    bar_width = 0.20
+
+    show_legend = True
+    for mode in [0, 1, 2]:
+
+        if mode > 0:
+            show_legend = False
+
+        for l in np.arange(len(event_labels)):
+
+            if show_legend:
+                leg = event_labels[l]
+            else:
+                leg = None
+
+            ax1.bar(np.arange(1, (2 * len(cache_anncs)), step = 2) + (m * bar_width), np.array(path_values[mode][l]), color = event_colors[l], linewidth = 1.5, alpha = 0.75, width = bar_width, label = leg)
+            m += 1.0
+
+        m += 1.0
+
+    ax1.set_yscale('log')
+    ax1.set_ylim(0.0001, 10000.0)
+
+    # ax1.set_title("Avg. nr. of events & path outcome probs.\n(|F|=1, 256 bit BF)")
+    ax1.set_xlabel("Cache announcement radius")
+    ax1.set_ylabel("Avg. nr. of deliv.")
+    # ax1.set_xticks(np.arange(1, (2 * len(cache_anncs)), step = 2), bf_sizes)
+    # ax1.set_yticks([0.0001, 0.001, 0.01, 0.1, 1.0, 10.0])
+#    ax1.set_yticklabels(['$10^{-4}$', '10^-3', '10^-2', '10^-1', '1', '10', '', ''])
+
+    ax1.legend(fontsize=FONTSIZE_LEGEND, ncol=1, loc='upper left')
+
+    # line plot on top of bar chart
+    ax2 = ax1.twinx()
+
+    for l in np.arange(len(latency_labels)):
+        ax2.plot(np.arange(1, (2 * len(cache_anncs)), step = 2), np.array(latency_avgs[l]), linewidth = 1.5, color = latency_colors[l], linestyle = latency_styles[l], marker = latency_markrs[l], markersize = latency_markrs_size[l], label = latency_labels[l])
+
+    ax2.set_ylim(0.0, 20.0)
+    ax2.set_ylabel("Avg. latency")
+    xticks = [0.4, 1.0, 1.6, 2.4, 3.0, 3.6, 4.4, 5.0, 5.6]
+    # xtick_labels = ['FL', 'R\n256', 'FB', 'FL', 'R\n512', 'FB', 'FL', 'R\n1024', 'FB']
+    xtick_labels = ['FL', 'R\n1', 'FB', '', '\n2', '', '', '\n3', '']
+    ax2.set_xticks(xticks)
+    ax2.set_xticklabels(xtick_labels)
+    ax2.set_yticks([0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0])
+    # ax2.set_yticklabels(['0.0', '0.5', '1.0', '', '', ''])
+    ax2.legend(fontsize=FONTSIZE_LEGEND, ncol=1, loc='upper right')
+
+    plt.savefig("cache-pro-active-annc.pdf", bbox_inches='tight', format = 'pdf')
+
+def plot_opportunistic_on_path(data):
+
+    latency_avgs    = defaultdict(list)
+    event_avgs      = defaultdict(defaultdict)
+    path_values     = defaultdict(defaultdict)
+
+    # labels and colors for bars (events)
+    event_labels = ['Correct deliv.', 'Wrong deliv.', 'No match']
+    event_colors = ['lightgrey', '#708090', 'black']
+    event_hatches = ['x', 'o', '*']
+    # labels and styles for lines (latency probs)
+    latency_labels = ['Random', 'Fallback', 'Ideal']
+    latency_colors = ['black', 'black', 'black']
+    latency_styles = ['-', '--', '-.']
+    latency_markrs = ['x', 'v', 'o']
+    latency_markrs_size = [14, 10, 8]
+
+    cache_distances = []
+    probs_sum = defaultdict(list)
+
+    for key in data:
+        for sub_key in data[key]:
+
+            # filenames follow the format: 
+            # <type>.<cache-annc>:<mmh-mode>.tsv
+
+            # extract mult. match handling mode
+            mmh_mode = sub_key.split(":", 1)[1].upper()
+
+            if key == "events":
+
+                # extract the cache dist and bf size
+                cache_distance = sub_key.split(":", 1)[0].upper()
+
+                if cache_distance not in cache_distances:
+                    cache_distances.append(cache_distance)
+
+                # group by event number and sum the probabilities to get the 
+                # expected value (i.e. avg. nr. of events by type)
+                event_probs = data[key][sub_key].groupby(by = ["EVENT"])["PROB"].sum()
+
+                print(sub_key)
+                print(event_probs)
+
+                for i, e in {0:2, 1:2, 2:0}.iteritems():
+
+                    if i not in event_avgs[mmh_mode]:
+                        event_avgs[mmh_mode][i] = []
                     
-                    event_avgs[entry_size][i].append(event_probs[e])
+                    event_avgs[mmh_mode][i].append(event_probs[e])
 
             elif key == "path":
 
@@ -663,13 +839,13 @@ def plot_opportunistic_latencies(data):
 
                     v = path_probs[i]
 
-                    if i not in path_values[entry_size]:
-                        path_values[entry_size][i] = []
+                    if i not in path_values[mmh_mode]:
+                        path_values[mmh_mode][i] = []
 
-                    path_values[entry_size][i].append(v)
+                    path_values[mmh_mode][i].append(v)
                     p += v
 
-                probs_sum[entry_size].append(p)
+                probs_sum[mmh_mode].append(p)
 
                 avg_latency = 0.0
                 latency_probs = data[key][sub_key].groupby(by = ["LATENCY"])["PROB"].sum()
@@ -677,7 +853,7 @@ def plot_opportunistic_latencies(data):
                 for lat, prob in latency_probs.iteritems():
                     avg_latency += (lat * prob)
 
-                latency_avgs[entry_size].append(avg_latency)
+                latency_avgs[mmh_mode].append(avg_latency)
 
     print("probs")
     for k in path_values:
@@ -687,27 +863,29 @@ def plot_opportunistic_latencies(data):
             print(probs_sum[k])
             path_values[k][i] = [ a / b for a, b in zip(path_values[k][i], probs_sum[k]) ]
             print(path_values[k][i])
-            
-    # scale the LLM avg. values by correctness
-    for entry_size in event_avgs:
-        for status in event_avgs[entry_size]:
-            for i in np.arange(len(event_avgs[entry_size][status])):
 
-                v = event_avgs[entry_size][status][i] * path_values[entry_size][status][i]
+    # scale the LLM avg. values by correctness
+    for mmh_mode in event_avgs:
+        for status in event_avgs[mmh_mode]:
+            for i in np.arange(len(event_avgs[mmh_mode][status])):
+
+                if status < 2:
+                    v = event_avgs[mmh_mode][status][i] * path_values[mmh_mode][status][i]
+                else:
+                    v = event_avgs[mmh_mode][status][i]
 
                 # ok, this is cheating a bit: the idea is to show a bit 
                 # of a bar (representing 0.0), just for the reader to know that this 
                 # isn't an error
-                if v < 0.005:
-                    v = 0.005
+                if v < 0.00001:
+                    v = 0.0000105
 
-                event_avgs[entry_size][status][i] = v
+                event_avgs[mmh_mode][status][i] = v
 
     # ideal latencies (added manually)
-    latency_avgs[16].append(2.0)
-    latency_avgs[16].append(3.0)
-    latency_avgs[16].append(3.0)
-    latency_avgs[16].append(3.0)
+    latency_avgs["I"].append(2.0)
+    latency_avgs["I"].append(3.0)
+    latency_avgs["I"].append(3.0)
 
     print("latency")
     print(latency_avgs)
@@ -750,11 +928,7 @@ def plot_opportunistic_latencies(data):
     print("[%d, %d]" % (x_min, x_max))
 
     show_legend = True
-    for entry_size in [7, 15]:
-
-        # only show the legend for 1 entry size
-        if entry_size > 7:
-            show_legend = False
+    for mmh_mode in event_avgs:
 
         # print the bars for each |L|, for both cache distances
         for l in np.arange(len(event_labels)):
@@ -764,34 +938,38 @@ def plot_opportunistic_latencies(data):
             else:
                 leg = None
 
-            ax1.bar(np.arange(1, (2 * len(cache_distances)), step = 2) + (m * bar_width), np.array(event_avgs[entry_size][l]), color = event_colors[l], linewidth = 1.5, alpha = 0.75, width = bar_width, label = leg)
+            ax1.bar(np.arange(1, (2 * len(cache_distances)), step = 2) + (m * bar_width), np.array(event_avgs[mmh_mode][l]), color = event_colors[l], linewidth = 1.5, alpha = 0.75, width = bar_width, label = leg)
             m += 1.0
+
+        # show legend only once
+        show_legend = False
 
         m += 1.0
 
-#    ax1.set_yscale('log')
-    ax1.set_ylim(0.0, 1.75)
+    ax1.set_yscale('log')
+    ax1.set_ylim(0.00001, 1000.0)
 
     # ax1.set_title("Avg. nr. of events & path outcome probs.\n(|F|=1, 256 bit BF)")
-    ax1.set_xlabel("Cache distances")
+    ax1.set_xlabel("Cache distance")
     ax1.set_ylabel("Avg. nr. of deliv.")
     # ax1.set_xticks(np.arange(1, (2 * len(cache_distances)), step = 2), cache_distances)
-    ax1.set_yticks(np.arange(0.0, 1.75, step = 0.25))
-    ax1.set_yticklabels(['0.0', '0.25', '0.5', '0.75', '1.0', '1.25', ''])
+    # ax1.set_yticks(np.arange(0.0, 1.75, step = 0.25))
+    # ax1.set_yticklabels(['0.0', '0.25', '0.5', '0.75', '1.0', '1.25', ''])
+    ax1.set_yticks([0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0])
     ax1.legend(fontsize=FONTSIZE_LEGEND, ncol=1, loc='upper left')
 
     # line plot on top of bar chart
     ax2 = ax1.twinx()
 
-    for k, l in {0:7, 1:15, 2:16}.iteritems():
+    for k, l in {0:"R", 1:"F", 2:"I"}.iteritems():
 
         ax2.plot(np.arange(1, (2 * len(cache_distances)), step = 2), np.array(latency_avgs[l]), linewidth = 1.5, color = latency_colors[k], linestyle = latency_styles[k], marker = latency_markrs[k], markersize = latency_markrs_size[k], label = latency_labels[k])
 
     ax2.set_ylim(0.0, 14.0)
     ax2.set_ylabel("Avg. latency")
 
-    xticks = [0.2, 0.7, 1.0, 1.3, 2.7, 3.0, 3.3, 4.7, 5.0, 5.3, 6.7, 7.0, 7.3,]
-    xtick_labels = ['|F|:', '7', '\n2', '15', '7', '\n3', '15', '7', '\n3$\,$(FB)', '15', '7', '\n3$\,$(512)', '15']
+    xticks = [0.6, 1.0, 1.4, 2.6, 3.0, 3.6, 4.6, 5.0, 5.4]
+    xtick_labels = ['R', '\n2', 'FB', 'R', '\n3', 'FB', 'R', '\n3 (512 BF)', 'FB']
     ax2.set_xticks(xticks)
     ax2.set_xticklabels(xtick_labels)
     # ax2.set_xlim(x_min, x_max)
@@ -800,7 +978,208 @@ def plot_opportunistic_latencies(data):
     # ax2.set_yticklabels(['0.0', '0.5', '1.0', '', '', ''])
     ax2.legend(fontsize=FONTSIZE_LEGEND, ncol=1, loc='upper right')
 
-    plt.savefig("cache-opportunistic-latencies.pdf", bbox_inches='tight', format = 'pdf')
+    plt.savefig("cache-opportunistic-on-path.pdf", bbox_inches='tight', format = 'pdf')
+
+def plot_opportunistic_off_path(data):
+
+    latency_avgs    = defaultdict(list)
+    event_avgs      = defaultdict(defaultdict)
+    path_values     = defaultdict(defaultdict)
+
+    # labels and colors for bars (events)
+    event_labels = ['Correct deliv.', 'Wrong deliv.']
+    event_colors = ['lightgrey', '#708090']
+    event_hatches = ['x', 'o', '*']
+    # labels and styles for lines (latency probs)
+    latency_labels = ['Random', 'Fallback', 'Ideal']
+    latency_colors = ['black', 'black', 'black']
+    latency_styles = ['-', '--', '-.']
+    latency_markrs = ['x', 'v', 'o']
+    latency_markrs_size = [14, 10, 8]
+
+    cache_anncs = []
+    probs_sum = defaultdict(list)
+
+    for key in data:
+        for sub_key in data[key]:
+
+            # filenames follow the format: 
+            # <type>.<cache-annc>:<mmh-mode>.tsv
+
+            # extract mult. match handling mode
+            mmh_mode = sub_key.split(":", 1)[1].upper()
+
+            if key == "events":
+
+                # extract the cache dist and bf size
+                cache_annc = int(sub_key.split(":", 1)[0].upper())
+
+                if cache_annc not in cache_anncs:
+                    cache_anncs.append(cache_annc)
+
+                # group by event number and sum the probabilities to get the 
+                # expected value (i.e. avg. nr. of events by type)
+                event_probs = data[key][sub_key].groupby(by = ["EVENT"])["PROB"].sum()
+
+                print(sub_key)
+                print(event_probs)
+
+                for i, e in {0:2, 1:2}.iteritems():
+
+                    if i not in event_avgs[mmh_mode]:
+                        event_avgs[mmh_mode][i] = []
+                    
+                    event_avgs[mmh_mode][i].append(event_probs[e])
+
+            elif key == "path":
+
+                path_probs = data[key][sub_key].groupby(by = ["STATUS"])["PROB"].sum()
+
+                print(sub_key)
+                print(path_probs)
+
+                p = 0.0
+                for i in [0, 1]:
+
+                    v = path_probs[i]
+
+                    if i not in path_values[mmh_mode]:
+                        path_values[mmh_mode][i] = []
+
+                    path_values[mmh_mode][i].append(v)
+                    p += v
+
+                probs_sum[mmh_mode].append(p)
+
+                avg_latency = 0.0
+                latency_probs = data[key][sub_key].groupby(by = ["LATENCY"])["PROB"].sum()
+
+                for lat, prob in latency_probs.iteritems():
+                    avg_latency += (lat * prob)
+
+                latency_avgs[mmh_mode].append(avg_latency)
+
+    print("probs")
+    for k in path_values:
+        for i in [0, 1]:
+            print(k)
+            print(path_values[k][i])
+            print(probs_sum[k])
+            path_values[k][i] = [ a / b for a, b in zip(path_values[k][i], probs_sum[k]) ]
+            print(path_values[k][i])
+
+    # scale the LLM avg. values by correctness
+    for mmh_mode in event_avgs:
+        for status in event_avgs[mmh_mode]:
+            for i in np.arange(len(event_avgs[mmh_mode][status])):
+
+                v = event_avgs[mmh_mode][status][i] * path_values[mmh_mode][status][i]
+
+                # # ok, this is cheating a bit: the idea is to show a bit 
+                # # of a bar (representing 0.0), just for the reader to know that this 
+                # # isn't an error
+                # if v < 0.005:
+                #     v = 0.005
+
+                event_avgs[mmh_mode][status][i] = v
+
+    # ideal latencies (added manually)
+    latency_avgs["I"].append(3.0)
+    latency_avgs["I"].append(3.0)
+    latency_avgs["I"].append(3.0)
+
+    print("latency")
+    print(latency_avgs)
+
+    print("events")
+    for k in event_avgs:
+        print(k)
+        print(event_avgs[k])
+
+    print("cache anncs")
+    print(cache_anncs)
+
+    #matplotlib.style.use('ggplot')
+    fig = plt.figure(figsize=(5, 4))
+    ax1 = fig.add_subplot(111)
+    ax1.grid(True)
+    
+    # we have 2 local entry sizes and 2 correctness values per size. hence 2 
+    # groups of bars, each group with 2 bars.
+    bar_group_size = len(event_labels)
+    bar_group_num = 2
+
+    # assumes the inter bar group space is 1 bar. also, for n bar groups 
+    # we have n - 1 inter bar group spaces
+    m = -(float(bar_group_num * bar_group_size) / 2.0) - ((bar_group_num - 1) / 2.0)
+    bar_width = 0.20
+
+    x_min = 0.0
+
+    bar_group_offset = np.arange(1, (2 * len(cache_anncs)), step = 2)[0] + (m * bar_width)
+    bar_group_width = (bar_group_num * bar_group_size + 1) * bar_width
+
+    x_max = np.arange(1, (2 * len(cache_anncs)), step = 2)[0] + (m * bar_width)
+    x_max += np.arange(1, (2 * len(cache_anncs)), step = 2)[-1] + ((bar_group_num * bar_group_size + 1) / 2.0) * bar_width
+
+    print(bar_group_size)
+    print(bar_group_num)
+    print(bar_group_offset)
+    print(bar_group_width)
+    print("[%d, %d]" % (x_min, x_max))
+
+    show_legend = True
+    for mmh_mode in event_avgs:
+
+        # print the bars for each |L|, for both cache distances
+        for l in np.arange(len(event_labels)):
+
+            if show_legend:
+                leg = event_labels[l]
+            else:
+                leg = None
+
+            ax1.bar(np.arange(1, (2 * len(cache_anncs)), step = 2) + (m * bar_width), np.array(event_avgs[mmh_mode][l]), color = event_colors[l], linewidth = 1.5, alpha = 0.75, width = bar_width, label = leg)
+            m += 1.0
+
+        # show legend only once
+        show_legend = False
+
+        m += 1.0
+
+    ax1.set_yscale('log')
+    ax1.set_ylim(0.00001, 1000.0)
+
+    # ax1.set_title("Avg. nr. of events & path outcome probs.\n(|F|=1, 256 bit BF)")
+    ax1.set_xlabel("Cache annc. radius")
+    ax1.set_ylabel("Avg. nr. of deliv.")
+    # ax1.set_xticks(np.arange(1, (2 * len(cache_distances)), step = 2), cache_distances)
+    # ax1.set_yticks(np.arange(0.0, 1.75, step = 0.25))
+    # ax1.set_yticklabels(['0.0', '0.25', '0.5', '0.75', '1.0', '1.25', ''])
+    ax1.set_yticks([0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0])
+    ax1.legend(fontsize=FONTSIZE_LEGEND, ncol=1, loc='upper left')
+
+    # line plot on top of bar chart
+    ax2 = ax1.twinx()
+
+    for k, l in {0:"R", 1:"F", 2:"I"}.iteritems():
+
+        ax2.plot(np.arange(1, (2 * len(cache_anncs)), step = 2), np.array(latency_avgs[l]), linewidth = 1.5, color = latency_colors[k], linestyle = latency_styles[k], marker = latency_markrs[k], markersize = latency_markrs_size[k], label = latency_labels[k])
+
+    ax2.set_ylim(0.0, 14.0)
+    ax2.set_ylabel("Avg. latency")
+
+    xticks = [0.7, 1.0, 1.3, 2.7, 3.0, 3.3, 4.7, 5.0, 5.3]
+    xtick_labels = ['R', '\n0', 'FB', 'R', '\n1', 'FB', 'R', '\n2', 'FB']
+    ax2.set_xticks(xticks)
+    ax2.set_xticklabels(xtick_labels)
+    # ax2.set_xlim(x_min, x_max)
+
+    ax2.set_yticks([0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0])
+    # ax2.set_yticklabels(['0.0', '0.5', '1.0', '', '', ''])
+    ax2.legend(fontsize=FONTSIZE_LEGEND, ncol=1, loc='upper right')
+
+    plt.savefig("cache-opportunistic-off-path.pdf", bbox_inches='tight', format = 'pdf')
 
 if __name__ == "__main__":
 
@@ -849,10 +1228,28 @@ if __name__ == "__main__":
         plot_bf_sizes(data)
     elif args.case == 'req-sizes':
         plot_req_sizes(data)
+
     elif args.case == 'cache-pro-active':
-        plot_cdn_latencies(data)
+
+        if args.subcase == 'anncs':
+            plot_pro_active_announcements(data)
+        elif args.subcase == 'bf-sizes':
+            plot_cdn_latencies(data)
+        else:
+            sys.stderr.write("""%s: [ERROR] please supply a valid subcase ('anncs' or 'bf-sizes').\n""" % sys.argv[0]) 
+            parser.print_help()
+            sys.exit(1)
+
     elif args.case == 'cache-opportunistic':
-        plot_opportunistic_latencies(data)
+
+        if args.subcase == 'on-path':
+            plot_opportunistic_on_path(data)
+        elif args.subcase == 'off-path':
+            plot_opportunistic_off_path(data)
+        else:
+            sys.stderr.write("""%s: [ERROR] please supply a valid subcase ('on-path' or 'off-path').\n""" % sys.argv[0]) 
+            parser.print_help()
+            sys.exit(1)
     else:
         sys.stderr.write("""%s: [ERROR] please supply a valid case\n""" % sys.argv[0]) 
         parser.print_help()

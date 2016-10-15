@@ -81,6 +81,7 @@ class RID_Analytics {
 
         int get_origin_distance(RID_Router * from_router);
         int get_origin_distance_rec(RID_Router * from_router);
+        int on_path_to_origin(RID_Router * router, int iface);
 
         // NETWORK PARAMETERS : 
 
@@ -103,6 +104,8 @@ class RID_Analytics {
         RID_RouterMap routers;
         // AS associated w/ origin server
         RID_Router * origin_server;
+        // AS path to origin server
+        std::set<std::string> origin_server_path;
 };
 
 #endif

@@ -167,6 +167,9 @@ class RID_Router {
             return this->no_forwarding;
         }
 
+        void set_leaf();
+        bool is_leaf();
+
     private:
 
         // computation of LPM match distributions (L_{i,p})
@@ -263,6 +266,8 @@ class RID_Router {
         // multiple match handling mode
         uint8_t mm_mode;
         std::set<long int> added_pivots;
+
+        bool leaf;
 };
 
 #endif
