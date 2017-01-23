@@ -18,6 +18,7 @@
 #define OPTION_BF_SIZE              (char *) "bf-size"
 #define OPTION_MM_MODE              (char *) "mm-mode"
 #define OPTION_EH_MODE              (char *) "eh-mode"
+#define OPTION_RESOLV_MODE          (char *) "resolution-mode"
 #define OPTION_ORIGIN_SERVER        (char *) "origin-server"
 
 using namespace std;
@@ -69,6 +70,11 @@ ArgvParser * create_argv_parser() {
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
+            OPTION_RESOLV_MODE,
+            "enable/disable error resolution. 0 for 'DISABLE', 1 for 'ENABLE'. default is 'DISABLE'.",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
             OPTION_ORIGIN_SERVER,
             "id of origin server. default is '0.3.7'.",
             ArgvParser::OptionRequiresValue);
@@ -104,6 +110,7 @@ int main (int argc, char **argv) {
     int mm_mode = 0;
     // incorrect delivery handling mode
     int eh_mode = 0;
+    int resolv_mode = 0;
     // origin server location
     char origin_server[MAX_ARRAY_SIZE];
     // default is "0.3.7"
@@ -187,6 +194,11 @@ int main (int argc, char **argv) {
             eh_mode = std::stoi(cmds->optionValue(OPTION_EH_MODE));
         }
 
+        if (cmds->foundOption(OPTION_RESOLV_MODE)) {
+
+            resolv_mode = std::stoi(cmds->optionValue(OPTION_RESOLV_MODE));
+        }
+
         if (cmds->foundOption(OPTION_ORIGIN_SERVER)) {
 
             strncpy(origin_server, (char *) cmds->optionValue(OPTION_ORIGIN_SERVER).c_str(), MAX_ARRAY_SIZE);
@@ -211,7 +223,7 @@ int main (int argc, char **argv) {
             std::string(scn_file),          // .scn file w/ topology info
             request_size, bf_size,          // parameters for FP rate calculation
             std::string(origin_server),     // origin server location: useful for latency
-            mm_mode, eh_mode);              // how to handle (1) multiple matches; and (2) wrong deliveries
+            mm_mode, eh_mode, resolv_mode); // how to handle (1) multiple matches; and (2) wrong deliveries
 
     // ... and run the model
     rid_analytics_env->run(std::string(scn_file));

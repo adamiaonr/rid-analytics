@@ -200,8 +200,10 @@ class RID_Router {
             __float080 * f_r_distribution,
             __float080 * log_fp_rates);
 
-        __float080 calc_cumulative_prob(__float080 * joint_prob_matrix, uint8_t iface, uint8_t f, uint8_t mode, long int & pivot);
+        __float080 calc_cumulative_prob(__float080 * joint_prob_matrix, uint8_t iface, uint8_t f, uint8_t mode, long int & pivot, __float080 & prob_new_events);
         __float080 calc_joint_log_prob(uint8_t ptree_size, uint8_t in_ptree_iface, int * iface_pivots);
+
+        int get_valid_ifaces(int ptree_size);
 
         // pmf for random variables L_i : size of the longest 
         // match pointing to iface i. L_i can assume values in 

@@ -28,7 +28,8 @@ RID_Analytics::RID_Analytics(
     uint16_t bf_size,
     std::string origin_server,
     int mm_mode,
-    int eh_mode) {
+    int eh_mode,
+    int resolution_mode) {
 
     // initialize the scenario parameters set at runtime (e.g. BF size, request 
     // size, TP sizes, F\R distributions)
@@ -37,6 +38,7 @@ RID_Analytics::RID_Analytics(
     this->bf_size = bf_size;
     this->mm_mode = mm_mode;
     this->eh_mode = eh_mode;
+    this->resolution_mode = resolution_mode;
     this->f_r_distribution = NULL;
 
     // ... and build the network
@@ -558,7 +560,7 @@ int RID_Analytics::run_rec(
                                 resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
                             }
 
-                        } else {
+                        } else if (this->mm_mode == MMH_RANDOM) {
 
                             // otherwise, the request source must receive 
                             // feedback of the incorrect delivery, in addition 
@@ -567,13 +569,16 @@ int RID_Analytics::run_rec(
                             penalty = (*prev_path_state_itr)->get_path_length() 
                                 + get_origin_distance(this->routers["0.3.0"]);
 
-                            Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
-                            this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
+                            if (this->resolution_mode == RESOLUTION_ON) {
 
-                            resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
-                            resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
-                            resolution_state->set_path_prob(router->get_iface_events_prob(event));
-                            resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                                Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
+                                this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
+
+                                resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
+                                resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
+                                resolution_state->set_path_prob(router->get_iface_events_prob(event));
+                                resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                            }
                         }
                     }
                 }
@@ -585,12 +590,15 @@ int RID_Analytics::run_rec(
                 // such, the probability of this event will transfer to 
                 // the SLM event. for this reason, we set P^{E}(NLM) = 0.0
                 if (ingress_iface != IFACE_UPSTREAM 
-                    && (router->get_height() > 0 && router->get_width() > 0)) {
+                    && (router->get_height() > 0)) {
 
                     path_state->set_path_prob(0.0);
                     path_state->set_path_status(STATUS_TN);
 
                 } else {
+
+                    path_state->set_path_status(OUTCOME_PACKET_DROP);
+                    path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
 
                     int penalty = 0;
                     if (this->mm_mode == MMH_FALLBACK) {
@@ -602,6 +610,7 @@ int RID_Analytics::run_rec(
                             // FIXME: this shouldn't be necessary, now to calculate 
                             // avg. latencies you should only look into correct 
                             // deliveries
+                            path_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
                             path_state->set_path_length(0.0);
 
                         } else {
@@ -611,27 +620,27 @@ int RID_Analytics::run_rec(
                             Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
                             this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
 
-                            resolution_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
+                            resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
                             resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
                             resolution_state->set_path_prob(router->get_iface_events_prob(event));
                             resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
                         }
 
-                    } else {
+                    } else if (this->mm_mode == MMH_RANDOM) {
 
                         penalty = (*prev_path_state_itr)->get_path_length() 
                                     + get_origin_distance(this->routers["0.3.0"]);
 
-                        path_state->set_path_status(OUTCOME_PACKET_DROP);
-                        path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+                        if (this->resolution_mode == RESOLUTION_ON) {
 
-                        Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
-                        this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
+                            Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
+                            this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
 
-                        resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
-                        resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
-                        resolution_state->set_path_prob(router->get_iface_events_prob(event));
-                        resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                            resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
+                            resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
+                            resolution_state->set_path_prob(router->get_iface_events_prob(event));
+                            resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                        }
                     }
                 }
             }

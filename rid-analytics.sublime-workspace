@@ -4,219 +4,283 @@
 		"selected_items":
 		[
 			[
-				"_r",
-				"_r5"
+				"fp_",
+				"fp_rates_diff_labels"
+			],
+			[
+				"bf_",
+				"bf_size"
+			],
+			[
+				"bf",
+				"bf_fp_rates"
+			],
+			[
+				"ag",
+				"aggr_types"
+			],
+			[
+				"ro",
+				"router_fp_rates"
+			],
+			[
+				"dif",
+				"diff_labels"
+			],
+			[
+				"agg",
+				"aggr_type"
+			],
+			[
+				"sub",
+				"sub_key"
+			],
+			[
+				"deli",
+				"deliveries"
+			],
+			[
+				"resol",
+				"resolv_mode"
+			],
+			[
+				"OPTION_RE",
+				"OPTION_RESOLV_MODE"
+			],
+			[
+				"res",
+				"resolution_mode"
+			],
+			[
+				"de",
+				"define"
+			],
+			[
+				"ent",
+				"entry"
+			],
+			[
+				"pa",
+				"path_values"
+			],
+			[
+				"inter",
+				"interleave"
+			],
+			[
+				"x_",
+				"x_pos"
+			],
+			[
+				"pat",
+				"path_labels"
+			],
+			[
+				"del",
+				"delivery_probs"
+			],
+			[
+				"li",
+				"list"
+			],
+			[
+				"path",
+				"path_values"
+			],
+			[
+				"ar",
+				"arange"
+			],
+			[
+				"path_",
+				"path_colors"
+			],
+			[
+				"even",
+				"events"
+			],
+			[
+				"si",
+				"size"
+			],
+			[
+				"en",
+				"entry_lengths"
+			],
+			[
+				"su",
+				"sub_key"
+			],
+			[
+				"plo",
+				"plot_global_hierarchical"
+			],
+			[
+				"el",
+				"elif"
+			],
+			[
+				"eve",
+				"event_avgs"
+			],
+			[
+				"lin",
+				"links"
+			],
+			[
+				"mat",
+				"matches"
+			],
+			[
+				"prob_",
+				"prob_new_events"
+			],
+			[
+				"_p",
+				"_prob"
 			],
 			[
 				"pt",
 				"ptree_size"
 			],
 			[
-				"ptr",
-				"ptree_iface"
+				"EVE",
+				"EVENT_MLM"
 			],
 			[
-				"IF",
-				"IFACE_LOCAL"
-			],
-			[
-				"h",
-				"height"
-			],
-			[
-				"_p",
-				"_ptree_size"
-			],
-			[
-				"_i",
-				"_ingress_tree_contribution"
-			],
-			[
-				"ou",
-				"output_dir"
-			],
-			[
-				"_su",
-				"_sum_egress_size_pmf"
-			],
-			[
-				"_s",
-				"_sum_egress_size_pmf"
-			],
-			[
-				"_if",
-				"_iface"
-			],
-			[
-				"iface",
-				"iface_pivots"
-			],
-			[
-				"size",
-				"sizeof"
-			],
-			[
-				"if",
-				"iface_num"
-			],
-			[
-				"_pr",
-				"_prob"
-			],
-			[
-				"laten",
-				"latencies"
-			],
-			[
-				"sub",
-				"subplot_code"
-			],
-			[
-				"ca",
-				"cache_distance"
-			],
-			[
-				"of",
-				"off-path-coop"
-			],
-			[
-				"DA",
-				"DATA_DIR"
-			],
-			[
-				"out",
-				"output_file_name"
+				"ptree",
+				"ptree_size"
 			],
 			[
 				"get_",
-				"get_iface_num"
+				"get_valid_ifaces"
 			],
 			[
-				"ge",
-				"get_router"
+				"get",
+				"get_valid_ifaces"
 			],
 			[
-				"_tp",
-				"_tp_distance"
+				"ptr",
+				"ptree_size"
 			],
 			[
-				"go",
-				"_go_up"
+				"ege",
+				"egress_ptree_prob"
+			],
+			[
+				"ingr",
+				"ingress_ptree_prob"
+			],
+			[
+				"eg",
+				"egress_ptree_prob"
+			],
+			[
+				"egre",
+				"egress_ptree_prob"
+			],
+			[
+				"iface",
+				"ifaces"
+			],
+			[
+				"MM",
+				"MMH_RANDOM"
+			],
+			[
+				"OU",
+				"OUTCOME_FALLBACK_DELIVERY"
+			],
+			[
+				"iface_",
+				"iface_num"
+			],
+			[
+				"f_",
+				"f_max"
+			],
+			[
+				"lat",
+				"latency_probs"
+			],
+			[
+				"la",
+				"latency_probs"
+			],
+			[
+				"annc",
+				"anncs"
+			],
+			[
+				"cache_a",
+				"cache_anncs"
+			],
+			[
+				"ori",
+				"origin_server"
+			],
+			[
+				"set",
+				"set_path_length"
+			],
+			[
+				"beg",
+				"begin"
+			],
+			[
+				"if",
+				"iface"
+			],
+			[
+				"RD",
+				"RID_Router"
+			],
+			[
+				"new",
+				"new_router"
+			],
+			[
+				"tie",
+				"tier_index"
 			],
 			[
 				"acc",
 				"access_tree_height"
 			],
 			[
-				"_",
-				"_height"
+				"f_d",
+				"f_dist"
 			],
 			[
-				"parn",
-				"parent_router"
+				"IFA",
+				"IFACE_LOCAL"
 			],
 			[
-				"ch",
-				"child_router"
-			],
-			[
-				"RID",
-				"RID_Router"
-			],
-			[
-				"get",
-				"get_width"
-			],
-			[
-				"fr",
-				"from_router"
-			],
-			[
-				"get_h",
-				"get_height"
+				"IF",
+				"IFACE_LOCAL"
 			],
 			[
 				"ifa",
 				"iface_num"
 			],
 			[
-				"u",
-				"uint32_t"
+				"lo",
+				"log_prob"
 			],
 			[
-				"_l",
-				"_legend_pos"
+				"I",
+				"IFACE_LOCAL"
 			],
 			[
-				"le",
-				"legend"
-			],
-			[
-				"y",
-				"y_max"
-			],
-			[
-				"y_",
-				"y_max"
-			],
-			[
-				"a",
-				"arange"
-			],
-			[
-				"set_",
-				"set_xticks"
-			],
-			[
-				"pr",
-				"prefix_man_plot"
-			],
-			[
-				"col",
-				"colors"
-			],
-			[
-				"exp",
-				"exp_factors"
-			],
-			[
-				"ex",
-				"exp_factors"
-			],
-			[
-				"f_m",
-				"f_min"
-			],
-			[
-				"no",
-				"no-caching"
-			],
-			[
-				"tes",
-				"test-case"
-			],
-			[
-				"test",
-				"test-type"
-			],
-			[
-				"f_",
-				"f_distribution"
-			],
-			[
-				"num",
-				"num_entries"
-			],
-			[
-				"en",
-				"num_entries"
-			],
-			[
-				"ui",
-				"uint8_t"
+				"flo",
+				"__float080"
 			],
 			[
 				"fwd",
+				"fwd_table"
+			],
+			[
+				"fw",
 				"fwd_table"
 			],
 			[
@@ -224,306 +288,242 @@
 				"_f_entries"
 			],
 			[
-				"_t",
-				"_to_not_expand"
+				"co",
+				"cout"
 			],
 			[
-				"_o",
-				"_original_local"
+				"OT",
+				"OUTCOME_FALLBACK_RELAY"
 			],
 			[
-				"_b",
-				"_bloated_non_local"
+				"set_",
+				"set_yticks"
 			],
 			[
-				"def",
-				"define"
+				"cac",
+				"cache_anncs"
 			],
 			[
-				"de",
-				"define"
+				"cach",
+				"cache_anncs"
 			],
 			[
-				"__",
-				"__float080"
+				"mm",
+				"mmh_mode"
 			],
 			[
-				"f_dis",
-				"f_distribution_non_local"
+				"ca",
+				"cache_annc"
 			],
 			[
-				"fw",
-				"fwd_table_size"
+				"Fal",
+				"Fallback"
 			],
 			[
-				"app",
-				"apply_prefix_management"
+				"on",
+				"on-path"
 			],
 			[
-				"IFA",
-				"IFACE_LOCAL"
+				"subca",
+				"subcase"
 			],
 			[
-				"expa",
-				"expand_factor"
-			],
-			[
-				"OP",
-				"OPTION_EXPAND_FACTOR"
-			],
-			[
-				"OPTION_E",
-				"OPTION_EXPAND_FACTOR"
-			],
-			[
-				"OPTION_F",
-				"OPTION_F_MIN"
-			],
-			[
-				"OPTT",
-				"OPTION_EXPAND_FACTOR"
-			],
-			[
-				"ar",
-				"argv"
-			],
-			[
-				"fil",
-				"file_name"
-			],
-			[
-				"bf",
-				"bf_size"
-			],
-			[
-				"in",
-				"ingress_iface"
-			],
-			[
-				"su",
-				"sub_dir"
-			],
-			[
-				"DATA",
-				"DATA_SUB_DIR"
-			],
-			[
-				"file",
-				"filename"
-			],
-			[
-				"SC",
-				"SCN_DIR"
-			],
-			[
-				"rw",
-				"rowspan"
-			],
-			[
-				"ori",
-				"origin"
-			],
-			[
-				"clo",
-				"colors"
-			],
-			[
-				"ba",
-				"bar_shift"
-			],
-			[
-				"oc",
-				"outcome_index"
+				"st",
+				"std"
 			],
 			[
 				"re",
-				"request_size"
+				"return"
 			],
 			[
-				"L",
-				"LEGEND_FONT_SIZE"
+				"to",
+				"to_string"
 			],
 			[
-				"_m",
-				"_x_max"
+				"rou",
+				"router"
 			],
 			[
-				"lege",
-				"legend1"
+				"PAT",
+				"PATH_TO_ORIGIN"
 			],
 			[
-				"co",
-				"color"
+				"ins",
+				"insert"
 			],
 			[
-				"req",
-				"request_sizes"
+				"PA",
+				"PATH_TO_ORIGIN_SIZE"
 			],
 			[
-				"ditr",
-				"distributions"
+				"probs",
+				"probs_sum"
+			],
+			[
+				"prob",
+				"probs_sum"
+			],
+			[
+				"font",
+				"fontsize"
+			],
+			[
+				"pro",
+				"probs_sum"
+			],
+			[
+				"path_b",
+				"path_probs"
+			],
+			[
+				"fall",
+				"fallback_carry_prob"
+			],
+			[
+				"bar",
+				"bar_group_width"
+			],
+			[
+				"ba",
+				"bar_group_num"
 			],
 			[
 				"x",
-				"xrange"
+				"x_max"
 			],
 			[
-				"reque",
-				"request_size"
+				"k",
+				"key"
 			],
 			[
-				"color",
-				"colors"
+				"entr",
+				"entry_size"
 			],
 			[
-				"EVE",
-				"EVENT_NUM"
+				"cache",
+				"cache_location"
 			],
 			[
-				"sc",
-				"scn_file"
+				"val",
+				"valid_ifaces"
 			],
 			[
-				"san",
-				"sanity-check"
+				"late",
+				"latency_markrs_size"
 			],
 			[
-				"ot",
-				"output_file"
+				"ev",
+				"event_avgs"
 			],
 			[
-				"dat",
-				"data_dir"
+				"excl",
+				"exclusions"
 			],
 			[
-				"da",
-				"data_dir"
+				"se",
+				"set_xticklabels"
 			],
 			[
-				"an",
-				"analysis"
+				"xt",
+				"xtick_labels"
 			],
 			[
-				"F",
-				"F_DISTRIBUTION_LOCAL"
+				"bar_",
+				"bar_group_size"
 			],
 			[
-				"cu",
-				"curr_i"
+				"nu",
+				"num_bar_groups"
 			],
 			[
-				"cur",
-				"curr_f"
+				"num",
+				"num_sticked_bars"
 			],
 			[
-				"MO",
-				"MODE_LOCAL"
+				"sh",
+				"show_legend"
 			],
 			[
-				"MOD",
-				"MODE_MIS"
+				"laten",
+				"latency_styles"
 			],
 			[
-				"ingres",
-				"ingress_size_pmf"
+				"corr",
+				"correctness"
 			],
 			[
-				"sta",
-				"starting_router"
+				"def",
+				"defaultdict"
 			],
 			[
-				"start",
-				"starting"
+				"deliv",
+				"deliveries"
 			],
 			[
-				"chil",
-				"child_router"
+				"pr",
+				"print"
 			],
 			[
-				"pre",
-				"prev_height"
+				"latency_",
+				"latency_values"
 			],
 			[
-				"IFAC",
-				"IFACE_LOCAL"
+				"av",
+				"avg_latency"
 			],
 			[
-				"get_n",
-				"get_fwd_table_next_hop"
+				"set_pa",
+				"set_path_prob"
 			],
 			[
-				"ingress_",
-				"ingress_iface"
+				"go",
+				"go_up"
 			],
 			[
-				"EI",
-				"EVENT_EI"
+				"pare",
+				"parent_router"
 			],
 			[
-				"pri",
-				"printf	printf …"
+				"ad",
+				"adj_router"
 			],
 			[
-				"LE",
-				"LESS_OR_EQUAL"
+				"from",
+				"from_router"
 			],
 			[
-				"ON",
-				"ONLY_DIAGONAL"
+				"end",
+				"endl"
 			],
 			[
-				"ONL",
-				"ONLY_LESS"
+				"OPTION_O",
+				"OPTION_ORIGIN_SERVER"
 			],
 			[
-				"lpm",
-				"lpm_pmf_prob"
+				"EVENT",
+				"EVENT_NLM"
 			],
 			[
-				"lp",
-				"lpm_pmf_prob"
+				"str",
+				"string"
 			],
 			[
-				"tot",
-				"total_joint_prob"
+				"or",
+				"origin_server"
 			],
 			[
-				"for",
-				"forward"
-			],
-			[
-				"fm",
-				"f_max"
-			],
-			[
-				"set",
-				"set_path_length"
-			],
-			[
-				"egr",
-				"egress_size_pmf"
-			],
-			[
-				"EV",
-				"EVENT_MIS"
-			],
-			[
-				"OU",
-				"OUTCOME_UNDEF"
-			],
-			[
-				"get_in",
-				"get_ingress_ptree_prob"
+				"err",
+				"error_handling_mode"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "/Users/adamiaonr/Downloads/cli",
+			"file": "src/sanity-check.cpp",
 			"settings":
 			{
-				"buffer_size": 5209,
+				"buffer_size": 7792,
 				"line_ending": "Unix"
 			}
 		},
@@ -531,7 +531,7 @@
 			"file": "src/rid-analytics.cpp",
 			"settings":
 			{
-				"buffer_size": 22694,
+				"buffer_size": 38487,
 				"line_ending": "Unix"
 			}
 		},
@@ -539,23 +539,24 @@
 			"file": "include/rid-analytics.h",
 			"settings":
 			{
-				"buffer_size": 3597,
+				"buffer_size": 3209,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "src/sanity-check.cpp",
+			"file": "/home/adamiaonr/Downloads/sdsadasdas",
 			"settings":
 			{
-				"buffer_size": 12578,
-				"line_ending": "Unix"
+				"buffer_size": 74236,
+				"line_ending": "Unix",
+				"name": "rid-analytics : request_size = 15, bf_size = 192"
 			}
 		},
 		{
 			"file": "src/rid-router.cpp",
 			"settings":
 			{
-				"buffer_size": 53149,
+				"buffer_size": 75486,
 				"line_ending": "Unix"
 			}
 		},
@@ -563,50 +564,48 @@
 			"file": "include/rid-router.h",
 			"settings":
 			{
-				"buffer_size": 7317,
+				"buffer_size": 9554,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": ".todos",
+			"file": "test/configs/example/complex.scn",
 			"settings":
 			{
-				"buffer_size": 1199,
+				"buffer_size": 1538,
+				"line_ending": "Unix",
+				"name": "request_size=5"
+			}
+		},
+		{
+			"file": "src/path-state.cpp",
+			"settings":
+			{
+				"buffer_size": 3652,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "request_size=15\nbf_size=256\naccess_tree_height=5\niface_num=4\nfwd_table_size=100000000\ntp_size_0=0,0,0,0\ntp_size_1=0,0,0,0,0,0,0,0\ntp_size_2=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\ntp_size_3=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\ntp_size_4=15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\niface_entry_proportion_0=0.00,0.00,0.50,0.50\niface_entry_proportion_1=0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33\niface_entry_proportion_2=0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33\niface_entry_proportion_3=0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33,0.00,0.33,0.33,0.33\niface_entry_proportion_4=1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00\nf_distribution_local=0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0002,0.0003,0.0035,0.0357,0.3695,2.5852,12.297,35.948,48.76,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\nf_distribution_non_local=48.867,35.85,12.286,2.5795,0.3753,0.0385,0.0026,0.0003,0.0002,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\nf_r_distribution=6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,6.6667,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\nmK3X9eGxu*:w",
-			"file": "test/configs/evaluation/vanilla/r15/vanilla-1-15.scn",
-			"file_size": 1595,
-			"file_write_time": 1469475208000000,
+			"file": "include/path-state.h",
 			"settings":
 			{
-				"buffer_size": 1608,
+				"buffer_size": 2273,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/adamiaonr/workbench/dns-performance/src/dns-performance.cpp",
+			"file": "/home/adamiaonr/workbench/.test/configs/evaluation/global/scenarios/dumbbell/h01.scn",
 			"settings":
 			{
-				"buffer_size": 11376,
+				"buffer_size": 53564,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Users/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
+			"file": "scripts/plot.py",
 			"settings":
 			{
-				"buffer_size": 13905,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "test/configs/fdist/10.fdist",
-			"settings":
-			{
-				"buffer_size": 515,
+				"buffer_size": 56694,
 				"line_ending": "Unix"
 			}
 		}
@@ -651,6 +650,79 @@
 	},
 	"file_history":
 	[
+		"/home/adamiaonr/workbench/rid-analytics/scripts/plot.py",
+		"/home/adamiaonr/Downloads/fp-analysis/plot.py",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h01-10k.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h01-1M.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h10.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h05.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-4.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h10-05-01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/Makefile",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h05.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-3.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/f01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/off-path/a33-02-15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/on-path/f01-a20-15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/on-path/f01-a10-15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-1.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-2.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/f02.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/off-path/a33-01-15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/off-path/a33-00-15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/f01-a20-15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/f01-a10-07.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/f01-a20-07.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f10.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f05.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f01.scn",
+		"/home/adamiaonr/workbench/dns-performance/src/dns-performance.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/fls",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f02.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/request-sizes/r15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/request-sizes/r10.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/request-sizes/r05.scn",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/plot-events.py",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/plot-no-caching.py",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/fdist/10.fdist",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/fdist/5.fdist",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/request-sizes/f01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f15.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f10.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f05.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f02.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/events.f01.1475671819.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/plot-prefix-management.py",
+		"/home/adamiaonr/Downloads/output.out",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f1.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/example.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/fdist/15.fdist",
+		"/home/adamiaonr/Downloads/cli",
+		"/home/adamiaonr/workbench/rid-analytics/example.scn",
+		"/home/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/data/events.1475591776.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/include/dataparser.h",
+		"/home/adamiaonr/workbench/rid-analytics/src/dataparser.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/example.xml",
+		"/home/adamiaonr/workbench/rid-analytics/example.nw",
+		"/home/adamiaonr/workbench/rid-testapp/Makefile",
+		"/home/adamiaonr/workbench/dns-performance/include/signal-handler.h",
+		"/home/adamiaonr/workbench/dns-performance/include/dns-utils.h",
+		"/home/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
+		"/home/adamiaonr/workbench/dns-performance/Makefile",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.scn",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.dist.scn",
+		"/home/adamiaonr/workbench/rid-analytics/.todos",
+		"/Users/adamiaonr/workbench/dns-performance/src/dns-performance.cpp",
+		"/Users/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/vanilla/r15/vanilla-1-15.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/run-sanity.sh",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-9-15.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-7-15.scn",
@@ -705,80 +777,7 @@
 		"/Users/adamiaonr/workbench/rid-analytics/test/data/sanity-check/caching/pervasive/on-path/r10/on-path-9-10-160.csv",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-1-5.scn",
 		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-2-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-3-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-4-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-5-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-6-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-7-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-8-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-9-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r5/nearest-replica-1-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r5/nearest-replica-3-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r5/nearest-replica-5-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r5/nearest-replica-7-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r10/nearest-replica-6-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r10/nearest-replica-4-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r10/nearest-replica-2-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r10/nearest-replica-1-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r10/nearest-replica-2-10",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/coop/r10/edge-coop-10-3.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/nearest-replica/r10/nearest-replica-9-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/coop/r10/edge-coop-10-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/coop/r10/edge-coop-10-7.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/coop/r5/edge-coop-5-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/coop/r5/edge-coop-5-7.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/off-path-coop/r10/off-path-coop-10-3.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/off-path-coop/r10/off-path-coop-10-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/off-path-coop/r10/off-path-coop-10-7.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/off-path-coop/r5/off-path-coop-5-3.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/off-path-coop/r5/off-path-coop-5-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/off-path-coop/r5/off-path-coop-5-7.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/coop/r5/oc-1-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/on-path/r10/oc-1-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/on-path/r5/oc-3-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/on-path/r5/oc-1-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/on-path/r5/oc-5-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/on-path/r5/oc-7-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/on-path/r5/oc-9-5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/off-path/r10/oc-9-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/off-path/r10/oc-1-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/off-path/r10/oc-3-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/off-path/r10/oc-5-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/edge/coop/r10/oc-9-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/off-path/r10/oc-7-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/r10/oc-3-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/r10/oc-5-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/r10/oc-7-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/r10/oc-1-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/r10/oc-9-10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/run-analysis.sh",
-		"/Users/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
-		"/Users/adamiaonr/workbench/rid-analytics/Makefile",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th2.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th3.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th4.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th1.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/include/argvparser.h",
-		"/Users/adamiaonr/workbench/rid-analytics/src/argvparser.cpp",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th10.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th9.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th6.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th7.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th8.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-th5.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r5/os-5-5-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r10/os-1-10-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/prefix-management/pm-5-10-t2.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r5/os-9-5-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-9-5-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r10/os-1-10-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r10/os-3-10-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r10/os-9-10-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r10/os-5-10-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r10/os-7-10-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-1-5-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-3-5-ll-nls.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity/r5/os-5-5-ll-nls.scn"
+		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/caching/pervasive/on-path/r5/on-path-3-5.scn"
 	],
 	"find":
 	{
@@ -795,137 +794,137 @@
 	},
 	"find_state":
 	{
-		"case_sensitive": true,
+		"case_sensitive": false,
 		"find_history":
 		[
-			"0,2,0",
+			"extract_data",
+			"plot_global_hierarchical_entry_sizes",
+			"resolution_state",
+			"resolution_mode",
+			"resolv_mode",
+			"OPTION_RESOLV_MODE",
+			"plot(",
+			"ax1",
+			"mm_mode",
+			"plot_global_hierarchical_bf_sizes",
+			"entry_lengths",
+			"ROUTER[1][1]",
+			"_styles",
+			"event_avgs =",
+			"mode =",
+			"plot_global_hie",
+			"/tp",
+			"ROUTER[2][0",
 			"calc_cumulative_prob",
-			"9,0",
-			"7,0",
-			"5,0",
-			"3,0",
-			"9,0",
-			"calc_lpm_pmf",
-			"< 4",
+			"ptree_size",
+			"pivot_to_int",
+			"calc_cumulative_prob",
+			"[0][2][0][2][1]",
+			"[0][2][0][2][0]",
+			"added eve",
+			"ROUTER[2][0",
+			"calc_iface_events_pmf",
+			"ROUTER[2][0",
+			"[0][2][0][2][0]",
+			"[0][1][0][2][1]",
+			"ROUTER[2][0",
+			"RID_Router::calc_lpm_pmf",
+			"[0][1][0][2][0]",
+			"[0][0][0][2][0]",
+			"ROUTER[2][0]",
+			"get_valid_ifaces",
+			"calc_cumulative_prob",
+			"pivot_to_int",
+			"added_pivots",
+			"this->added_pivots",
+			"id=\"2.0",
+			"ROUTER[2][1",
+			"lpm",
+			"this->ingress_ptree_prob",
+			"calc_joint_log_prob(",
+			"calc_joint_log",
 			"calc_joint_log_prob",
-			"calc_joint_lpm_pmf",
-			"calc_lpm_pmf(",
-			"0,1",
-			"0,2,",
-			"0,3",
-			"0,1",
-			"0,0,1",
-			"0,1 ",
-			"0,1",
-			"0,1,0",
-			"f_r_d",
-			"f_r",
-			"ingress",
-			"calc_lpm_p",
-			"calc_lpm_pmf",
-			"egress_size_",
-			"egress_size",
-			"calc_iface",
-			"egress_size_pmf",
-			"egress_",
-			"ingress",
-			"egress_size",
-			"calc_lpm_pmf",
-			"egress_size",
-			"0,5,0",
-			"fig",
-			"6,0",
-			"_for_real_dir",
-			"$file",
-			"0,10,0",
-			"10,0",
-			"5,0",
-			"0,5,0",
-			"exp_factors",
-			"find_tp",
-			"printf",
-			"erase_access_tree_rec",
-			"build_network_rec",
-			"from_router",
-			"tp_sizes",
-			"tp_s",
-			"tp_",
-			"colors",
-			"get_log_fp_rates",
-			"calc_lpm_pmf",
-			"num_entries",
-			"fwd_table_size",
-			"calc_lpm_pmf",
-			"add_f",
-			"expansion",
-			"get_log_fp_rates",
-			"fwd_table_si",
-			"num_entries",
-			"fwd_table_size",
-			"expanded_size",
-			"add_fwd_table_entry",
-			"_original_local",
-			"DEFAULT_CSV_DIR",
-			"DEFAULT_SCN_FILE",
-			"build_network",
-			"build_ne",
-			"fwd_table_size",
-			"f_distribution",
-			"_dis",
-			"0,5,0",
-			"0,2,0",
-			"bf_size",
-			"160",
-			"320",
-			"sys.argv",
-			"output_file",
-			"OptionRequiresValue",
-			"option",
-			"request_si",
-			"calc_lpm_pmf",
-			"_cumulative_event_prob",
-			"forward(",
-			"iface_entry_proportion",
-			"fwd_table_row",
-			"f_distribution",
-			" = 1.0",
-			"init_",
-			"init_egress_size_pmf",
-			"this->egress_size_pmf",
-			"== NULL",
-			"bf_",
-			"RID_Router(",
-			"RID_R",
-			"get_log_fp_rates",
-			"DEFAULT_M",
-			"BF_SIZE",
-			"DEFAULT_M",
-			"get_log_fp_rates",
-			"fp_rate(",
-			"fp_rate",
-			"BF_SIZE",
-			"forward(",
-			"printf(\"RID",
-			"np.arange",
-			"mode",
-			"build_network_rec",
-			"this->f_distribution",
-			"RID_Analytics",
-			"- 1",
-			"calc_joint_lpm_pmf",
+			"log_pr",
+			"get_lpm_prob",
+			"[0][0][0][10]",
+			"ROUTER",
+			"ROUTER[0]",
+			"[0]",
+			"[0][0][1][12]",
+			"[0][0][1][10]",
+			"[0][0][0][10]",
 			"calc_joint_log_prob",
+			"calc_joint_log_prob(",
 			"calc_joint_lpm_pmf(",
-			"forward(",
-			"build_n",
-			"get_outcome",
-			"UPSTREAM",
-			"forward(",
-			"calc_joint_lo",
-			"calc_",
-			"forward(",
+			"ROUTER[2][1]",
+			"calc_lpm_pmf",
+			"get_valid_ifaces(",
+			"ptree_iface",
+			"calc_lpm",
 			"calc_joint_log_prob",
+			"ingress_ptree_prob",
+			"ingress_p",
+			"ingress_ptree_prob",
 			"calc_joint_lpm_pmf",
-			"forward("
+			"id=\"1.1",
+			"egress_ptree_prob_sum",
+			"erased",
+			"ROUTER[1][1]",
+			"ROUTER[3][4]",
+			"ROUTER[1][1]",
+			"ROUTER[1][0]",
+			"ROUTER[1][1]",
+			"ROUTER[1][0]",
+			"ROUTER [1][0]",
+			"IFACE_LOCAL",
+			"/tp",
+			"calc_lpm_pmf(",
+			"calc_lpm",
+			"egress_p",
+			"ROUTER[1][0]",
+			"path_state_itr",
+			"valid_iface",
+			"id=\"2.0",
+			"valid_ifaces",
+			"id=\"1.0",
+			"id=\"2.0",
+			"is_leaf()",
+			"RID_Router(",
+			"build_netw",
+			"valid_ifaces",
+			"calc_joint_log_prob",
+			"ingress_p",
+			"egress_ptree",
+			"egress",
+			"no_forwarding",
+			"f_dis",
+			"get_log_fp_rates",
+			"_log_prob_not_fp",
+			"_log_fp_rates",
+			"egress_ptre",
+			"egress_iface_prob",
+			"id=\"2.0",
+			"<fwd_size_dist size=\"1\">1.00</fwd_size_dist>",
+			"                    <fwd_size_dist size=\"1\">1.00</fwd_size_dist>\n                    <fwd_size_dist size=\"2\">0.00</fwd_size_dist>",
+			"cache_annc",
+			"cache_anncs",
+			"id=\"3.0",
+			"on_pa",
+			"fallback_carry",
+			"id=\"2.0",
+			"tp iface",
+			"id=\"2.0",
+			"id=\"3.1",
+			"calc_joint_lpm_pmf(",
+			"calc_joint_lpm_pmf",
+			"calc_joint_log_prob",
+			"JOINT_PROB",
+			"0.3.0",
+			"id=\"3.0",
+			"id=\"2.0",
+			"id=\"3.0",
+			"id=\"2.0",
+			"id=\"3.0"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -933,6 +932,69 @@
 		"regex": false,
 		"replace_history":
 		[
+			"ax2",
+			"bf_sizes",
+			"cache_distance",
+			"cache_distances",
+			"cache_locations",
+			"entry_sizes",
+			"EVENT_MLM",
+			"EVENT_SLM",
+			"EVENT_NLM",
+			"EVENT_LLM",
+			"this->origin_server",
+			"eh_mode",
+			"STATUS_",
+			"",
+			"fontsize = 16",
+			"req_sizes",
+			"bf_sizes",
+			"bf_lengths",
+			"output_label",
+			"OPTION_OUTPUT_LABEL",
+			"<fwd_size_dist size=\"1\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"2\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"3\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"4\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"5\">1.00</fwd_size_dist>",
+			">5</tp>",
+			">2</tp>",
+			"                    <fwd_size_dist size=\"1\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"2\">1.00</fwd_size_dist>",
+			">15</tp>",
+			"                    <fwd_size_dist size=\"1\">1.00</fwd_size_dist>\n                    <fwd_size_dist size=\"2\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"3\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"4\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"5\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"6\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"7\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"8\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"9\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"10\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"11\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"12\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"13\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"14\">0.00</fwd_size_dist>\n                    <fwd_size_dist size=\"15\">0.00</fwd_size_dist>",
+			"->eop",
+			"dfs_itr",
+			"egress_iface_prob",
+			"this->egress_iface_prob",
+			"egress_ptree_prob",
+			"ingress_ptree_prob",
+			"egress_ptree_pmf",
+			"1</tp>",
+			"size=\"3\">0.00<",
+			"size=\"1\">1.00<",
+			"size=\"3\">0.00<",
+			"MODE_MM_FLOOD",
+			"f_limit",
+			"0.25",
+			"path_state_itr",
+			"cumulative_event_prob",
+			"event_prob",
+			"initial_state",
+			"path_state_tree_itr",
+			"joint_lpm_matrix",
+			"height",
+			"go_up",
+			"get_next_hop",
+			"as_uint()",
+			"(\"index\")",
+			"index=",
+			"router",
+			"node",
+			"tier=",
+			",3",
+			",2",
+			"event",
+			"EVENT_LOCAL_IFACE_MATCH",
+			"EVENT_SINGLE_IFACE_MATCH",
+			"EVENT_MULTIPLE_IFACE_MATCHES",
+			"EVENT_NO_MATCHES",
+			"num_size_f_entries",
 			"0,1,0",
 			"0,2",
 			"0,1,",
@@ -997,70 +1059,7 @@
 			"fwd_table_row",
 			"this->",
 			"i < (this->iface_num + 1)",
-			"IFACE_LOCAL",
-			"F_",
-			"F_i",
-			"joint_f_pmf",
-			"f_pmf",
-			"__float080",
-			"long double",
-			"prob_Li_f",
-			"__float128",
-			"double",
-			"splitted",
-			"",
-			"*** NEXT TIER ***",
-			"*** PROBABILITIES *** ",
-			"// *** PROBABILITIES *** ",
-			"// *** LATENCIES *** ",
-			"// *** latencies *** ",
-			"outcomes",
-			"run-analysis",
-			"_SENSITIVITY",
-			"alpha",
-			"//graphviz_graph->add_node((*depth_itr), depth, mhs_node",
-			"add_node((*depth_itr), depth, fpo_node, depth + 1, breadth, (pos_prob_local * (input_params.alpha[curr_node_tier])))",
-			"IMPOSSIBLE CASES",
-			"FPO",
-			"fpo",
-			"FPO",
-			"OPTION_CACHE_TIER",
-			"[0]",
-			"to_string",
-			"_EXAMPLE",
-			"align_nodes(graphviz_graph, ",
-			"align_nodes(graph_viz, ",
-			"get_next_level",
-			"set_next_level",
-			"sizeof(const Node *)",
-			"level",
-			"depth",
-			"graphviz_",
-			"next_depth",
-			"prev_depth",
-			"Drawbacks:",
-			"Advantages:",
-			"",
-			"fps-rates-fib",
-			"fig:fps-rates-entry",
-			"",
-			"*",
-			"       ",
-			"   -#",
-			"    ",
-			"o_optimistic",
-			"o-optimistic",
-			"o_optimistic",
-			"o-optimistic",
-			"Carnegie Mellon University",
-			"    ",
-			"CMU",
-			"dat_filename",
-			"*",
-			"CONTENT_SOURCE_DIST",
-			"DataParser",
-			"data-parser",
-			"data_filename"
+			"IFACE_LOCAL"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1071,31 +1070,38 @@
 	"groups":
 	[
 		{
+			"selected": 9,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "/Users/adamiaonr/Downloads/cli",
+					"file": "src/sanity-check.cpp",
 					"settings":
 					{
-						"buffer_size": 5209,
+						"buffer_size": 7792,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								7280,
+								7280
 							]
 						],
 						"settings":
 						{
-							"auto_name": "",
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"rulers":
+							[
+								80
+							],
+							"spell_check": true,
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 181.0,
+						"translation.y": 2677.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1105,15 +1111,15 @@
 					"file": "src/rid-analytics.cpp",
 					"settings":
 					{
-						"buffer_size": 22694,
+						"buffer_size": 38487,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								16271,
-								16271
+								26942,
+								26942
 							]
 						],
 						"settings":
@@ -1128,7 +1134,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 9120.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1138,15 +1144,15 @@
 					"file": "include/rid-analytics.h",
 					"settings":
 					{
-						"buffer_size": 3597,
+						"buffer_size": 3209,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								1689,
+								1689
 							]
 						],
 						"settings":
@@ -1160,40 +1166,36 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 720.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 3,
-					"file": "src/sanity-check.cpp",
+					"file": "/home/adamiaonr/Downloads/sdsadasdas",
 					"settings":
 					{
-						"buffer_size": 12578,
+						"buffer_size": 74236,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								12242,
-								12242
+								72699,
+								72699
 							]
 						],
 						"settings":
 						{
-							"rulers":
-							[
-								80
-							],
-							"spell_check": true,
-							"syntax": "Packages/C++/C++.tmLanguage",
+							"auto_name": "rid-analytics : request_size = 15, bf_size = 192",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 27794.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1203,15 +1205,15 @@
 					"file": "src/rid-router.cpp",
 					"settings":
 					{
-						"buffer_size": 53149,
+						"buffer_size": 75486,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								22178,
-								22178
+								67282,
+								67282
 							]
 						],
 						"settings":
@@ -1226,7 +1228,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 8006.0,
+						"translation.y": 24840.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1236,15 +1238,15 @@
 					"file": "include/rid-router.h",
 					"settings":
 					{
-						"buffer_size": 7317,
+						"buffer_size": 9554,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4926,
-								4926
+								9554,
+								9554
 							]
 						],
 						"settings":
@@ -1258,60 +1260,30 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 3592.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 6,
-					"file": ".todos",
+					"file": "test/configs/example/complex.scn",
 					"settings":
 					{
-						"buffer_size": 1199,
+						"buffer_size": 1538,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								377,
-								377
+								400,
+								400
 							]
 						],
 						"settings":
 						{
-							"rulers":
-							[
-								80
-							],
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "test/configs/evaluation/vanilla/r15/vanilla-1-15.scn",
-					"settings":
-					{
-						"buffer_size": 1608,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1596,
-								1605
-							]
-						],
-						"settings":
-						{
+							"auto_name": "request_size=5",
 							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
@@ -1321,19 +1293,19 @@
 					"type": "text"
 				},
 				{
-					"buffer": 8,
-					"file": "/Users/adamiaonr/workbench/dns-performance/src/dns-performance.cpp",
+					"buffer": 7,
+					"file": "src/path-state.cpp",
 					"settings":
 					{
-						"buffer_size": 11376,
+						"buffer_size": 3652,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								10775,
-								10840
+								205,
+								205
 							]
 						],
 						"settings":
@@ -1343,45 +1315,73 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 3622.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "include/path-state.h",
+					"settings":
+					{
+						"buffer_size": 2273,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1685,
+								1685
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 9,
-					"file": "/Users/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
+					"file": "/home/adamiaonr/workbench/.test/configs/evaluation/global/scenarios/dumbbell/h01.scn",
 					"settings":
 					{
-						"buffer_size": 13905,
+						"buffer_size": 53564,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								8583,
-								8583
+								34297,
+								34297
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/C++/C++.tmLanguage",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 3500.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 10,
-					"file": "test/configs/fdist/10.fdist",
+					"file": "scripts/plot.py",
 					"settings":
 					{
-						"buffer_size": 515,
+						"buffer_size": 56694,
 						"regions":
 						{
 						},
@@ -1394,7 +1394,9 @@
 						],
 						"settings":
 						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,

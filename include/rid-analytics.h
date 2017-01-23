@@ -21,6 +21,9 @@
 #define MODE_SAVE_GRAPH     0x04
 #define MODE_SAVE_OUTCOMES  0x08
 
+#define RESOLUTION_OFF  0x00
+#define RESOLUTION_ON   0x01
+
 // indexes for output file array
 #define FILE_EVENTS         0
 #define FILE_PATHS          1
@@ -63,7 +66,8 @@ class RID_Analytics {
             uint16_t bf_size,
             std::string origin_server,
             int mm_mode,
-            int eh_mode);
+            int eh_mode,
+            int resolution_mode);
         ~RID_Analytics();
 
         int run(std::string scn_filename);
@@ -96,6 +100,7 @@ class RID_Analytics {
         uint16_t bf_size;
         int mm_mode;
         int eh_mode;
+        int resolution_mode;
         RID_TPMap tp_sizes;
         __float080 * f_r_distribution;
         // path state tree

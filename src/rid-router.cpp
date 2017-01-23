@@ -324,10 +324,32 @@ int RID_Router::forward(
     // if the request is going up, we relay NIS cases to the router upstream. 
     // once we reach the top of the topology, we give up relaying and use 
     // a 'fallback' to origin
-    if (this->get_next_hop(ingress_iface).router->get_height() > this->height
-        && (this->height > 0 && this->width > 0)) {
+    if ((this->height > 0) &&
+        ((this->get_id() == "0.3.0") || (this->get_next_hop(ingress_iface).router->get_height() > this->height))) {
+
         this->egress_iface_prob[1][0] += this->iface_events_pmf[EVENT_NLM];
+
+        __float080 egress_ptree_prob_sum = 0.0;
+        if ((this->get_id() != "0.3.0")) {
+
+            this->egress_ptree_prob[1][0] += this->iface_events_pmf[EVENT_NLM];
+
+                if (this->egress_ptree_prob[1][0] > 0.0) {
+
+                    for (int f = 0; f <= this->f_max; f++)
+                        egress_ptree_prob_sum += this->egress_ptree_prob[1][f];
+
+                    for (int f = 0; f <= this->f_max; f++)
+                        this->egress_ptree_prob[1][f] = (this->egress_ptree_prob[1][f] / egress_ptree_prob_sum);
+            }
+
+            int e = this->no_forwarding.erase(1);
+            std::cout << "RID_Router::forward() : [INFO] erased " << e << " elements from blocked ifaces" << std::endl;
+        }
     }
+
+    std::cout << "RID_Router::forward() : [INFO] P('EVENT_MLM' / valid_ifaces) = " 
+        << this->iface_events_pmf[EVENT_MLM] / 3.0 << std::endl;
 
     this->print_iface_events_pmf();
     this->print_egress_iface_prob();
@@ -838,20 +860,20 @@ int RID_Router::calc_lpm_pmf(
                 * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0)   // making sure that there are entries in this iface
                 * aux;
 
-            if (this->ingress_ptree_prob[f] > 0.0) {
+            // if (this->ingress_ptree_prob[f] > 0.0) {
 
-                if (exp(_log_prob_not_fp[0]) > 0.0)
-                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
-                        << (int) _iface << "][" << f << "] _log_prob_not_fp[0] = " << exp(_log_prob_not_fp[0]) << std::endl;
+            //     if (exp(_log_prob_not_fp[0]) > 0.0)
+            //         std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
+            //             << (int) _iface << "][" << f << "] _log_prob_not_fp[0] = " << exp(_log_prob_not_fp[0]) << std::endl;
 
-                if (exp(_log_prob_not_fp[0]) > 0.0)
-                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
-                        << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << f << "] = " << this->fwd_table[_iface].f_distribution[f - 1] << std::endl;
+            //     if (exp(_log_prob_not_fp[0]) > 0.0)
+            //         std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
+            //             << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << f << "] = " << this->fwd_table[_iface].f_distribution[f - 1] << std::endl;
 
-                if (exp(_log_prob_not_fp[0]) > 0.0)
-                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
-                        << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
-            }
+            //     if (exp(_log_prob_not_fp[0]) > 0.0)
+            //         std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (1) EP["
+            //             << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
+            // }
         }
 
         for (int f = 1; f <= this->f_max; f++) {
@@ -866,26 +888,26 @@ int RID_Router::calc_lpm_pmf(
                         * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0)   // making sure that there are entries in this iface
                         * ((this->fwd_table[_iface].f_distribution[f - 1] > 0.0) ? 1.0 : 0.0);
 
-                    if (this->ingress_ptree_prob[p] > 0.0) {
+                    // if (this->ingress_ptree_prob[p] > 0.0) {
 
-                        if (exp(_log_prob_not_fp[f]) > 0.0) {
+                    //     if (exp(_log_prob_not_fp[f]) > 0.0) {
 
-                            if((1.0 - exp(_log_fp_rates[f - 1])) > 0.0) {             
+                    //         if((1.0 - exp(_log_fp_rates[f - 1])) > 0.0) {             
 
-                                std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
-                                    << (int) _iface << "][" << f << "] _log_prob_not_fp[" << f << "] = " << exp(_log_prob_not_fp[f]) << std::endl;
+                    //             std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
+                    //                 << (int) _iface << "][" << f << "] _log_prob_not_fp[" << f << "] = " << exp(_log_prob_not_fp[f]) << std::endl;
 
-                                std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
-                                    << (int) _iface << "][" << f << "] 1.0 - exp(_log_fp_rates[" << f - 1 << "]) = " << (1.0 - exp(_log_fp_rates[f - 1])) << std::endl;
+                    //             std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
+                    //                 << (int) _iface << "][" << f << "] 1.0 - exp(_log_fp_rates[" << f - 1 << "]) = " << (1.0 - exp(_log_fp_rates[f - 1])) << std::endl;
 
-                                std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
-                                    << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << f << "] = " << this->fwd_table[_iface].f_distribution[f - 1] << std::endl;
+                    //             std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
+                    //                 << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << f << "] = " << this->fwd_table[_iface].f_distribution[f - 1] << std::endl;
 
-                                std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
-                                    << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
-                            }
-                        }
-                    }
+                    //             std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (2) EP["
+                    //                 << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
+                    //         }
+                    //     }
+                    // }
 
                 } else {
 
@@ -898,26 +920,26 @@ int RID_Router::calc_lpm_pmf(
                             * ((this->fwd_table[_iface].num_entries > 0) ? 1.0 : 0.0)   // making sure that there are entries in this iface
                             * ((this->fwd_table[_iface].f_distribution[f - 1] > 0.0) ? 1.0 : 0.0);
 
-                        if (this->ingress_ptree_prob[p] > 0.0) {
+                        // if (this->ingress_ptree_prob[p] > 0.0) {
 
-                            if (exp(_log_prob_not_fp[g]) > 0.0) {
+                        //     if (exp(_log_prob_not_fp[g]) > 0.0) {
 
-                                if((1.0 - exp(_log_fp_rates[g - 1])) > 0.0) {      
+                        //         if((1.0 - exp(_log_fp_rates[g - 1])) > 0.0) {      
 
-                                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
-                                        << (int) _iface << "][" << f << "] _log_prob_not_fp[" << g << "] = " << exp(_log_prob_not_fp[g]) << std::endl;
+                        //             std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
+                        //                 << (int) _iface << "][" << f << "] _log_prob_not_fp[" << g << "] = " << exp(_log_prob_not_fp[g]) << std::endl;
 
-                                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
-                                        << (int) _iface << "][" << f << "] 1.0 - exp(_log_fp_rates[" << g - 1 << "]) = " << (1.0 - exp(_log_fp_rates[g - 1])) << std::endl;
+                        //             std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
+                        //                 << (int) _iface << "][" << f << "] 1.0 - exp(_log_fp_rates[" << g - 1 << "]) = " << (1.0 - exp(_log_fp_rates[g - 1])) << std::endl;
 
-                                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
-                                        << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << g << "] = " << this->fwd_table[_iface].f_distribution[g - 1] << std::endl;
+                        //             std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
+                        //                 << (int) _iface << "][" << f << "] f_distribution[" << (int) _iface << "][" << g << "] = " << this->fwd_table[_iface].f_distribution[g - 1] << std::endl;
 
-                                    std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
-                                        << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
-                                }
-                            }
-                        }
+                        //             std::cout << "RID_Router::calc_lpm_pmf() : [INFO] (3) EP["
+                        //                 << (int) _iface << "][" << f << "] = " << this->egress_ptree_prob[_iface][f] << std::endl;
+                        //         }
+                        //     }
+                        // }
                     }
                 }
             }
@@ -926,8 +948,9 @@ int RID_Router::calc_lpm_pmf(
         for (int f = 0; f <= this->f_max; f++)
             egress_ptree_prob_sum += this->egress_ptree_prob[_iface][f];
 
-        for (int f = 0; f <= this->f_max; f++)
-            this->egress_ptree_prob[_iface][f] = (this->egress_ptree_prob[_iface][f] / egress_ptree_prob_sum);
+        if (egress_ptree_prob_sum > 0.0)
+            for (int f = 0; f <= this->f_max; f++)
+                this->egress_ptree_prob[_iface][f] = (this->egress_ptree_prob[_iface][f] / egress_ptree_prob_sum);
 
         egress_ptree_prob_sum = 0.0;
 
@@ -1227,10 +1250,7 @@ int RID_Router::calc_joint_lpm_pmf(
     return 0;
 }
 
-__float080 RID_Router::calc_joint_log_prob(
-    uint8_t ptree_size,
-    uint8_t ptree_iface, 
-    int * iface_pivots) {
+int RID_Router::get_valid_ifaces(int ptree_size) {
 
     // we now go through a(n over) complicated piece of (work) code to 
     // determine the amount of valid egress ifaces for these inputs. 
@@ -1244,7 +1264,7 @@ __float080 RID_Router::calc_joint_log_prob(
         valid_ifaces -= 1;
         i = IFACE_LOCAL + 1;
 
-        // std::cout << "RID_Router::calc_joint_log_prob() [INFO] local link not included. valid_ifaces = " << valid_ifaces << std::endl;
+        // std::cout << "RID_Router::get_valid_ifaces() [INFO] local link not included. valid_ifaces = " << valid_ifaces << std::endl;
     }
 
     // subtract the ifaces in the forwarding list, as well as those which 
@@ -1259,7 +1279,7 @@ __float080 RID_Router::calc_joint_log_prob(
 
             valid_ifaces--;
 
-            // std::cout << "RID_Router::calc_joint_log_prob() [INFO] link " << i << " included. valid_ifaces = " << valid_ifaces << std::endl;
+            // std::cout << "RID_Router::get_valid_ifaces() [INFO] link " << i << " included. valid_ifaces = " << valid_ifaces << std::endl;
 
         } else {
 
@@ -1276,12 +1296,12 @@ __float080 RID_Router::calc_joint_log_prob(
             if (!(f_dist > 0.0)) {
                 valid_ifaces--;
 
-                // std::cout << "RID_Router::calc_joint_log_prob() [INFO] LINK[" 
+                // std::cout << "RID_Router::get_valid_ifaces() [INFO] LINK[" 
                 //     << i << "].f_dist[" << (int) ptree_size << "] = 0.0 (" << f_dist 
                 //     << "). valid_ifaces = " << valid_ifaces << std::endl;
 
                 // for (int j = 0; j < this->f_max; j++)
-                //     std::cout << "RID_Router::calc_joint_log_prob() [INFO] F_DIST[" 
+                //     std::cout << "RID_Router::get_valid_ifaces() [INFO] F_DIST[" 
                 //         << i << "].[" << j << "] = " << this->fwd_table[i].f_distribution[j] << std::endl;
             }
         }
@@ -1291,6 +1311,16 @@ __float080 RID_Router::calc_joint_log_prob(
     if (valid_ifaces < 1) {
         valid_ifaces = 1;
     }
+
+    return valid_ifaces;
+}
+
+__float080 RID_Router::calc_joint_log_prob(
+    uint8_t ptree_size,
+    uint8_t ptree_iface, 
+    int * iface_pivots) {
+
+    int valid_ifaces = get_valid_ifaces(ptree_size);
 
     // scale the calculated probabilities by the probability of having a 
     // request - of any size - enter this router
@@ -1322,7 +1352,7 @@ int pivot_to_int(int * pivots, int pivot_size, long int pivot_init) {
     long int pivot = pivot_init;
     int p = 1, pp = p;
 
-    std::cout << "pivot_to_int() : [INFO] initial pivot : " << pivot << std::endl;
+    // std::cout << "pivot_to_int() : [INFO] initial pivot : " << pivot << std::endl;
 
     for ( ; p < (pivot_size + 1); p++) {
 
@@ -1331,12 +1361,10 @@ int pivot_to_int(int * pivots, int pivot_size, long int pivot_init) {
 
         pivot += ((long int) pivots[p - 1]) * ((long int) pow(10, pp++));
 
-        std::cout << "pivot_to_int() : [INFO] added pivot " << pivot << " from array ";
-
-        for (int i = 0; i < pivot_size; i++)
-            std::cout << "[" << pivots[i] << "]";
-
-        std::cout << std::endl;
+        // std::cout << "pivot_to_int() : [INFO] added pivot " << pivot << " from array ";
+        // for (int i = 0; i < pivot_size; i++)
+        //     std::cout << "[" << pivots[i] << "]";
+        // std::cout << std::endl;
     }
 
     return pivot;
@@ -1347,7 +1375,8 @@ __float080 RID_Router::calc_cumulative_prob(
     uint8_t iface, 
     uint8_t f,
     uint8_t mode,
-    long int & pivot) {
+    long int & pivot,
+    __float080 & prob_new_events) {
 
     // printf("RID_Router::calc_cumulative_prob() : [IFACE : %d][|F| : %d][MODE : %s]\n", 
     //     iface, f, CUMULATIVE_PROB_MODE_STR[mode]);
@@ -1369,6 +1398,7 @@ __float080 RID_Router::calc_cumulative_prob(
 
     // 
     int ptree_size = pivot;
+    prob_new_events = 0.0;
 
     // the mode argument specifies the upper limit for |F| during the cumulative 
     // probability: 
@@ -1454,7 +1484,24 @@ __float080 RID_Router::calc_cumulative_prob(
                     // of probability events
                     // FIXME: this could be a source of trouble
                     if (mode == MODE_EI_INCLUSIVE && _prob > 0.0) {
+
                         pivot = pivot_to_int(iface_pivots, this->iface_num, ptree_size);
+
+                        std::set<long int>::iterator it = this->added_pivots.find(pivot);
+                        if (it != this->added_pivots.end()) {
+
+                            std::cout << "RID_Router::calc_cumulative_prob() : [INFO] event " 
+                                << pivot << " has been considered before." << std::endl;
+
+                        } else {
+
+                            this->added_pivots.insert(pivot);
+
+                            std::cout << "RID_Router::calc_cumulative_prob() : [INFO] added event " 
+                                << pivot << "." << std::endl;
+
+                            prob_new_events += _prob;
+                        }
                     }
 
                     _cumulative_prob += _prob;
@@ -1475,7 +1522,24 @@ __float080 RID_Router::calc_cumulative_prob(
                 _prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
                 if (mode == MODE_EI_INCLUSIVE && _prob > 0.0) {
+
                     pivot = pivot_to_int(iface_pivots, this->iface_num, ptree_size);
+
+                    std::set<long int>::iterator it = this->added_pivots.find(pivot);
+                    if (it != this->added_pivots.end()) {
+
+                        std::cout << "RID_Router::calc_cumulative_prob() : [INFO] event " 
+                            << pivot << " has been considered before." << std::endl;
+
+                    } else {
+
+                        this->added_pivots.insert(pivot);
+
+                        std::cout << "RID_Router::calc_cumulative_prob() : [INFO] added event " 
+                            << pivot << "." << std::endl;
+
+                        prob_new_events += _prob;
+                    }
                 }
 
                 _cumulative_prob += _prob;
@@ -1567,17 +1631,18 @@ __float080 RID_Router::calc_cumulative_prob(
 int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_size) {
 
     long int pivot = 0;
+    __float080 prob_new_events = 0.0;
 
     // LOCAL MATCH : call calc_cumulative_prob in MODE_LI mode
     for (uint8_t _f = this->f_max; _f > 0; _f--) {
 
         // printf("RID_Router::calc_iface_events_pmf() : calc_cumulative_prob(..., %d, %d, %s)\n", 
         //     IFACE_LOCAL, _f, CUMULATIVE_PROB_MODE_STR[MODE_LI]);
-        this->iface_events_pmf[EVENT_LLM] += this->calc_cumulative_prob(joint_prob_matrix, IFACE_LOCAL, _f, MODE_LI, pivot);
+        this->iface_events_pmf[EVENT_LLM] += this->calc_cumulative_prob(joint_prob_matrix, IFACE_LOCAL, _f, MODE_LI, pivot, prob_new_events);
     }
 
     std::cout << "RID_Router::calc_iface_events_pmf() : [INFO]"
-        << "\n\t P('EVENT_LLM' [" << (int) ptree_size << "]') = " << this->iface_events_pmf[EVENT_LLM]
+        << "\n\t P('EVENT_LLM' [ptree_size = " << (int) ptree_size << "]') = " << this->iface_events_pmf[EVENT_LLM]
         << std::endl;
 
     // NO MATCHES : just call get_joint_lpm_prob() with iface_pivots = {0, 0, ..., 0}
@@ -1596,24 +1661,24 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_
 
             // probability of choosing iface being *over others*, with an entry 
             // of size f.
-            prob_single = this->calc_cumulative_prob(joint_prob_matrix, iface, f, MODE_EI_EXCLUSIVE, pivot);
+            prob_single = this->calc_cumulative_prob(joint_prob_matrix, iface, f, MODE_EI_EXCLUSIVE, pivot, prob_new_events);
             // in some cases, we may want the probability of iface being chosen, 
             // even if together with any other iface (e.g. if a flooding strategy 
             // is in place). 
-            prob_multiple = this->calc_cumulative_prob(joint_prob_matrix, iface, f, MODE_EI_INCLUSIVE, pivot);
+            prob_multiple = this->calc_cumulative_prob(joint_prob_matrix, iface, f, MODE_EI_INCLUSIVE, pivot, prob_new_events);
 
             // keep track of the total EI probability as well (sanity check)
             if (prob_single > 0.0) {
 
                 std::cout << "RID_Router::calc_iface_events_pmf() : [INFO]"
-                    << "\n\t P('EI_EXCLUSIVE' [" << (int) iface << "][" << (int) f << "]') = " << prob_single
+                    << "\n\t P('EGRESS_IFACE_EXCLUSIVE' [" << (int) iface << "][" << (int) f << "]') = " << prob_single
                     << std::endl;
             }
 
             if (prob_multiple > 0.0) {
 
                 std::cout << "RID_Router::calc_iface_events_pmf() : [INFO]"
-                    << "\n\t P('EI_INCLUSIVE' [" << (int) iface << "][" << (int) f << "]') = " << prob_multiple
+                    << "\n\t P('EGRESS_IFACE_INCLUSIVE' [" << (int) iface << "][" << (int) f << "]') = " << prob_multiple
                     << std::endl;
             }
 
@@ -1625,17 +1690,28 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_
 
             } else if (this->mm_mode == MMH_RANDOM) {
 
-                int valid_ifaces = (int) this->iface_num - this->no_forwarding.size();
-
-                // if the local iface is not in the 'no forwarding' list, don't consider it
-                std::set<int>::iterator it = this->no_forwarding.find((int) IFACE_LOCAL);
-                if (it == this->no_forwarding.end())
-                    valid_ifaces -= 1;
-
-                if (valid_ifaces < 1)
-                    valid_ifaces = 1;
-
+                // FIXME: i've identified a problem: if the outdegree 
+                // is > 2, then events as [2][2][1] should be divided 
+                // by 1/2, while events such as [2][2][2] should be divided 
+                // by 1/3. this only fails for MMH_RANDOM.
+                int valid_ifaces = get_valid_ifaces(ptree_size);
                 this->egress_iface_prob[iface][f] += (prob_single + ((1.0 / (__float080) valid_ifaces) * (prob_multiple - prob_single)));
+
+
+                if ((prob_multiple - prob_single) > 0.0) {
+
+                    std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] "
+                        << "\n\t [MMH_RANDOM] P('EGRESS_IFACE[" << (int) iface << "][" << (int) f << "][ptree_size = " << ptree_size << "]') += " 
+                        << (prob_single + ((1.0 / (__float080) valid_ifaces) * (prob_multiple - prob_single)))
+                        << std::endl;
+
+                    std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] "
+                        << "\n\t [MMH_RANDOM] P('EGRESS_IFACE[" << (int) iface << "][" << (int) f << "][ptree_size = " << ptree_size << "]') = " << this->egress_iface_prob[iface][f]
+                        << std::endl;
+
+                    std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] "
+                        << "\n\t valid_ifaces = " << valid_ifaces << std::endl;
+                }
 
             } else {
 
@@ -1646,29 +1722,18 @@ int RID_Router::calc_iface_events_pmf(__float080 * joint_prob_matrix, int ptree_
             // the probability of an exclusive iface choice event correctly
             this->iface_events_pmf[EVENT_SLM] += prob_single;
 
-            if (prob_multiple > 0.0) {
+            if (prob_new_events > 0.0) {
 
-                std::set<long int>::iterator it = this->added_pivots.find(pivot);
-                if (it != this->added_pivots.end()) {
-
-                    std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] event " 
-                        << pivot << " has been considered before." << std::endl;
-
-                } else {
-
-                    this->added_pivots.insert(pivot);
-
-                    std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] added event " 
-                        << pivot << "." << std::endl;
-                    this->iface_events_pmf[EVENT_MLM] += (prob_multiple - prob_single);
-                }
+                this->iface_events_pmf[EVENT_MLM] += (prob_new_events - prob_single);
+                std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] P('EVENT_MLM' [ptree_size = " << ptree_size << "]) = " 
+                    << this->iface_events_pmf[EVENT_MLM] << std::endl;
             }
 
             // keep track of the total EI probability as well (sanity check)
             if (prob_single > 0.0 || prob_multiple > 0.0) {
 
                 std::cout << "RID_Router::calc_iface_events_pmf() : [INFO] "
-                    << "\n\t P('[" << (int) iface << "][" << (int) f << "]') = " << this->egress_iface_prob[iface][f]
+                    << "\n\t P('EGRESS_IFACE[" << (int) iface << "][" << (int) f << "]') = " << this->egress_iface_prob[iface][f]
                     << std::endl;
             }
         }
