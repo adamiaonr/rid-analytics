@@ -4,14 +4,11 @@ CC := g++
 # Special directories
 SRCDIR := src
 BUILDDIR := build
-TARGET_SANITY := sanity-check
-#TARGET_SENSITIVITY := sensitivity-analysis
+TARGET := rid-analytics
 
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-OBJECTS_SANITY := $(filter-out $(BUILDDIR)/$(TARGET_SENSITIVITY).o, $(OBJECTS))
-#OBJECTS_SENSITIVITY := $(filter-out $(BUILDDIR)/$(TARGET_SANITY).o, $(OBJECTS))
 
 # use -ggdb for GNU debugger
 CFLAGS := -g -ggdb -gdwarf-2 -Wall -Wno-comment -std=c++11
@@ -19,17 +16,13 @@ CFLAGS := -g -ggdb -gdwarf-2 -Wall -Wno-comment -std=c++11
 LIB := -lm
 INC := -Iinclude
 
-#all: $(TARGET_SANITY) $(TARGET_SENSITIVITY)
-all: $(TARGET_SANITY)
+#all: $(TARGET) $(TARGET)
+all: $(TARGET)
 	@echo " Doing nothing..."
 
-$(TARGET_SANITY): $(OBJECTS_SANITY)
+$(TARGET): $(OBJECTS)
 	@echo " Linking..."
-	@echo " $(CC) $^ -o $(TARGET_SANITY) $(LIB)"; $(CC) $^ -o $(TARGET_SANITY) $(LIB)
-
-# $(TARGET_SENSITIVITY): $(OBJECTS_SENSITIVITY)
-# 	@echo " Linking..."
-# 	@echo " $(CC) $^ -o $(TARGET_SENSITIVITY) $(LIB)"; $(CC) $^ -o $(TARGET_SENSITIVITY) $(LIB)
+	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
@@ -37,7 +30,6 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 
 clean:
 	@echo " Cleaning..."; 
-#	$(RM) -r $(BUILDDIR) $(TARGET_SANITY) $(TARGET_SENSITIVITY) *~
-	$(RM) -r $(BUILDDIR) $(TARGET_SANITY) *~
+	$(RM) -r $(BUILDDIR) $(TARGET) *~
 
 .PHONY: clean
