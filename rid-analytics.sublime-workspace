@@ -4,6 +4,26 @@
 		"selected_items":
 		[
 			[
+				"rock",
+				"rocketfuel_path"
+			],
+			[
+				"to",
+				"topology"
+			],
+			[
+				"ro",
+				"rocketfuel_file"
+			],
+			[
+				"ar",
+				"args"
+			],
+			[
+				"parse_",
+				"parse_rocketfuel_isp_map"
+			],
+			[
 				"ta",
 				"table_sizes"
 			],
@@ -60,10 +80,6 @@
 				"delivery_probs"
 			],
 			[
-				"to",
-				"topologies"
-			],
-			[
 				"fp_",
 				"fp_rates_diff_labels"
 			],
@@ -78,10 +94,6 @@
 			[
 				"ag",
 				"aggr_types"
-			],
-			[
-				"ro",
-				"router_fp_rates"
 			],
 			[
 				"dif",
@@ -134,10 +146,6 @@
 			[
 				"li",
 				"list"
-			],
-			[
-				"ar",
-				"arange"
 			],
 			[
 				"path_",
@@ -506,14 +514,6 @@
 			[
 				"set_pa",
 				"set_path_prob"
-			],
-			[
-				"go",
-				"go_up"
-			],
-			[
-				"pare",
-				"parent_router"
 			]
 		]
 	},
@@ -528,83 +528,26 @@
 			}
 		},
 		{
-			"file": "src/rid-analytics.cpp",
+			"file": "experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
 			"settings":
 			{
-				"buffer_size": 38487,
+				"buffer_size": 53594,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "include/rid-analytics.h",
+			"file": "scripts/rocketfuel/convert-rocketfuel.py",
 			"settings":
 			{
-				"buffer_size": 3209,
+				"buffer_size": 8285,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "src/rid-router.cpp",
+			"file": "experiments/examples/rocketfuel/1221.r0.cch",
 			"settings":
 			{
-				"buffer_size": 75486,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "include/rid-router.h",
-			"settings":
-			{
-				"buffer_size": 9554,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "test/configs/example/complex.scn",
-			"settings":
-			{
-				"buffer_size": 1538,
-				"line_ending": "Unix",
-				"name": "request_size=5"
-			}
-		},
-		{
-			"file": "src/path-state.cpp",
-			"settings":
-			{
-				"buffer_size": 3652,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "include/path-state.h",
-			"settings":
-			{
-				"buffer_size": 2273,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "scripts/plot.py",
-			"settings":
-			{
-				"buffer_size": 79499,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "run-analysis.sh",
-			"settings":
-			{
-				"buffer_size": 5489,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "run-dummy.sh",
-			"settings":
-			{
-				"buffer_size": 16769,
+				"buffer_size": 42623,
 				"line_ending": "Unix"
 			}
 		}
@@ -649,6 +592,20 @@
 	},
 	"file_history":
 	[
+		"/home/adamiaonr/workbench/fnss/core/fnss/topologies/topology.py",
+		"/home/adamiaonr/workbench/fnss/core/fnss/topologies/parsers.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/2914.cch",
+		"/home/adamiaonr/workbench/rid-analytics/Makefile",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/plot.py",
+		"/home/adamiaonr/workbench/rid-analytics/run-dummy.sh",
+		"/home/adamiaonr/workbench/rid-analytics/run-analysis.sh",
+		"/home/adamiaonr/workbench/rid-analytics/include/path-state.h",
+		"/home/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/complex.scn",
+		"/home/adamiaonr/workbench/rid-analytics/include/rid-router.h",
+		"/home/adamiaonr/workbench/rid-analytics/src/rid-router.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/include/rid-analytics.h",
+		"/home/adamiaonr/workbench/rid-analytics/src/rid-analytics.cpp",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/prefix-exclusion/scenarios/cache-distance/table-sizes/c33.03.1e5.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/prefix-exclusion/scenarios/cache-distance/table-sizes/c33.04.1e5.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/prefix-exclusion/scenarios/cache-distance/table-sizes/c33.05.1e5.scn",
@@ -701,7 +658,6 @@
 		"/home/adamiaonr/Downloads/sdsadasdas",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/non-hierarchical/f01.scn",
 		"/home/adamiaonr/workbench/.test/configs/evaluation/global/scenarios/dumbbell/h01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/plot.py",
 		"/home/adamiaonr/Downloads/fp-analysis/plot.py",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h01-10k.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h01-1M.scn",
@@ -711,7 +667,6 @@
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h01.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-4.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h10-05-01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/Makefile",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h01.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h05.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-3.scn",
@@ -753,7 +708,6 @@
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/fdist/15.fdist",
 		"/home/adamiaonr/Downloads/cli",
 		"/home/adamiaonr/workbench/rid-analytics/example.scn",
-		"/home/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/data/events.1475591776.tsv",
 		"/home/adamiaonr/workbench/rid-analytics/include/dataparser.h",
 		"/home/adamiaonr/workbench/rid-analytics/src/dataparser.cpp",
@@ -765,18 +719,7 @@
 		"/home/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
 		"/home/adamiaonr/workbench/dns-performance/Makefile",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.dist.scn",
-		"/home/adamiaonr/workbench/rid-analytics/.todos",
-		"/Users/adamiaonr/workbench/dns-performance/src/dns-performance.cpp",
-		"/Users/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/vanilla/r15/vanilla-1-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/run-sanity.sh",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-9-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-7-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-5-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-3-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r15/no-caching-1-15.scn",
-		"/Users/adamiaonr/workbench/rid-analytics/test/configs/sanity-check/no-caching/r10/no-caching-1-10.scn"
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.dist.scn"
 	],
 	"find":
 	{
@@ -796,6 +739,10 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"path",
+			"Directed",
+			"TARGET_SANITY",
+			"TARGET_SENSITIVITY",
 			":03",
 			"c33.03.",
 			"distance/strong-full",
@@ -919,11 +866,7 @@
 			"calc_joint_lpm_pmf",
 			"id=\"1.1",
 			"egress_ptree_prob_sum",
-			"erased",
-			"ROUTER[1][1]",
-			"ROUTER[3][4]",
-			"ROUTER[1][1]",
-			"ROUTER[1][0]"
+			"erased"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -931,6 +874,8 @@
 		"regex": false,
 		"replace_history":
 		[
+			"rocketfuel_path",
+			"TARGET",
 			":10",
 			":05",
 			":04",
@@ -1056,9 +1001,7 @@
 			"local",
 			"RID_Router::calc_lpm_pmf()",
 			"prefix",
-			"get_joint_lpm_prob",
-			"add_joint_lpm_prob",
-			"PTREE"
+			"get_joint_lpm_prob"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1106,28 +1049,23 @@
 				},
 				{
 					"buffer": 1,
-					"file": "src/rid-analytics.cpp",
+					"file": "experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
 					"settings":
 					{
-						"buffer_size": 38487,
+						"buffer_size": 53594,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								352,
-								352
+								64,
+								64
 							]
 						],
 						"settings":
 						{
-							"rulers":
-							[
-								80
-							],
-							"spell_check": true,
-							"syntax": "Packages/C++/C++.tmLanguage",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
@@ -1139,198 +1077,18 @@
 				},
 				{
 					"buffer": 2,
-					"file": "include/rid-analytics.h",
+					"file": "scripts/rocketfuel/convert-rocketfuel.py",
 					"settings":
 					{
-						"buffer_size": 3209,
+						"buffer_size": 8285,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1689,
-								1689
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-								80
-							],
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 720.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "src/rid-router.cpp",
-					"settings":
-					{
-						"buffer_size": 75486,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								29467,
-								29467
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-								80
-							],
-							"spell_check": true,
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 10800.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "include/rid-router.h",
-					"settings":
-					{
-						"buffer_size": 9554,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								6261,
-								6261
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-								80
-							],
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 2835.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "test/configs/example/complex.scn",
-					"settings":
-					{
-						"buffer_size": 1538,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								400,
-								400
-							]
-						],
-						"settings":
-						{
-							"auto_name": "request_size=5",
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "src/path-state.cpp",
-					"settings":
-					{
-						"buffer_size": 3652,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								205,
-								205
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "include/path-state.h",
-					"settings":
-					{
-						"buffer_size": 2273,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1685,
-								1685
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "scripts/plot.py",
-					"settings":
-					{
-						"buffer_size": 79499,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								27117,
-								27117
+								2513,
+								2513
 							]
 						],
 						"settings":
@@ -1340,61 +1098,33 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 8250.0,
+						"translation.y": 18.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 9,
-					"file": "run-analysis.sh",
+					"buffer": 3,
+					"file": "experiments/examples/rocketfuel/1221.r0.cch",
 					"settings":
 					{
-						"buffer_size": 5489,
+						"buffer_size": 42623,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								1038,
+								1038
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
+							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 10,
-					"file": "run-dummy.sh",
-					"settings":
-					{
-						"buffer_size": 16769,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								7793,
-								7793
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 135.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
