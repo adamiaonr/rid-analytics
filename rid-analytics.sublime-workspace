@@ -4,6 +4,94 @@
 		"selected_items":
 		[
 			[
+				"ed",
+				"edge_id"
+			],
+			[
+				"ne",
+				"neigh_node"
+			],
+			[
+				"id",
+				"id_str"
+			],
+			[
+				"po",
+				"pop_tail"
+			],
+			[
+				"re",
+				"req_size"
+			],
+			[
+				"li",
+				"link"
+			],
+			[
+				"conv",
+				"convert_to_scn"
+			],
+			[
+				"s",
+				"str"
+			],
+			[
+				"rr",
+				"router"
+			],
+			[
+				"pr",
+				"print"
+			],
+			[
+				"isp",
+				"isp_nr"
+			],
+			[
+				"topo",
+				"topology"
+			],
+			[
+				"dat",
+				"data_path"
+			],
+			[
+				"pars",
+				"parse_isp_map"
+			],
+			[
+				"par",
+				"parse_rocketfuel_isp_map"
+			],
+			[
+				"da",
+				"data_path"
+			],
+			[
+				"parse_",
+				"parse_pop_level_isp_map"
+			],
+			[
+				"add_",
+				"add_edge"
+			],
+			[
+				"add",
+				"add_node"
+			],
+			[
+				"pop_",
+				"pop_head"
+			],
+			[
+				"n",
+				"name"
+			],
+			[
+				"lo",
+				"long"
+			],
+			[
 				"rock",
 				"rocketfuel_path"
 			],
@@ -18,10 +106,6 @@
 			[
 				"ar",
 				"args"
-			],
-			[
-				"parse_",
-				"parse_rocketfuel_isp_map"
 			],
 			[
 				"ta",
@@ -142,10 +226,6 @@
 			[
 				"del",
 				"delivery_probs"
-			],
-			[
-				"li",
-				"list"
 			],
 			[
 				"path_",
@@ -320,10 +400,6 @@
 				"iface_num"
 			],
 			[
-				"lo",
-				"log_prob"
-			],
-			[
 				"I",
 				"IFACE_LOCAL"
 			],
@@ -374,10 +450,6 @@
 			[
 				"st",
 				"std"
-			],
-			[
-				"re",
-				"return"
 			],
 			[
 				"rou",
@@ -442,78 +514,6 @@
 			[
 				"cache",
 				"cache_location"
-			],
-			[
-				"val",
-				"valid_ifaces"
-			],
-			[
-				"late",
-				"latency_markrs_size"
-			],
-			[
-				"ev",
-				"event_avgs"
-			],
-			[
-				"excl",
-				"exclusions"
-			],
-			[
-				"se",
-				"set_xticklabels"
-			],
-			[
-				"xt",
-				"xtick_labels"
-			],
-			[
-				"bar_",
-				"bar_group_size"
-			],
-			[
-				"nu",
-				"num_bar_groups"
-			],
-			[
-				"num",
-				"num_sticked_bars"
-			],
-			[
-				"sh",
-				"show_legend"
-			],
-			[
-				"laten",
-				"latency_styles"
-			],
-			[
-				"corr",
-				"correctness"
-			],
-			[
-				"def",
-				"defaultdict"
-			],
-			[
-				"deliv",
-				"deliveries"
-			],
-			[
-				"pr",
-				"print"
-			],
-			[
-				"latency_",
-				"latency_values"
-			],
-			[
-				"av",
-				"avg_latency"
-			],
-			[
-				"set_pa",
-				"set_path_prob"
 			]
 		]
 	},
@@ -528,6 +528,30 @@
 			}
 		},
 		{
+			"file": "scripts/rocketfuel/convert-rocketfuel.py",
+			"settings":
+			{
+				"buffer_size": 11712,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripts/rocketfuel/topology.scn",
+			"settings":
+			{
+				"buffer_size": 282984,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/adamiaonr/workbench/networking-sandbox/ping/src/pingy.cpp",
+			"settings":
+			{
+				"buffer_size": 14439,
+				"line_ending": "Unix"
+			}
+		},
+		{
 			"file": "experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
 			"settings":
 			{
@@ -536,18 +560,10 @@
 			}
 		},
 		{
-			"file": "scripts/rocketfuel/convert-rocketfuel.py",
+			"file": "/mnt/hgfs/adamiaonr/Downloads/rocketfuel_maps_cch/README.cch",
 			"settings":
 			{
-				"buffer_size": 8285,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "experiments/examples/rocketfuel/1221.r0.cch",
-			"settings":
-			{
-				"buffer_size": 42623,
+				"buffer_size": 3709,
 				"line_ending": "Unix"
 			}
 		}
@@ -592,6 +608,17 @@
 	},
 	"file_history":
 	[
+		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/graph_utils.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/maps-n-paths/README",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/maps-n-paths/1221:1221/edges.wt",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/maps-n-paths/1221:1221/edges.lat",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/maps-n-paths/1221:1221/edges",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/isp-maps/1221.r0.cch",
+		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/metric_str_utils.py",
+		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/dependency_graph.py",
+		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/graphs.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/1221.r0.cch",
 		"/home/adamiaonr/workbench/fnss/core/fnss/topologies/topology.py",
 		"/home/adamiaonr/workbench/fnss/core/fnss/topologies/parsers.py",
 		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/2914.cch",
@@ -708,18 +735,7 @@
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/fdist/15.fdist",
 		"/home/adamiaonr/Downloads/cli",
 		"/home/adamiaonr/workbench/rid-analytics/example.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/data/events.1475591776.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/include/dataparser.h",
-		"/home/adamiaonr/workbench/rid-analytics/src/dataparser.cpp",
-		"/home/adamiaonr/workbench/rid-analytics/example.xml",
-		"/home/adamiaonr/workbench/rid-analytics/example.nw",
-		"/home/adamiaonr/workbench/rid-testapp/Makefile",
-		"/home/adamiaonr/workbench/dns-performance/include/signal-handler.h",
-		"/home/adamiaonr/workbench/dns-performance/include/dns-utils.h",
-		"/home/adamiaonr/workbench/dns-performance/src/dns-utils.cpp",
-		"/home/adamiaonr/workbench/dns-performance/Makefile",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/sensitivity/sensitivity.dist.scn"
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/data/events.1475591776.tsv"
 	],
 	"find":
 	{
@@ -739,6 +755,8 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"r1",
+			"723",
 			"path",
 			"Directed",
 			"TARGET_SANITY",
@@ -864,9 +882,7 @@
 			"ingress_p",
 			"ingress_ptree_prob",
 			"calc_joint_lpm_pmf",
-			"id=\"1.1",
-			"egress_ptree_prob_sum",
-			"erased"
+			"id=\"1.1"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1012,6 +1028,7 @@
 	"groups":
 	[
 		{
+			"selected": 1,
 			"sheets":
 			[
 				{
@@ -1049,6 +1066,94 @@
 				},
 				{
 					"buffer": 1,
+					"file": "scripts/rocketfuel/convert-rocketfuel.py",
+					"settings":
+					{
+						"buffer_size": 11712,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6607,
+								6607
+							]
+						],
+						"settings":
+						{
+							"rulers":
+							[
+								80
+							],
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2688.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "scripts/rocketfuel/topology.scn",
+					"settings":
+					{
+						"buffer_size": 282984,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								174521,
+								174521
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 727.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/home/adamiaonr/workbench/networking-sandbox/ping/src/pingy.cpp",
+					"settings":
+					{
+						"buffer_size": 14439,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 3330.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
 					"file": "experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
 					"settings":
 					{
@@ -1059,8 +1164,8 @@
 						"selection":
 						[
 							[
-								64,
-								64
+								887,
+								887
 							]
 						],
 						"settings":
@@ -1070,58 +1175,32 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 45.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 2,
-					"file": "scripts/rocketfuel/convert-rocketfuel.py",
+					"buffer": 5,
+					"file": "/mnt/hgfs/adamiaonr/Downloads/rocketfuel_maps_cch/README.cch",
 					"settings":
 					{
-						"buffer_size": 8285,
+						"buffer_size": 3709,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2513,
-								2513
+								949,
+								949
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 2,
 							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 18.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "experiments/examples/rocketfuel/1221.r0.cch",
-					"settings":
-					{
-						"buffer_size": 42623,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1038,
-								1038
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,

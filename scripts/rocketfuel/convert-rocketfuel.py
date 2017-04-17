@@ -1,150 +1,286 @@
 import argparse
 import re
+import sys
+import glob
+import os
 
+import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 import xml.etree.cElementTree as et
 
 from xml.dom import minidom
+from prettytable import PrettyTable
 
-def convert_to_scn(topology, req_size=15):
+from collections import defaultdict
+from collections import OrderedDict
 
-    root = et.Element("topology")
+# post simple statistics about each AS-level topology:
+#   - nr. of nodes
+#   - nr. of links
+#   - median outdegree
+def print_statistics(rocketfuel_dir):
 
-    x = 0
-    y = 0
-    for node in topology.nodes():
+    stats = OrderedDict()
 
-        # for each node create a sub-element of type 'router'
-        node_id = topology.node[node]['node_id']
-        domain = et.SubElement(root, "router", id = node_id, tier = node_id.split(".")[0], index = node_id.split(".")[1])
+    for filename in sorted(glob.glob(os.path.join(rocketfuel_dir, '*r0.cch'))):
 
-        # within each node, add links
-        for neigh_node in topology.neighbors(node):
+        topology_id = filename.split("/")[-1]
+        topology_id = topology_id.split(".", 1)[0]
+        topology = parse_isp_map(filename)
 
-            edge_id = str(topology[node][neigh_node]['edge_nr'])
-            link = et.SubElement(domain, "link", local = edge_id, remote = edge_id, rrouter = topology.node[neigh_node]['node_id'])
+        stats[topology_id] = defaultdict()
+
+        stats[topology_id]['nodes'] = topology.number_of_nodes()
+        stats[topology_id]['links'] = topology.number_of_edges()
+        degree_sequence = sorted(nx.degree(topology).values(), reverse = True)
+        stats[topology_id]['outdegree'] = np.median(degree_sequence)
+
+    table = PrettyTable(['as id', '# nodes', '# links', 'median outdegree'])
+
+    for topology_id in stats:
+        table.add_row([
+            topology_id,
+            stats[topology_id]['nodes'],
+            stats[topology_id]['links'],
+            stats[topology_id]['outdegree']
+            ])
+
+    print("")
+    print(table)
+    print("")
+
+# add true positive entries to a topology (.scn file). we start by applying 
+# changes in a networkx object, then call convert_to_scn() to generate a .scn 
+# file.
+#
+# algorithm:
+#   - find all shortest paths in topology originated on content_source_id 
+#   - add entries of size tp_size on links in shortest path
+def add_content_route(topology, content_source_id, tp_size = 1, radius = -1):
+
+    routes = nx.single_source_shortest_path(topology, content_source_id)
+
+    # add a tp entry to the local iface of content_source_id. this is basically 
+    # an edge with the same head and tail.
+    topology.add_edge(content_source_id, content_source_id, 
+        type = 'internal', 
+        e1 = ("%d:%d"   % (content_source_id, 0)), 
+        e2 = ("%d:%d"   % (content_source_id, 0)),
+        tp = ("%d:%d:%d" % (content_source_id, 0, tp_size)))
+
+    # iterate through the links in the path, so that we add tp information 
+    # to them
+    for route in routes:
+        for i in xrange(len(routes[route]) - 1):
+            
+            # get src and dst ends of the edge
+            src, dst = routes[route][i], routes[route][i + 1]
+            # determine the interface of dst to which we should add 
+            # the tp info
+            edge = topology.get_edge_data(src, dst);
+            iface = 0
+            if int(edge['e1'].split(':', 1)[0]) == dst:
+                iface = edge['e1']
+            else:
+                iface = edge['e2']
+
+            # the tp info is a tuple of the form <router>:<outgoing iface>:<size> 
+            topology.add_edge(src, dst, tp = ("%s:%d" % (iface, tp_size)))
+
+    return 0
+
+def get_shortest_paths(topology):
+
+    # compute shortest paths from every node to every other node. the paths 
+    # are stored as strings, sequences of node ids, separated by ','. the structure 
+    # of the returned dictionary is:
+    #
+    #   - [source 1] -> [ 
+    #                   "<source 1>,<path node 1>,<path node 2>, ... ,<node 0>",
+    #                   "<source 1>,<path node 1>,<path node 2>, ... ,<node 1>",
+    #                   (...),
+    #                   "<source 1>,<path node 1>, ... ,<node n>"
+    #                   ]
+    #
+    #   - [source 2] -> [ 
+    #                   "<source 2>,<path node 1>,<path node 2>, ... ,<node 0>",
+    #                   "<source 2>,<path node 1>,<path node 2>, ... ,<node 1>",
+    #                   (...),
+    #                   "<source 2>,<path node 1>, ... ,<node n>"
+    #                   ]
+    #   - (...)
+    shortest_paths = defaultdict(list)
+    for source in topology.nodes():
+
+        routes = nx.single_source_shortest_path(topology, source)
+
+        for dst, route in routes.iteritems():
+            # we transform the list of nodes in the route into a string, which 
+            # then allows for more convenient search on get_iface_distr()
+            route = ','.join(str(node) for node in route)
+            shortest_paths[source].append(route)
+
+    return shortest_paths
+
+# FIXME : this algorithm is terribly inefficient...
+def get_fwd_dist(topology, shortest_paths, router):
+
+    # fwd_dist values
+    fwd_dist = defaultdict(float)
+    # nr. of nodes in topology
+    node_num = len(topology.nodes())
+    neighbor_num = len(topology.neighbors(router))
+    # set of visited sources
+    visited_sources = set([])
+
+    # how many nodes announce their contents via neighbor?
+    # we determine this by finding the nr. of sources which include a shortest 
+    # paths with the sequence "neighbor,router" in it.
+    for i, neighbor in enumerate(topology.neighbors(router)):
+        
+        if (i + 1) == neighbor_num:
+            fwd_dist[neighbor] = float(node_num - 1) - float(len(visited_sources))
+            continue
+
+        search_str = ("%d,%d" % (neighbor, router))
+        
+        for source in shortest_paths:
+
+            if source in visited_sources:
+                continue;
+
+            for path in shortest_paths[source]:
+
+                if search_str in path:
+                    fwd_dist[neighbor] += 1.00
+                    visited_sources.add(source)
+                    break
+
+    for neighbor in fwd_dist:
+        fwd_dist[neighbor] = fwd_dist[neighbor] * (1.0 / float(node_num))
+
+    # interface 0 (local) has 1.0 / neighbor_num fwd_dist value
+    fwd_dist[router] = (1.0 / float(node_num))
+
+    return fwd_dist
+
+def convert_to_scn(topology, req_size = 15):
+
+    shortest_paths = get_shortest_paths(topology)
+    topology_block = et.Element("topology")
+
+    # cycle through each node in the topology. we then write 5 diff. types of 
+    # blocks: 
+    #   - <router id=""> block
+    #   - <link local="" remote="" rrouter=""> block
+    #   - <fwd_size_dist size="">x.xx</fwd_size_dist> block
+    #   - <fwd_dist iface="y">x.xx</fwd_dist>
+    #   - <tp iface="y">x</tp>
+    for router in topology.nodes():
+
+        added_local_iface = False
+
+        # add <router id=""> block
+        router_block = et.SubElement(topology_block, "router", id = str(router))
+
+        # add <link> blocks, one for each neighbor of router
+        for i, neighbor_router in enumerate(topology.neighbors(router)):
+
+            # extract the attributes of the link
+            edge = topology.get_edge_data(router, neighbor_router);
+
+            # distribute the link ifaces 'a' and 'b' over local and remote
+            local_iface     = 0
+            remote_iface    = 0
+
+            if int(edge['e1'].split(':', 1)[0]) == router:
+                local_iface   = edge['e1'].split(':', 1)[1]
+                remote_iface  = edge['e2'].split(':', 1)[1]
+            else:
+                local_iface   = edge['e2'].split(':', 1)[1]
+                remote_iface  = edge['e1'].split(':', 1)[1]
+
+            link_block = et.SubElement(router_block, "link", 
+                local   = str(local_iface), 
+                remote  = str(remote_iface), 
+                rrouter = str(neighbor_router))
+
+            # add <fwd_size_dist> blocks, indicating the distribution of 
+            # forwarding entry sizes at each link.
+            for i in xrange(req_size):
+                fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = "0.00"
+
+            # add <tp> block (if edge has 'tp' attribute)
+            # <tp iface="2">1</tp>
+            if ('tp' in edge) and (int(edge['tp'].split(':')[0]) == router):
+                tp_block = et.SubElement(router_block, "tp", iface = edge['tp'].split(':')[1]).text = edge['tp'].split(':')[2]
+
+            if (neighbor_router == router):
+                added_local_iface = True
+
+        # add a special local link (represents local delivery), if not added 
+        # already
+        if not added_local_iface:
+            link_block = et.SubElement(router_block, "link", 
+                local   = str(0), 
+                remote  = str(0), 
+                rrouter = str(router))
 
             for i in xrange(req_size):
-                fwd_size_dist = et.SubElement(link, "fwd_size_dist", size = str(i + 1)).text = "0.00"
+                fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = "0.00"
 
-        x = x + 1
-        y = y + 1
+        # add <fwd_dist> blocks for each iface
 
-    xmlstr = minidom.parseString(et.tostring(root)).toprettyxml(indent="    ")
+        # get the fwd_dist values for the router's ifaces
+        fwd_dist = get_fwd_dist(topology, shortest_paths, router)
+        # if the local iface isn't calculated in get_fwd_dist() (e.g. that 
+        # only happens if the link (router, router) has been added), add it 
+        # now.
+        if not added_local_iface:
+            fwd_dist_block = et.SubElement(router_block, "fwd_dist", iface = str(0)).text = ("%.3f" % (fwd_dist[router]))
+        # finally, the ifaces pointing to each neighboring router
+        for neighbor_router in topology.neighbors(router):
+
+            # find iface which links to neighbor_router
+            edge = topology.get_edge_data(router, neighbor_router)
+            local_iface = 0
+            if int(edge['e1'].split(':', 1)[0]) == router:
+                local_iface = edge['e1'].split(':', 1)[1]
+            else:
+                local_iface = edge['e2'].split(':', 1)[1]
+
+            fwd_dist_block = et.SubElement(router_block, "fwd_dist", iface = str(local_iface)).text = ("%.3f" % (fwd_dist[neighbor_router]))
+
+
+    xmlstr = minidom.parseString(et.tostring(topology_block)).toprettyxml(indent="    ")
     with open("topology.scn", "w") as f:
         f.write(xmlstr)
 
-def parse_pop_level_isp_map(rocketfuel_path):
+def draw_isp_map(topology):
 
-    topology = nx.Graph()
-    comment_char = '#'
-    # extract the isp prefix (i.e. '<isp-number>:')
-    isp_nr = rocketfuel_path.split("/")[-1] + ":"
+    pos = nx.spring_layout(topology)
+    nx.draw_networkx_nodes(
+        topology, 
+        pos,
+        node_color = 'red',
+        node_size = 500,
+        alpha = 0.5)
 
-    # extract the node names and edges
-    node_id = 0
-    for line in open(rocketfuel_path.rstrip("/") + "/edges", "r").readlines():
+    nx.draw_networkx_edges(
+        topology,
+        pos,
+        width = 1.0, 
+        alpha = 0.5)
 
-        if comment_char in line:
-            # split on comment char, keep only the part before
-            line, _ = line.split(comment_char, 1)
-            line = line.strip()
+    labels={}
+    for router in topology.nodes():
+        labels[router] = str(router)
+    nx.draw_networkx_labels(topology, pos, labels, font_size = 10)
 
-        if len(line) == 0:
-            continue
+    # save the figure in <rocketfuel-file>.pdf
+    plt.savefig(args.data_path.rstrip("/").rstrip(".cch").split("/")[-1].split(":")[-1] + ".pdf", bbox_inches='tight', format = 'pdf')
 
-        try:
-
-            # extract the edge number
-            edge_nr = int(re.findall(" \d+", line)[-1])
-            print("edge_nr = %d" % (edge_nr))
-
-            # extract head and tail nodes of the edge
-            pop_head = line.split(" -> ")[0]
-            pop_tail = line.split(" -> ")[1]
-            pop_tail = re.findall("[1-9]\d*:\D*, \S*", pop_tail)[0]
-            print("pop_head = %s, pop_tail = %s" % (pop_head, pop_tail))
-
-            # add nodes to pop-level topology graph
-
-            if pop_head not in topology:
-                topology.add_node(pop_head, node_id = str(node_id) + ".0")
-                node_id = node_id + 1
-
-            if pop_tail not in topology:
-                topology.add_node(pop_tail, node_id = str(node_id) + ".0")
-                node_id = node_id + 1
-
-            # add edge
-            topology.add_edge(pop_head, pop_tail, edge_nr = edge_nr, edge_latency = 0.0, edge_weight = 0.0)
-            print("topology[%s][%s] = %d" % (pop_head, pop_tail, topology[pop_head][pop_tail]['edge_nr']))
-
-        except IndexError:
-            raise ValueError('Invalid input file. Parsing failed '\
-                             'while trying to parse an internal node')
-
-    # extract the latency from edges.lat
-    for line in open(rocketfuel_path.rstrip("/") + "/edges.lat", "r").readlines():
-
-        if comment_char in line:
-            # split on comment char, keep only the part before
-            line, _ = line.split(comment_char, 1)
-            line = line.strip()
-
-        if len(line) == 0:
-            continue
-
-        try:
-
-            # latency is a decimal number at the end of the line
-            print("line = %s" % (line))
-            print("match = %s" % (re.findall("\d+\.*\d*", line)[-1]))
-            edge_latency = float(re.findall("\d+\.*\d*", line)[-1])
-            print("edge_latency = %f" % (edge_latency))
-            # extract head and tail nodes of the edge
-            pop_head = line.split(" -> ")[0]
-            pop_tail = line.split(" -> ")[1]
-            pop_tail = re.findall("[1-9]\d*:\D*, \S*", pop_tail)[0]
-
-            # update the edge attributes
-            topology[pop_head][pop_tail]['edge_latency'] = edge_latency
-            print("topology[%s][%s] = %f" % (pop_head, pop_tail, topology[pop_head][pop_tail]['edge_latency']))
-
-        except IndexError:
-            raise ValueError('Invalid input file. Parsing failed '\
-                             'while trying to parse an internal node')
-
-    # extract the weight (whatever that is...) from edges.wt
-    for line in open(rocketfuel_path.rstrip("/") + "/edges.wt", "r").readlines():
-
-        if comment_char in line:
-            # split on comment char, keep only the part before
-            line, _ = line.split(comment_char, 1)
-            line = line.strip()
-
-        if len(line) == 0:
-            continue
-
-        try:
-
-            # weight is also a decimal number, at the end of the line
-            edge_weight = float(re.findall("\d+\.*\d*", line)[-1])
-            print("edge_weight = %f" % (edge_weight))
-            # extract head and tail nodes of the edge
-            pop_head = line.split(" -> ")[0]
-            pop_tail = line.split(" -> ")[1]
-            pop_tail = re.findall("[1-9]\d*:\D*, \S*", pop_tail)[0]
-
-            # update the edge attributes
-            topology[pop_head][pop_tail]['edge_weight'] = edge_weight
-            print("topology[%s][%s] = %f" % (pop_head, pop_tail, topology[pop_head][pop_tail]['edge_weight']))
-
-        except IndexError:
-            raise ValueError('Invalid input file. Parsing failed '\
-                             'while trying to parse an internal node')
-
-    return topology
 
 # parser for RocketFuel ISP (router-level) maps .cch files
 # adapted from http://fnss.github.io/ (email: fnss.dev@gmail.com) 
@@ -212,6 +348,8 @@ def parse_isp_map(rocketfuel_path):
     topology = nx.Graph()
     comment_char = '#'
 
+    node_ifaces = defaultdict(defaultdict)
+
     for line in open(rocketfuel_path, "r").readlines():
         if comment_char in line:
             # split on comment char, keep only the part before
@@ -253,10 +391,36 @@ def parse_isp_map(rocketfuel_path):
             topology.add_node(node, type='internal',
                               location=node_location,
                               address=address, r=r, backbone=backbone)
-            for link in internal_links:
+            for i, link in enumerate(internal_links):
+                
                 link = int(link)
+
                 if node != link:
-                    topology.add_edge(node, link, type='internal')
+
+                    if (topology.has_edge(node, link) == False):
+
+                        # initialize the node_ifaces dict (if not already)
+                        if 'prev' not in node_ifaces[node]:
+                            node_ifaces[node]['prev'] = 0
+                            node_ifaces[node]['ifaces'] = defaultdict(int)
+
+                        if 'prev' not in node_ifaces[link]:
+                            node_ifaces[link]['prev'] = 0
+                            node_ifaces[link]['ifaces'] = defaultdict(int)
+
+                        node_ifaces[node]['prev'] += 1
+                        node_ifaces[node]['ifaces'][link] = node_ifaces[node]['prev']
+                        # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[node]['prev'], node, node, link))
+
+                        node_ifaces[link]['prev'] += 1
+                        node_ifaces[link]['ifaces'][node] = node_ifaces[link]['prev']
+                        # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[link]['prev'], link, link, node))
+
+                    topology.add_edge(node, link, 
+                        type = 'internal', 
+                        e1 = ("%d:%d"   % (node, node_ifaces[node]['ifaces'][link])), 
+                        e2 = ("%d:%d"   % (link, node_ifaces[link]['ifaces'][node])))
+
             for link in external_links:
                 link = int(link)
                 if node != link:
@@ -270,14 +434,18 @@ if __name__ == "__main__":
 
     # options (self-explanatory)
     parser.add_argument(
-        "--mode", 
-         help = """type of topologies to work with. e.g. 'pop' for pop-level 
-            topologies, 'isp-map' for isp maps, etc.""")
-
-    parser.add_argument(
         "--data-path", 
          help = """path w/ topology files (e.g. .cch for isp maps, edge folders 
             for pop-level maps, etc.)""")
+
+    parser.add_argument(
+        "--add-tp-source", 
+         help = """e.g. '--add-tp-source <source id>:<size>:<radius>'""")
+
+    parser.add_argument(
+        "--print-stats", 
+         help = """print statistics about RocketFuel dataset""",
+         action = "store_true")
 
     args = parser.parse_args()
 
@@ -287,23 +455,19 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    # extract the contents of the .cch file to a networkx object
-    if args.mode == "pop":
-        topology = parse_pop_level_isp_map(args.data_path)
-        convert_to_scn(topology)
+    if args.print_stats:
+        print_statistics(args.data_path)
+        sys.exit(0)
 
-    elif args.mode == "isp-map":
-        topology = parse_isp_map(args.data_path)
-        convert_to_scn(topology)
+    # build a networkx topology out of a Rocketfuel topology
+    topology = parse_isp_map(args.data_path)
+    draw_isp_map(topology)
+    # if requested, add a true positive content source
+    if args.add_tp_source:
+        add_content_route(
+            topology, 
+            int(args.add_tp_source.split(':')[0]), 
+            int(args.add_tp_source.split(':')[1]))
 
-    else:
-        sys.stderr.write("""%s: [ERROR] invalid mode (%s)\n""" % (sys.argv[0], args.mode)) 
-        parser.print_help()
-        sys.exit(1)
-
-    # draw the graph
-    nx.draw_spring(topology)
-    # save the figure in <rocketfuel-file>.pdf
-    plt.savefig(args.data_path.rstrip("/").rstrip(".cch").split("/")[-1].split(":")[-1] + ".pdf", bbox_inches='tight', format = 'pdf')
-
-
+    # finally, convert the topology to an .scn file
+    convert_to_scn(topology)
