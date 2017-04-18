@@ -50,6 +50,48 @@ def print_statistics(rocketfuel_dir):
     print(table)
     print("")
 
+# post simple statistics about each AS-level topology:
+#   - nr. of nodes
+#   - nr. of links
+#   - median outdegree
+def print_pop_level_statistics(rocketfuel_dir):
+
+    stats = OrderedDict()
+
+    for root, dirs, files in os.walk(rocketfuel_dir):
+        for filename in files:
+
+            if not filename.endswith(".wt"):
+                continue
+
+            filename = os.path.join(root, filename)
+            print("filename : %s" % (filename))
+
+            topology_id = filename.split("/")[-2]
+            topology_id = topology_id.split(".", 1)[0]
+            topology = parse_pop_level_map(filename)
+
+            stats[topology_id] = defaultdict()
+
+            stats[topology_id]['nodes'] = topology.number_of_nodes()
+            stats[topology_id]['links'] = topology.number_of_edges()
+            degree_sequence = sorted(nx.degree(topology).values(), reverse = True)
+            stats[topology_id]['outdegree'] = np.median(degree_sequence)
+
+    table = PrettyTable(['as id', '# nodes', '# links', 'median outdegree'])
+
+    for topology_id in stats:
+        table.add_row([
+            topology_id,
+            stats[topology_id]['nodes'],
+            stats[topology_id]['links'],
+            stats[topology_id]['outdegree']
+            ])
+
+    print("")
+    print(table)
+    print("")
+
 # add true positive entries to a topology (.scn file). we start by applying 
 # changes in a networkx object, then call convert_to_scn() to generate a .scn 
 # file.
@@ -118,7 +160,7 @@ def get_shortest_paths(topology):
         for dst, route in routes.iteritems():
             # we transform the list of nodes in the route into a string, which 
             # then allows for more convenient search on get_iface_distr()
-            route = ','.join(str(node) for node in route)
+            route = ','.join(("%03d" % (node)) for node in route)
             shortest_paths[source].append(route)
 
     return shortest_paths
@@ -142,8 +184,8 @@ def get_fwd_dist(topology, shortest_paths, router):
         if (i + 1) == neighbor_num:
             fwd_dist[neighbor] = float(node_num - 1) - float(len(visited_sources))
             continue
-
-        search_str = ("%d,%d" % (neighbor, router))
+            
+        search_str = ("%03d,%03d" % (neighbor, router))
         
         for source in shortest_paths:
 
@@ -238,7 +280,7 @@ def convert_to_scn(topology, req_size = 15):
         # only happens if the link (router, router) has been added), add it 
         # now.
         if not added_local_iface:
-            fwd_dist_block = et.SubElement(router_block, "fwd_dist", iface = str(0)).text = ("%.3f" % (fwd_dist[router]))
+            fwd_dist_block = et.SubElement(router_block, "fwd_dist", iface = str(0)).text = ("%.4f" % (fwd_dist[router]))
         # finally, the ifaces pointing to each neighboring router
         for neighbor_router in topology.neighbors(router):
 
@@ -250,14 +292,14 @@ def convert_to_scn(topology, req_size = 15):
             else:
                 local_iface = edge['e2'].split(':', 1)[1]
 
-            fwd_dist_block = et.SubElement(router_block, "fwd_dist", iface = str(local_iface)).text = ("%.3f" % (fwd_dist[neighbor_router]))
+            fwd_dist_block = et.SubElement(router_block, "fwd_dist", iface = str(local_iface)).text = ("%.4f" % (fwd_dist[neighbor_router]))
 
 
     xmlstr = minidom.parseString(et.tostring(topology_block)).toprettyxml(indent="    ")
     with open("topology.scn", "w") as f:
         f.write(xmlstr)
 
-def draw_isp_map(topology):
+def draw_pop_level_map(topology):
 
     pos = nx.spring_layout(topology)
     nx.draw_networkx_nodes(
@@ -279,152 +321,82 @@ def draw_isp_map(topology):
     nx.draw_networkx_labels(topology, pos, labels, font_size = 10)
 
     # save the figure in <rocketfuel-file>.pdf
-    plt.savefig(args.data_path.rstrip("/").rstrip(".cch").split("/")[-1].split(":")[-1] + ".pdf", bbox_inches='tight', format = 'pdf')
+    plt.savefig(args.data_path.split("/")[-2] + ".pdf", bbox_inches='tight', format = 'pdf')
 
-
-# parser for RocketFuel ISP (router-level) maps .cch files
-# adapted from http://fnss.github.io/ (email: fnss.dev@gmail.com) 
-def parse_isp_map(rocketfuel_path):
-    """
-    Parse a network topology from RocketFuel ISP map file.
-
-    The ASes provided by the RocketFuel dataset are the following:
-
-    +------+---------------------+-------+--------+------------+------------+
-    | ASN  | Name                | Span  | Region | Nodes (r1) | Nodes (r0) |
-    +======+=====================+=======+========+============+============+
-    | 1221 | Telstra (Australia) | world | AUS    |  2999      |  378 (318) |
-    | 1239 | Sprintlink (US)     | world | US     |  8352      |  700 (604) |
-    | 1755 | EBONE (Europe)      | world | Europe |   609      |  172       |
-    | 2914 | Verio (US)          | world | US     |  7109      | 1013       |
-    | 3257 | Tiscali (Europe)    | world | Europe |   855      |  248 (240) |
-    | 3356 | Level 3 (US)        | world | US     |  3447      |  652       |
-    | 3967 | Exodus (US)         | world | US     |   917      |  215 (201) |
-    | 4755 | VSNL (India)        | world | India  |   121      |   12       |
-    | 6461 | Abovenet (US)       | world | US     |     0      |  202       |
-    | 7018 | AT&T (US)           | world | US     | 10152      |  656 (631) |
-    +------+---------------------+-------+--------+------------+------------+
-
-    Parameters
-    ----------
-    rocketfuel_path : str
-        The path of the file containing the RocketFuel map. It should have
-        extension .cch
-
-    Returns
-    -------
-    topology : DirectedTopology
-        The object containing the parsed topology.
-
-    Notes
-    -----
-    The returned topology is always directed. If an undirected topology is
-    desired, convert it using the DirectedTopology.to_undirected() method.
-
-    Each node of the returned graph has the following attributes:
-     * **type**: string
-     * **location**: string (optional)
-     * **address**: string
-     * **r**: int
-     * **backbone**: boolean (optional)
-
-    Each edge of the returned graph has the following attributes:
-     * type : string, which can either be *internal* or *external*
-
-    If the topology contains self-loops (links starting and ending in the same
-    node) they are stripped from the topology.
-
-    Raises
-    ------
-    ValueError
-        If the provided file cannot be parsed correctly.
-
-    Examples
-    --------
-    >>> import fnss
-    >>> topology = fnss.parse_rocketfuel_isp_map('1221.r0.cch')
-    """
+def parse_pop_level_map(rocketfuel_file):
 
     topology = nx.Graph()
     comment_char = '#'
 
     node_ifaces = defaultdict(defaultdict)
 
-    for line in open(rocketfuel_path, "r").readlines():
+    # extract the node names and edges
+    node_id = 0
+    node_ids = defaultdict(int)
+    for line in open(rocketfuel_file, "r").readlines():
+
         if comment_char in line:
             # split on comment char, keep only the part before
             line, _ = line.split(comment_char, 1)
             line = line.strip()
+
         if len(line) == 0:
             continue
-        # Parse line.
-        if line.startswith("-"):
-            # Case external node
-            # -euid =externaladdress rn
-            try:
-                node = int(re.findall("-\d+", line)[0])
-                address = (re.findall("=\S+", line)[0])[1:]  # .strip("=")
-                r = int(re.findall("r\d$", line)[0][1:])  # .strip("r"))
-            except IndexError:
-                raise ValueError('Invalid input file. Parsing failed '\
-                                 'while trying to parse an external node')
 
-            topology.add_node(node, type='external', address=address, r=r)
+        try:
 
-        else:
-            # Case internal node
-            # uid @loc [+] [bb] (num_neigh) [&ext] -> <nuid-1> <nuid-2>
-            # ... {-euid} ... =name[!] rn
-            try:
-                node = int(re.findall("\d+", line)[0])
-                node_location = re.findall("@\S*", line)[0]
-                node_location = re.sub("[\+@]", "", node_location)
-                r = int(re.findall("r\d$", line)[0][1:])  # .strip("r"))
-                address = (re.findall("=\S+", line)[0])[1:]  # .strip("=")
-            except IndexError:
-                raise ValueError('Invalid input file. Parsing failed '\
-                                 'while trying to parse an internal node')
-            internal_links = re.findall("<(\d+)>", line)
-            external_links = re.findall("{(-?\d+)}", line)
-            backbone = True if len(re.findall("\sbb\s", line)) > 0 \
-                       else False
-            topology.add_node(node, type='internal',
-                              location=node_location,
-                              address=address, r=r, backbone=backbone)
-            for i, link in enumerate(internal_links):
-                
-                link = int(link)
+            # extract head and tail nodes of the edge
+            head = line.split(" -> ")[0].split(",")[0]
+            tail = line.split(" -> ")[1].split(",")[0]
+            # print("%s -> %s" % (head, tail))
 
-                if node != link:
+            # add nodes to pop-level topology graph
+            if head not in node_ids:
+                # add node ids to lookup table
+                node_ids[head] = node_id
+                node_id += 1
+                topology.add_node(node_ids[head], node_str = head)
+                # print("added node w/ id %d (str : %s)" % (node_ids[head], head))
 
-                    if (topology.has_edge(node, link) == False):
+            if tail not in node_ids:
+                # add node ids to lookup table
+                node_ids[tail] = node_id
+                node_id += 1
+                topology.add_node(node_ids[tail], node_str = tail)
+                # print("added node w/ id %d (str : %s)" % (node_ids[tail], tail))
 
-                        # initialize the node_ifaces dict (if not already)
-                        if 'prev' not in node_ifaces[node]:
-                            node_ifaces[node]['prev'] = 0
-                            node_ifaces[node]['ifaces'] = defaultdict(int)
+            head_id = node_ids[head]
+            tail_id = node_ids[tail]
 
-                        if 'prev' not in node_ifaces[link]:
-                            node_ifaces[link]['prev'] = 0
-                            node_ifaces[link]['ifaces'] = defaultdict(int)
+            if (topology.has_edge(head_id, tail_id) == False):
 
-                        node_ifaces[node]['prev'] += 1
-                        node_ifaces[node]['ifaces'][link] = node_ifaces[node]['prev']
-                        # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[node]['prev'], node, node, link))
+                # initialize the node_ifaces dict (if not already)
+                if 'prev' not in node_ifaces[head_id]:
+                    node_ifaces[head_id]['prev'] = 0
+                    node_ifaces[head_id]['ifaces'] = defaultdict(int)
 
-                        node_ifaces[link]['prev'] += 1
-                        node_ifaces[link]['ifaces'][node] = node_ifaces[link]['prev']
-                        # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[link]['prev'], link, link, node))
+                if 'prev' not in node_ifaces[tail_id]:
+                    node_ifaces[tail_id]['prev'] = 0
+                    node_ifaces[tail_id]['ifaces'] = defaultdict(int)
 
-                    topology.add_edge(node, link, 
-                        type = 'internal', 
-                        e1 = ("%d:%d"   % (node, node_ifaces[node]['ifaces'][link])), 
-                        e2 = ("%d:%d"   % (link, node_ifaces[link]['ifaces'][node])))
+                node_ifaces[head_id]['prev'] += 1
+                node_ifaces[head_id]['ifaces'][tail_id] = node_ifaces[head_id]['prev']
+                # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[node]['prev'], node, node, link))
 
-            for link in external_links:
-                link = int(link)
-                if node != link:
-                    topology.add_edge(node, link, type='external')
+                node_ifaces[tail_id]['prev'] += 1
+                node_ifaces[tail_id]['ifaces'][head_id] = node_ifaces[tail_id]['prev']
+                # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[link]['prev'], link, link, node))
+
+            topology.add_edge(head_id, tail_id,
+                e1 = ("%d:%d"   % (head_id, node_ifaces[head_id]['ifaces'][tail_id])), 
+                e2 = ("%d:%d"   % (tail_id, node_ifaces[tail_id]['ifaces'][head_id])))
+
+            # print("added edge (%d -> %d) (str : %s)" % (head_id, tail_id, str(topology.get_edge_data(head_id, tail_id))))
+
+        except IndexError:
+            raise ValueError('Invalid input file. Parsing failed '\
+                             'while trying to parse an internal node')
+
     return topology
 
 if __name__ == "__main__":
@@ -456,12 +428,14 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.print_stats:
-        print_statistics(args.data_path)
+        print_pop_level_statistics(args.data_path)
+        # print_statistics(args.data_path)
         sys.exit(0)
 
-    # build a networkx topology out of a Rocketfuel topology
-    topology = parse_isp_map(args.data_path)
-    draw_isp_map(topology)
+    # build a networkx topology out of a Rocketfuel pop-level topology
+    topology = parse_pop_level_map(args.data_path)    
+    draw_pop_level_map(topology)
+
     # if requested, add a true positive content source
     if args.add_tp_source:
         add_content_route(
