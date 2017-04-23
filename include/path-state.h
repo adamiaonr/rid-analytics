@@ -9,7 +9,8 @@
 #define OUTCOME_FALLBACK_DELIVERY   (int) 0x02
 #define OUTCOME_FALLBACK_RELAY      (int) 0x03
 #define OUTCOME_PACKET_DROP         (int) 0x04
-#define OUTCOME_UNDEF               (int) 0x05
+#define OUTCOME_RTT_DROP            (int) 0x05
+#define OUTCOME_UNDEF               (int) 0x06
 
 // path status
 #define STATUS_TP     (int) 0x06
@@ -58,6 +59,13 @@ class Path_State {
         RID_Router * get_router();
         char * to_string();
 
+        void set_tree_bitmask(uint8_t * tree_bitmask, int tree_bitmask_size);
+        uint8_t * get_tree_bitmask();
+        int get_tree_bitmask_size();
+
+        void set_rtt(int rtt);
+        int get_rtt();
+
     private:
 
         // a pointer to the RID router associated with this path state
@@ -75,6 +83,11 @@ class Path_State {
         // over a 'prefix tree' of size p
         __float080 * ingress_ptree_prob;
         __float080 ingress_iface_prob;
+        // tree bitmask of the path
+        uint8_t * tree_bitmask;
+        int tree_bitmask_size;
+        // rtt of packet
+        int rtt;
 };
 
 #endif

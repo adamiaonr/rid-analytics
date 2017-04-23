@@ -3,6 +3,8 @@ import re
 import sys
 import glob
 import os
+import math
+import binascii
 
 import numpy as np
 import networkx as nx
@@ -76,16 +78,21 @@ def print_pop_level_statistics(rocketfuel_dir):
             stats[topology_id]['nodes'] = topology.number_of_nodes()
             stats[topology_id]['links'] = topology.number_of_edges()
             degree_sequence = sorted(nx.degree(topology).values(), reverse = True)
-            stats[topology_id]['outdegree'] = np.median(degree_sequence)
+            print(degree_sequence)
+            stats[topology_id]['min-outdegree'] = np.min(degree_sequence)
+            stats[topology_id]['med-outdegree'] = np.median(degree_sequence)
+            stats[topology_id]['max-outdegree'] = np.max(degree_sequence)
 
-    table = PrettyTable(['as id', '# nodes', '# links', 'median outdegree'])
+    table = PrettyTable(['as id', '# nodes', '# links', 'min. outdegree', 'median outdegree', 'max. outdegree'])
 
     for topology_id in stats:
         table.add_row([
             topology_id,
             stats[topology_id]['nodes'],
             stats[topology_id]['links'],
-            stats[topology_id]['outdegree']
+            stats[topology_id]['min-outdegree'],
+            stats[topology_id]['med-outdegree'],
+            stats[topology_id]['max-outdegree']
             ])
 
     print("")
@@ -170,6 +177,7 @@ def get_fwd_dist(topology, shortest_paths, router):
 
     # fwd_dist values
     fwd_dist = defaultdict(float)
+    iface_trees = defaultdict(set)
     # nr. of nodes in topology
     node_num = len(topology.nodes())
     neighbor_num = len(topology.neighbors(router))
@@ -181,10 +189,9 @@ def get_fwd_dist(topology, shortest_paths, router):
     # paths with the sequence "neighbor,router" in it.
     for i, neighbor in enumerate(topology.neighbors(router)):
         
-        if (i + 1) == neighbor_num:
-            fwd_dist[neighbor] = float(node_num - 1) - float(len(visited_sources))
-            continue
-            
+        # if (i + 1) == neighbor_num:
+        #     fwd_dist[neighbor] = float(node_num - 1) - float(len(visited_sources))
+        #     continue
         search_str = ("%03d,%03d" % (neighbor, router))
         
         for source in shortest_paths:
@@ -197,6 +204,7 @@ def get_fwd_dist(topology, shortest_paths, router):
                 if search_str in path:
                     fwd_dist[neighbor] += 1.00
                     visited_sources.add(source)
+                    iface_trees[neighbor].add(source)
                     break
 
     for neighbor in fwd_dist:
@@ -205,7 +213,23 @@ def get_fwd_dist(topology, shortest_paths, router):
     # interface 0 (local) has 1.0 / neighbor_num fwd_dist value
     fwd_dist[router] = (1.0 / float(node_num))
 
-    return fwd_dist
+    return fwd_dist, iface_trees
+
+def to_tree_bitmask(topology, iface_trees):
+
+    # calculate nr. of bytes of the bitmask. note we can represent 8 nodes per 
+    # byte
+    nr_bytes = int(math.ceil(float(len(topology.nodes())) / 8.0))
+    # initialize tree bitmask to 0s
+    tree_bitmask = [0] * nr_bytes
+
+    for source in iface_trees:
+        byte_index = int((source / 8))
+        # print("source : %d, tree_bitmask[%d] = %d" % (source, byte_index, tree_bitmask[byte_index]))
+        tree_bitmask[byte_index] |= (1 << (source % 8))
+        # print("bit index = %d, tree_bitmask[%d] = %d" % ((source % 8), byte_index, tree_bitmask[byte_index]))
+
+    return nr_bytes, binascii.hexlify(bytearray(tree_bitmask))
 
 def convert_to_scn(topology, req_size = 15):
 
@@ -225,6 +249,9 @@ def convert_to_scn(topology, req_size = 15):
 
         # add <router id=""> block
         router_block = et.SubElement(topology_block, "router", id = str(router))
+
+        # get the fwd_dist values for the router's ifaces
+        fwd_dist, iface_trees = get_fwd_dist(topology, shortest_paths, router)
 
         # add <link> blocks, one for each neighbor of router
         for i, neighbor_router in enumerate(topology.neighbors(router)):
@@ -258,6 +285,10 @@ def convert_to_scn(topology, req_size = 15):
             if ('tp' in edge) and (int(edge['tp'].split(':')[0]) == router):
                 tp_block = et.SubElement(router_block, "tp", iface = edge['tp'].split(':')[1]).text = edge['tp'].split(':')[2]
 
+            # add tree_bitmask
+            nr_bytes, tree_bitmask = to_tree_bitmask(topology, list(iface_trees[neighbor_router]))
+            tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
+
             if (neighbor_router == router):
                 added_local_iface = True
 
@@ -272,10 +303,10 @@ def convert_to_scn(topology, req_size = 15):
             for i in xrange(req_size):
                 fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = "0.00"
 
-        # add <fwd_dist> blocks for each iface
+            nr_bytes, tree_bitmask = to_tree_bitmask(topology, [router])
+            tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
 
-        # get the fwd_dist values for the router's ifaces
-        fwd_dist = get_fwd_dist(topology, shortest_paths, router)
+        # add <fwd_dist> blocks for each iface
         # if the local iface isn't calculated in get_fwd_dist() (e.g. that 
         # only happens if the link (router, router) has been added), add it 
         # now.

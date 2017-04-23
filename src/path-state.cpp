@@ -91,6 +91,27 @@ __float080 Path_State::get_event_prob() {
     return this->event_prob; 
 }
 
+void Path_State::set_tree_bitmask(uint8_t * tree_bitmask, int tree_bitmask_size) {
+    this->tree_bitmask_size = tree_bitmask_size;
+    this->tree_bitmask = tree_bitmask;
+}
+
+int Path_State::get_tree_bitmask_size() { 
+    return this->tree_bitmask_size; 
+}
+
+uint8_t * Path_State::get_tree_bitmask() { 
+    return this->tree_bitmask; 
+}
+
+void Path_State::set_rtt(int rtt) { 
+    this->rtt = rtt;
+}
+
+int Path_State::get_rtt() { 
+    return this->rtt; 
+}
+
 RID_Router * Path_State::get_router() { 
     return this->router; 
 }
@@ -118,6 +139,9 @@ char * Path_State::to_string() {
         case OUTCOME_PACKET_DROP:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "PACKET_DROP");
             break;
+        case OUTCOME_RTT_DROP:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "RTT_DROP");
+            break;
         case STATUS_TP:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "STATUS_TP");
             break;
@@ -134,8 +158,8 @@ char * Path_State::to_string() {
 
     snprintf(
         node_str, MAX_PATH_STATE_STRING_SIZE, 
-        "ROUTER[%d][%d] : [PROB : %-.5LE][PATH_LENGTH : %-5d][OUTCOME: %s]",
-        this->router->get_height(), this->router->get_width(),
+        "ROUTER[%s] : [PROB : %-.5LE][PATH_LENGTH : %-5d][OUTCOME: %s]",
+        this->router->get_id().c_str(),
         this->path_prob, this->path_length, status);
 
     return node_str;

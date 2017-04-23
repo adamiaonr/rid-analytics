@@ -20,6 +20,7 @@
 #define OPTION_EH_MODE              (char *) "eh-mode"
 #define OPTION_RESOLV_MODE          (char *) "resolution-mode"
 #define OPTION_ORIGIN_SERVER        (char *) "origin-server"
+#define OPTION_START_ROUTER         (char *) "start-router"
 
 using namespace std;
 using namespace CommandLineProcessing;
@@ -28,7 +29,7 @@ ArgvParser * create_argv_parser() {
 
     ArgvParser * cmds = new ArgvParser();
 
-    cmds->setIntroductoryDescription("\n\nrid-analytics v1.0\n\na tool to simulate the behavior "\
+    cmds->setIntroductoryDescription("\n\nrid-analytics v2.0\n\na tool to simulate the behavior "\
         "of RID networks. it computes the probability of different delivery states for "\
         "all possible request paths in a network topology passed as input.\nby adamiaonr@cmu.edu");
 
@@ -80,6 +81,11 @@ ArgvParser * create_argv_parser() {
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
+            OPTION_START_ROUTER,
+            "id of starting router. default is '0'.",
+            ArgvParser::OptionRequiresValue);
+
+    cmds->defineOption(
             OPTION_VERBOSE,
             "print stats during the model run. default: not verbose",
             ArgvParser::NoOptionAttribute);
@@ -113,6 +119,7 @@ int main (int argc, char **argv) {
     int resolv_mode = 0;
     // origin server location
     char origin_server[MAX_ARRAY_SIZE];
+    char start_router[MAX_ARRAY_SIZE];
     // default is "0.3.7"
     strncpy(origin_server, "0.3.7", MAX_ARRAY_SIZE);
 
@@ -204,6 +211,11 @@ int main (int argc, char **argv) {
             strncpy(origin_server, (char *) cmds->optionValue(OPTION_ORIGIN_SERVER).c_str(), MAX_ARRAY_SIZE);
         }
 
+        if (cmds->foundOption(OPTION_START_ROUTER)) {
+
+            strncpy(start_router, (char *) cmds->optionValue(OPTION_START_ROUTER).c_str(), MAX_ARRAY_SIZE);
+        }
+
         if (cmds->foundOption(OPTION_VERBOSE)) {
             verbose = true;
         }
@@ -226,7 +238,7 @@ int main (int argc, char **argv) {
             mm_mode, eh_mode, resolv_mode); // how to handle (1) multiple matches; and (2) wrong deliveries
 
     // ... and run the model
-    rid_analytics_env->run(std::string(scn_file));
+    rid_analytics_env->run(std::string(scn_file), std::string(start_router));
 
     printf("rid-analytics : output dir = %s, output label = %s\n", data_dir, output_label);
 

@@ -21,6 +21,13 @@
 #define MODE_SAVE_GRAPH     0x04
 #define MODE_SAVE_OUTCOMES  0x08
 
+// specifies if wrong deliveries should be fixed 
+// or not. it influences the probability of (in)correct
+// deliveries and latency. it can take 2 values:
+//  -# RESOLUTION_OFF : no fixes if a packet is 
+//     delivered incorrectly.
+//  -# RESOLUTION_ON : packet is sent to the origin 
+//     server if a wrong delivery occurs.
 #define RESOLUTION_OFF  0x00
 #define RESOLUTION_ON   0x01
 
@@ -28,9 +35,9 @@
 #define FILE_EVENTS         0
 #define FILE_PATHS          1
 
-// error handling mode
-#define EH_DEFAULT      0x00
-#define EH_FALLBACK     0x01
+// // error handling mode (unused)
+// #define EH_DEFAULT      0x00
+// #define EH_FALLBACK     0x01
 
 // P(|F|_i) distributions (for IFACE_LOCAL and otherwise)
 #define LOCAL       0x00
@@ -70,7 +77,7 @@ class RID_Analytics {
             int resolution_mode);
         ~RID_Analytics();
 
-        int run(std::string scn_filename);
+        int run(std::string scn_filename, std::string start_router_id);
         int view_results(uint8_t mode, std::string output_dir, std::string output_label);
 
     private:
@@ -85,7 +92,10 @@ class RID_Analytics {
 
         int get_origin_distance(RID_Router * from_router);
         int get_origin_distance_rec(RID_Router * from_router);
-        int on_path_to_origin(RID_Router * router, int iface);
+        int on_path_to_origin(
+            RID_Router * router, 
+            int ingress_iface, 
+            int egress_iface);
 
         // NETWORK PARAMETERS : 
 
@@ -109,6 +119,7 @@ class RID_Analytics {
         RID_RouterMap routers;
         // AS associated w/ origin server
         RID_Router * origin_server;
+        RID_Router * start_router;
         // AS path to origin server
         std::set<std::string> origin_server_path;
 };
