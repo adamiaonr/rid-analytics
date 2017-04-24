@@ -1203,29 +1203,6 @@ int RID_Router::calc_joint_largest_match_distributions(
     return 0;
 }
 
-int pivot_to_int(int * pivots, int pivot_size, long int pivot_init) {
-
-    long int pivot = pivot_init;
-    int p = 1, pp = p;
-
-    // std::cout << "pivot_to_int() : [INFO] initial pivot : " << pivot << std::endl;
-
-    for ( ; p < (pivot_size + 1); p++) {
-
-        if (pivots[p - 1] > 9)
-            pp++;
-
-        pivot += ((long int) pivots[p - 1]) * ((long int) pow(10, pp++));
-
-        // std::cout << "pivot_to_int() : [INFO] added pivot " << pivot << " from array ";
-        // for (int i = 0; i < pivot_size; i++)
-        //     std::cout << "[" << pivots[i] << "]";
-        // std::cout << std::endl;
-    }
-
-    return pivot;
-}
-
 __float080 RID_Router::calc_cumulative_prob(
     uint8_t mode,
     uint8_t fixed_iface, 

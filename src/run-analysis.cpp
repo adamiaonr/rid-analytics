@@ -29,20 +29,21 @@ ArgvParser * create_argv_parser() {
 
     ArgvParser * cmds = new ArgvParser();
 
-    cmds->setIntroductoryDescription("\n\nrid-analytics v2.0\n\na tool to simulate the behavior "\
-        "of RID networks. it computes the probability of different delivery states for "\
-        "all possible request paths in a network topology passed as input.\nby adamiaonr@cmu.edu");
+    cmds->setIntroductoryDescription("\n\nrid-analytics v2.0\n\na tool to \
+analyze the behavior of Bloom-filter based forwarding networks. it computes the \
+probability of different delivery states for all possible request paths in a \
+network topology passed as input.\nby adamiaonr@cmu.edu");
 
     cmds->setHelpOption("h", "help", "help page.");
 
     cmds->defineOption(
             OPTION_SCN_FILE,
-            "path to .scn file which contains the input info for the analysis",
+            "path to .scn file with scenario info for analysis",
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
             OPTION_DATA_DIR,
-            "path to a directory to output .csv files w/ latency data",
+            "path to directory on which to save .csv files w/ results",
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
@@ -52,7 +53,7 @@ ArgvParser * create_argv_parser() {
 
     cmds->defineOption(
             OPTION_BF_SIZE,
-            "size of RID or Bloom filter (in bits)",
+            "size of Bloom filter (in bits)",
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
@@ -62,7 +63,7 @@ ArgvParser * create_argv_parser() {
 
     cmds->defineOption(
             OPTION_MM_MODE,
-            "mult. match mode. 0 for 'FLOOD', 1 for 'RANDOM', 2 for 'FALLBACK'. default is 'FLOOD'.",
+            "multiple match resolution mode. 0 for 'FLOOD', 1 for 'RANDOM', 2 for 'FALLBACK'. default is 'FLOOD'.",
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
@@ -77,7 +78,7 @@ ArgvParser * create_argv_parser() {
 
     cmds->defineOption(
             OPTION_ORIGIN_SERVER,
-            "id of origin server. default is '0.3.7'.",
+            "id of origin server. default is '1'.",
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
@@ -117,11 +118,12 @@ int main (int argc, char **argv) {
     // incorrect delivery handling mode
     int eh_mode = 0;
     int resolv_mode = 0;
-    // origin server location
+    // origin server location. default is '1'
     char origin_server[MAX_ARRAY_SIZE];
+    strncpy(origin_server, "1", MAX_ARRAY_SIZE);
+    // start router id. default is '0'
     char start_router[MAX_ARRAY_SIZE];
-    // default is "0.3.7"
-    strncpy(origin_server, "0.3.7", MAX_ARRAY_SIZE);
+    strncpy(start_router, "0", MAX_ARRAY_SIZE);
 
     // parse() takes the arguments to main() and parses them according to 
     // ArgvParser rules

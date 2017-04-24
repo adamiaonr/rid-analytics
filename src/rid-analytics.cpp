@@ -781,6 +781,9 @@ int RID_Analytics::run(
     int tree_bitmask_size = this->start_router->get_tree_bitmask_size(0);
     uint8_t * tree_bitmask = (uint8_t *) calloc(tree_bitmask_size, sizeof(uint8_t));
     initial_state->set_tree_bitmask(tree_bitmask, tree_bitmask_size);
+    // the initial rtt is set to the distance from starting router to the 
+    // origin server
+    initial_state->set_rtt(get_origin_distance(this->start_router));
 
     // we always start at the ingress iface, so that we don't have a local 
     // match at the initial router (not sure if this can work directly like 

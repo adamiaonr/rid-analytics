@@ -4,14 +4,14 @@ CC := g++
 # Special directories
 SRCDIR := src
 BUILDDIR := build
-TARGET := rid-analytics
+TARGET := run-analysis
 
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 
 # use -ggdb for GNU debugger
-CFLAGS := -g -ggdb -gdwarf-2 -Wall -Wno-comment -std=c++11
+CFLAGS := -g -ggdb -Wall -Wno-comment -std=c++11
 
 LIB := -lm
 INC := -Iinclude
