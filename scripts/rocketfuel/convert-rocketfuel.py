@@ -78,7 +78,6 @@ def print_pop_level_statistics(rocketfuel_dir):
             stats[topology_id]['nodes'] = topology.number_of_nodes()
             stats[topology_id]['links'] = topology.number_of_edges()
             degree_sequence = sorted(nx.degree(topology).values(), reverse = True)
-            print(degree_sequence)
             stats[topology_id]['min-outdegree'] = np.min(degree_sequence)
             stats[topology_id]['med-outdegree'] = np.median(degree_sequence)
             stats[topology_id]['max-outdegree'] = np.max(degree_sequence)
@@ -231,7 +230,7 @@ def to_tree_bitmask(topology, iface_trees):
 
     return nr_bytes, binascii.hexlify(bytearray(tree_bitmask))
 
-def convert_to_scn(topology, req_size = 15):
+def convert_to_scn(topology, entry_sizes, req_size = 15):
 
     shortest_paths = get_shortest_paths(topology)
     topology_block = et.Element("topology")
@@ -278,7 +277,12 @@ def convert_to_scn(topology, req_size = 15):
             # add <fwd_size_dist> blocks, indicating the distribution of 
             # forwarding entry sizes at each link.
             for i in xrange(req_size):
-                fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = "0.00"
+
+                fwd_size_dist_block_text = "0.00"
+                if str(i + 1) in entry_sizes:
+                    fwd_size_dist_block_text = ("%.2f" % (entry_sizes[str(i + 1)]))
+
+                fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = fwd_size_dist_block_text
 
             # add <tp> block (if edge has 'tp' attribute)
             # <tp iface="2">1</tp>
@@ -301,7 +305,12 @@ def convert_to_scn(topology, req_size = 15):
                 rrouter = str(router))
 
             for i in xrange(req_size):
-                fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = "0.00"
+
+                fwd_size_dist_block_text = "0.00"
+                if str(i + 1) in entry_sizes:
+                    fwd_size_dist_block_text = ("%.2f" % (entry_sizes[str(i + 1)]))
+
+                fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = fwd_size_dist_block_text
 
             nr_bytes, tree_bitmask = to_tree_bitmask(topology, [router])
             tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
@@ -446,13 +455,22 @@ if __name__ == "__main__":
          help = """e.g. '--add-tp-source <source id>:<size>:<radius>'""")
 
     parser.add_argument(
+        "--entry-sizes", 
+         help = """e.g. '--entry-sizes <entry-size>:<size %>|<entry-size>:<size %>|...|<entry-size>:<size %>'""")
+
+    parser.add_argument(
         "--print-stats", 
          help = """print statistics about RocketFuel dataset""",
          action = "store_true")
 
     args = parser.parse_args()
 
-    # quit if a dir w/ causality files hasn't been provided
+    entry_sizes = defaultdict();
+    if args.entry_sizes:
+        entry_size_records = args.entry_sizes.split("|")
+        for record in entry_size_records:
+            entry_sizes[record.split(":", 1)[0]] = (float(record.split(":", 1)[1]) / 100.0)
+
     if not args.data_path:
         sys.stderr.write("""%s: [ERROR] please supply a data path\n""" % sys.argv[0]) 
         parser.print_help()
@@ -464,7 +482,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # build a networkx topology out of a Rocketfuel pop-level topology
-    topology = parse_pop_level_map(args.data_path)    
+    topology = parse_pop_level_map(args.data_path)
     draw_pop_level_map(topology)
 
     # if requested, add a true positive content source
@@ -475,4 +493,4 @@ if __name__ == "__main__":
             int(args.add_tp_source.split(':')[1]))
 
     # finally, convert the topology to an .scn file
-    convert_to_scn(topology)
+    convert_to_scn(topology, entry_sizes)
