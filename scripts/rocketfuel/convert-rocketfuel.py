@@ -17,6 +17,8 @@ from prettytable import PrettyTable
 from collections import defaultdict
 from collections import OrderedDict
 
+DEFAULT_DIFF_DISTR_DIR = "/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions"
+
 # post simple statistics about each AS-level topology:
 #   - nr. of nodes
 #   - nr. of links
@@ -230,10 +232,26 @@ def to_tree_bitmask(topology, iface_trees):
 
     return nr_bytes, binascii.hexlify(bytearray(tree_bitmask))
 
+def load_request_entry_diff_distributions(req_size, topology_block, diff_distr_type = 'l', diff_distr_dir = DEFAULT_DIFF_DISTR_DIR):
+
+    filename = os.path.join(diff_distr_dir, ("%d.fdist" % (req_size)))
+    for line in open(filename, "r").readlines():
+
+        if line.split("=", 1)[0] is not diff_distr_type:
+            continue
+
+        values = line.split("=", 1)[1].split(",")
+        for i, value in enumerate(values):
+            if (i + 1) > req_size:
+                break
+            f_r_dist_block = et.SubElement(topology_block, "f_r_dist", diff = str(i + 1)).text = value
+
 def convert_to_scn(topology, entry_sizes, req_size = 15):
 
     shortest_paths = get_shortest_paths(topology)
     topology_block = et.Element("topology")
+
+    load_request_entry_diff_distributions(req_size, topology_block)
 
     # cycle through each node in the topology. we then write 5 diff. types of 
     # blocks: 
