@@ -662,6 +662,8 @@ int RID_Analytics::run_rec(
             // remaining event will be translated into a NLM event.
             if (((*prev_path_state_itr)->get_rtt() - 1) < 0) {
 
+                std::cout << "RID_Analytics::run_rec() : [INFO] RTT LIMIT REACHED" << std::endl;
+
                 Path_State * path_state = new Path_State(router, this->request_size);
                 path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
 
@@ -698,7 +700,7 @@ int RID_Analytics::run_rec(
                 //  -# ingress_iface_probs : the prob of having a packet 
                 //     flow through iface i (takes TPs into account)
                 //
-                path_state->set_ingress_ptree_prob(router->get_egress_ptree_prob(iface), this->f_max);
+                path_state->set_ingress_ptree_prob(router->get_egress_iface_probs(iface), this->f_max);
 
                 path_prob = router->get_egress_iface_prob(iface); 
                 if (on_path_to_origin(router, ingress_iface, iface) && (this->mm_mode == MMH_FALLBACK)) {
@@ -760,12 +762,16 @@ int RID_Analytics::run_rec(
                 // FIXME: this subtle condition is the one that actually 
                 // terminates the run. 
                 // FIXME: this could be the source of trouble.
-                if (next_hop.router == router || iface == ingress_iface)
+                if (next_hop.router == router || iface == ingress_iface) {
+
+                    std::cout << "RID_Analytics::run_rec() : [INFO] FOUND THE MAGIC STOPPING CONDITION" << std::endl;
+
                     continue;
+                }
 
                 std::cout << "RID_Analytics::run_rec() : [INFO] on router[" << router->get_id() 
                     << "], forwarding to router[" << next_hop.router->get_id() 
-                    << "]" << std::endl;
+                    << "], rtt = " << (int) path_state->get_rtt() << std::endl;
 
                 run_rec(next_hop.router, next_hop.iface, path_state_itr);
             }
@@ -819,7 +825,7 @@ int RID_Analytics::run(
     initial_state->set_tree_bitmask(tree_bitmask, tree_bitmask_size);
     // the initial rtt is set to the distance from starting router to the 
     // origin server
-    initial_state->set_rtt(get_origin_distance(this->start_router));
+    initial_state->set_rtt(2 * get_origin_distance(this->start_router));
 
     // we always start at the ingress iface, so that we don't have a local 
     // match at the initial router (not sure if this can work directly like 

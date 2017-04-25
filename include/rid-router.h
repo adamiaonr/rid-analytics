@@ -148,6 +148,7 @@ class RID_Router {
         void print_egress_ptree_prob();
 
         __float080 get_egress_iface_prob(uint8_t iface);
+        __float080 * get_egress_iface_probs(uint8_t iface);
         void print_egress_iface_prob();
 
         int get_tree_bitmask_size(uint8_t iface);
@@ -203,7 +204,7 @@ class RID_Router {
             uint8_t ptree_iface, 
             int * iface_pivots);
 
-        __float080 get_joint_prob_sum(
+        __float080 calc_joint_largest_match_prob_sum(
             uint8_t ptree_size,
             uint8_t ptree_iface);
 
