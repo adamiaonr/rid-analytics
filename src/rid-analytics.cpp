@@ -54,6 +54,8 @@ RID_Analytics::RID_Analytics(
 
     // after building the network, save the origin server pointer
     this->origin_server = this->routers[origin_server_id];
+    std::cout << "RID_Analytics::RID_Analytics() [INFO] : origin_server_id = " 
+        << this->routers[origin_server_id]->get_id() << std::endl;
 }
 
 RID_Analytics::~RID_Analytics() {
@@ -94,9 +96,9 @@ int RID_Analytics::on_path_to_origin(
     int ingress_iface, 
     int egress_iface = -1) {
 
-    uint8_t origin_server_id = (1 << (std::stoi(this->origin_server->get_id()) % 8));
-    uint8_t * tree_bitmask = NULL;
-    int tree_bitmask_size = 0;
+    uint8_t bitmask_value = (1 << (std::stoi(this->origin_server->get_id()) % 8));
+    uint8_t bitmask_byte = (std::stoi(this->origin_server->get_id()) / 8);
+    uint8_t tree_bitmask_value = 0;
 
     if ((egress_iface == -1)) {
 
@@ -105,23 +107,17 @@ int RID_Analytics::on_path_to_origin(
             if (k == ingress_iface)
                 continue;
 
-            tree_bitmask_size = router->get_tree_bitmask_size(k);
-            tree_bitmask = router->get_tree_bitmask(k);
-            for (int b = 0; b < tree_bitmask_size; b++) {
-                if ((origin_server_id & tree_bitmask[b]) == origin_server_id)
-                    return 1;
-            }
+            tree_bitmask_value = router->get_tree_bitmask(k)[bitmask_byte];
+            if ((bitmask_value & tree_bitmask_value) == bitmask_value)
+                return 1;
         }
 
         return 0;
     }
 
-    tree_bitmask_size = router->get_tree_bitmask_size(egress_iface);
-    tree_bitmask = router->get_tree_bitmask(egress_iface);
-    for (int b = 0; b < tree_bitmask_size; b++) {
-        if ((origin_server_id & tree_bitmask[b]) == origin_server_id)
-            return 1;
-    }
+    tree_bitmask_value = router->get_tree_bitmask(egress_iface)[bitmask_byte];
+    if ((bitmask_value & tree_bitmask_value) == bitmask_value)
+        return 1;
 
     return 0;
 }
@@ -132,28 +128,38 @@ int RID_Analytics::get_origin_distance(RID_Router * from_router) {
     if (from_router->get_id() == this->origin_server->get_id())
         return 0;
 
-    uint8_t origin_server_id = (1 << (std::stoi(this->origin_server->get_id()) % 8));
+    uint8_t bitmask_value = (1 << (std::stoi(this->origin_server->get_id()) % 8));
+    uint8_t bitmask_byte = (std::stoi(this->origin_server->get_id()) / 8);
+
+    // std::cout << "RID_Analytics::get_origin_distance() : [INFO] "
+    //     << "\n\torigin_server_id = " << this->origin_server->get_id() 
+    //     << "\n\tbitmask_value = " << (int) bitmask_value 
+    //     << "\n\tbitmask_byte = " << (int) bitmask_byte << std::endl;
+
     int origin_distance = 0;
     RID_Router * next_router = from_router;
     while (next_router->get_id() != this->origin_server->get_id()) {
+
+        // std::cout << "RID_Analytics::get_origin_distance() : [INFO] "
+        //     << "\n\tnext router id = " << next_router->get_id() << std::endl;
 
         // get next router in path
         uint8_t iface_num = next_router->get_iface_num();
         for (uint8_t k = 0; k < iface_num; k++) {
 
-            int tree_bitmask_size = next_router->get_tree_bitmask_size(k);
             uint8_t * tree_bitmask = next_router->get_tree_bitmask(k);
-            for (int b = 0; b < tree_bitmask_size; b++) {
-                if ((origin_server_id & tree_bitmask[b]) == origin_server_id) {
+            // std::cout << "RID_Analytics::get_origin_distance() : [INFO] "
+            //     << "\n\ttree_bitmask = " << (int) tree_bitmask[bitmask_byte] 
+            //     << "\n\tbitmask_value = " << (int) bitmask_value << std::endl;
 
-                    // save the next router in the path in next_router
-                    next_router = next_router->get_next_hop(k).router;
-                    // increment the origin distance
-                    origin_distance++;
-                    // jump off the cycle
-                    b = tree_bitmask_size;
-                    k = iface_num;
-                }
+            if ((bitmask_value & tree_bitmask[bitmask_byte]) == bitmask_value) {
+
+                // save the next router in the path in next_router
+                next_router = next_router->get_next_hop(k).router;
+                // increment the origin distance
+                origin_distance++;
+                // jump off the cycle
+                k = iface_num;
             }
         }
     }
@@ -273,6 +279,7 @@ int RID_Analytics::build_network(std::string nw_filename) {
 
             new_router = (*rit).second;
             new_router->init(
+                router_id,
                 table_size,                 // nr. of table entries for router
                 iface_num,                  // nr. of ifaces (i.e. nr. of adjacent routers)
                 this->f_max,                // max. request & forwarding entry size
@@ -292,6 +299,9 @@ int RID_Analytics::build_network(std::string nw_filename) {
 
             // add the router to the router map
             this->routers[router_id] = new_router;
+
+            std::cout << "RID_Analytics::build_network() : [INFO] added new router : "
+                << router_id << std::endl;
         }
 
         // if (tier == this->access_tree_height && tier_index > 0)
@@ -323,10 +333,33 @@ int RID_Analytics::build_network(std::string nw_filename) {
             std::string tree_bitmask_str = std::string(tree_bitmask_block.text().as_string());
 
             std::vector<uint8_t> tree_bitmask;
-            for (unsigned int i = 0; i < tree_bitmask_str.size(); i++) {
-                uint8_t int_val = (uint8_t) ((tree_bitmask_str[i] >= 'a') ? (tree_bitmask_str[i] - 'a' + 10) : (tree_bitmask_str[i] - '0'));
-                tree_bitmask.push_back(int_val);
+            for (unsigned int i = 0; i < tree_bitmask_str.size(); ) {
+
+                uint8_t higher_bits = (uint8_t) ((tree_bitmask_str[i] >= 'a') ? (tree_bitmask_str[i] - 'a' + 10) : (tree_bitmask_str[i] - '0'));
+                // std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
+                //     << router_id << "][" << link.attribute("local").as_int() << "] : "
+                //     << "\n\tstr (H4): " << tree_bitmask_str[i]
+                //     << "\n\tint (H4): " << (int) higher_bits << std::endl;
+
+                i++;
+
+                uint8_t lower_bits = (uint8_t) ((tree_bitmask_str[i] >= 'a') ? (tree_bitmask_str[i] - 'a' + 10) : (tree_bitmask_str[i] - '0'));
+                // std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
+                //     << router_id << "][" << link.attribute("local").as_int() << "] : "
+                //     << "\n\tstr (L4): " << tree_bitmask_str[i]
+                //     << "\n\tint (L4): " << (int) lower_bits
+                //     << "\n\tint (H4L4): " << (int) (((higher_bits << 4) & 0xF0) | (lower_bits & 0x0F)) << std::endl;
+
+                i++;
+
+                tree_bitmask.push_back(((higher_bits << 4) & 0xF0) | (lower_bits & 0x0F));
             }
+
+            std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
+                << router_id << "][" << link.attribute("local").as_int() << "] : ";
+            for (unsigned int i = 0; i < tree_bitmask.size(); i++)
+                std::cout << "[" << (int) tree_bitmask[i] << "] ";
+            std::cout << std::endl;
             
             std::string adjacent_router_id = std::string(link.attribute("rrouter").value());
 
@@ -343,6 +376,9 @@ int RID_Analytics::build_network(std::string nw_filename) {
                 adjacent_router = new RID_Router();
                 // add adj. router to the router map
                 this->routers[adjacent_router_id] = adjacent_router;
+
+                std::cout << "RID_Analytics::build_network() : [INFO] added new router : "
+                    << adjacent_router_id << std::endl;
             }
 
             new_router->add_fwd_table_entry(

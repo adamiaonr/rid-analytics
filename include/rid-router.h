@@ -105,6 +105,7 @@ class RID_Router {
         ~RID_Router();
 
         int init(
+            std::string router_id,
             uint64_t fwd_table_size,
             uint8_t iface_num,
             uint8_t f_max,
@@ -175,7 +176,7 @@ class RID_Router {
         int calc_joint_largest_match_distributions(
             uint8_t ptree_size, 
             uint8_t ptree_iface,
-            __float080 * joint_prob_matrix); 
+            __float080 * joint_prob_matrix);
 
         // computation of iface event & egress size probabilities
         int calc_iface_events_distributions(
@@ -202,6 +203,10 @@ class RID_Router {
             uint8_t ptree_iface, 
             int * iface_pivots);
 
+        __float080 get_joint_prob_sum(
+            uint8_t ptree_size,
+            uint8_t ptree_iface);
+
         bool is_iface_on_ptree(int iface, uint8_t * tree_bitmask);
         int calc_ptree_iface_probs();
         int calc_egress_ptree_probs(
@@ -211,7 +216,6 @@ class RID_Router {
             __float080 * log_prob_not_fp);
 
         RID_Router::lpm_pmf_row ** lpm_pmf;
-        __float080 total_joint_prob;
         // probability of interface events (NIS, MIS, LI)
         __float080 * iface_events_pmf;
         // probability of having the largest match at iface i

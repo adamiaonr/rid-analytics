@@ -11,7 +11,7 @@ SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 
 # use -ggdb for GNU debugger
-CFLAGS := -g -ggdb -Wall -Wno-comment -std=c++11
+CFLAGS := -g -ggdb -gdwarf-2 -Wall -Wno-comment -std=c++11
 
 LIB := -lm
 INC := -Iinclude

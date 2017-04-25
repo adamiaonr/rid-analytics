@@ -246,12 +246,14 @@ def load_request_entry_diff_distributions(req_size, topology_block, diff_distr_t
                 break
             f_r_dist_block = et.SubElement(topology_block, "f_r_dist", diff = str(i + 1)).text = value
 
-def convert_to_scn(topology, entry_sizes, req_size = 15):
+def convert_to_scn(topology, entry_sizes, table_size = 100000000, req_size = 5):
 
     shortest_paths = get_shortest_paths(topology)
     topology_block = et.Element("topology")
 
     load_request_entry_diff_distributions(req_size, topology_block)
+
+    fwd_table_size_block = et.SubElement(topology_block, "fwd_table_size").text = str(table_size)
 
     # cycle through each node in the topology. we then write 5 diff. types of 
     # blocks: 
@@ -473,6 +475,10 @@ if __name__ == "__main__":
          help = """e.g. '--add-tp-source <source id>:<size>:<radius>'""")
 
     parser.add_argument(
+        "--table-size", 
+         help = """e.g. '--table-size 10000000'""")
+
+    parser.add_argument(
         "--entry-sizes", 
          help = """e.g. '--entry-sizes <entry-size>:<size %>|<entry-size>:<size %>|...|<entry-size>:<size %>'""")
 
@@ -488,6 +494,10 @@ if __name__ == "__main__":
         entry_size_records = args.entry_sizes.split("|")
         for record in entry_size_records:
             entry_sizes[record.split(":", 1)[0]] = (float(record.split(":", 1)[1]) / 100.0)
+
+    table_size = 10000000
+    if args.table_size:
+        table_size = int(args.table_size)
 
     if not args.data_path:
         sys.stderr.write("""%s: [ERROR] please supply a data path\n""" % sys.argv[0]) 
@@ -511,4 +521,4 @@ if __name__ == "__main__":
             int(args.add_tp_source.split(':')[1]))
 
     # finally, convert the topology to an .scn file
-    convert_to_scn(topology, entry_sizes)
+    convert_to_scn(topology, entry_sizes, table_size)
