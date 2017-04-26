@@ -59,11 +59,11 @@ class RID_Analytics {
 
     public:
 
-        struct nw_link
+        struct run_record
         {
-            int iface_local;
-            int iface_remote;
-            std::string router_remote;
+            RID_Router * next_router;
+            int ingress_iface;
+            tree<Path_State *>::iterator prev_path_state_itr;
         };
 
         RID_Analytics() {}

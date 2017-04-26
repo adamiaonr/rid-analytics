@@ -414,6 +414,7 @@ int RID_Analytics::run_rec(
     // next hop information
     RID_Router::nw_address next_hop;
     tree<Path_State *>::iterator path_state_itr;
+    std::vector<RID_Analytics::run_record> single_link_match_states;
 
     // run the forward() operation on this router : this will determine the 
     // following info:
@@ -769,11 +770,29 @@ int RID_Analytics::run_rec(
                     continue;
                 }
 
-                std::cout << "RID_Analytics::run_rec() : [INFO] on router[" << router->get_id() 
-                    << "], forwarding to router[" << next_hop.router->get_id() 
-                    << "], rtt = " << (int) path_state->get_rtt() << std::endl;
+                std::cout << "RID_Analytics::run_rec() : [INFO] saving slm record :"
+                    << "\n\ton router[" << router->get_id() << "]"
+                    << "\n\tforwarding to router[" << next_hop.router->get_id() << "]"
+                    << "\n\trtt = " << (int) path_state->get_rtt() << std::endl;
 
-                run_rec(next_hop.router, next_hop.iface, path_state_itr);
+
+                RID_Analytics::run_record slm_record;
+
+                slm_record.next_router = next_hop.router;
+                slm_record.ingress_iface = next_hop.iface;
+                slm_record.prev_path_state_itr = path_state_itr;
+
+                single_link_match_states.push_back(slm_record);
+                //run_rec(next_hop.router, next_hop.iface, path_state_itr);
+            }
+
+            std::vector<RID_Analytics::run_record>::iterator itr;
+            for (itr = single_link_match_states.begin(); itr != single_link_match_states.end(); itr++) {
+
+                std::cout << "RID_Analytics::run_rec() : [INFO] on router[" << router->get_id() 
+                    << "], forwarding to router[" << (*itr).next_router->get_id() 
+                    << "], rtt = " << (int) (*((*itr).prev_path_state_itr))->get_rtt() << std::endl;
+                run_rec((*itr).next_router, (*itr).ingress_iface, (*itr).prev_path_state_itr);
             }
         }
     }
