@@ -42,11 +42,6 @@ RID_Router::RID_Router(
     // initialize the ingress_ptree_prob[] array
     this->ingress_ptree_prob = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
 
-    // initialize the egress_ptree_prob[iface][] array
-    this->egress_ptree_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
-    for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
-        this->egress_ptree_prob[_iface] = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
-
     // initialize the egress_iface_prob[iface][] array
     this->egress_iface_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
     for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
@@ -84,9 +79,6 @@ RID_Router::~RID_Router() {
     free(this->iface_events_pmf);
 
     for (uint8_t _iface = IFACE_LOCAL + 1; _iface < this->iface_num; _iface++)
-        free(this->egress_ptree_prob[_iface]);
-
-    for (uint8_t _iface = IFACE_LOCAL + 1; _iface < this->iface_num; _iface++)
         free(this->egress_iface_prob[_iface]);
 }
 
@@ -122,11 +114,6 @@ int RID_Router::init(
 
     // initialize the ingress_ptree_prob[] array
     this->ingress_ptree_prob = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
-
-    // initialize the egress_ptree_prob[iface][] array
-    this->egress_ptree_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
-    for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
-        this->egress_ptree_prob[_iface] = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
 
     // initialize the egress_iface_prob[iface][] array
     this->egress_iface_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
@@ -383,8 +370,9 @@ int RID_Router::forward(
 
     // 2.1.1) initialize a single array to compute the joint prob distribution 
     // for all ptree_size
-    __float080 * joint_lpm_matrix = NULL;
-    init_joint_lpm_pmf(&(joint_lpm_matrix));
+    std::map<std::string, __float080> joint_lpm_matrix;
+    // __float080 * joint_lpm_matrix = NULL;
+    // init_joint_lpm_pmf(&(joint_lpm_matrix));
 
     // 2.1.2) initialize iface_events_pmf
     for (uint8_t i = 0; i < EVENT_NUM; i++)
@@ -413,7 +401,8 @@ int RID_Router::forward(
 
         // 2.2.2) re-use the joint probability matrix for the computation of 
         // joint prob of each prefix tree size
-        clear_joint_lpm_pmf(&(joint_lpm_matrix));
+        joint_lpm_matrix.clear();
+        // clear_joint_lpm_pmf(&(joint_lpm_matrix));
 
         // 2.2.3) assuming the prefix tree of size ptree_size continues on 
         // iface ptree_iface...
@@ -424,11 +413,11 @@ int RID_Router::forward(
             if (it != this->no_forwarding.end())
                 continue;
 
-            calc_joint_largest_match_distributions(ptree_size, ptree_iface, joint_lpm_matrix);
+            calc_joint_largest_match_distributions(ptree_size, ptree_iface, &joint_lpm_matrix);
         }
 
         // 2.3) calc the prob distribution for ifaces, for each ptree_size
-        if (calc_iface_events_distributions(ptree_size, joint_lpm_matrix) < 0)
+        if (calc_iface_events_distributions(ptree_size, &joint_lpm_matrix) < 0)
             return -1;
     }
 
@@ -442,8 +431,8 @@ int RID_Router::forward(
     this->print_iface_events_pmf();
     this->print_egress_iface_prob();
 
-    // clean up after yourself...
-    free(joint_lpm_matrix);
+    // // clean up after yourself...
+    // free(joint_lpm_matrix);
     // ... aaaaand we're out of here!
     return 0;
 }
@@ -626,32 +615,30 @@ void RID_Router::print_lpm_pmf(uint8_t iface) {
     printf("\n");
 }
 
-/*
- * \brief   allocates memory for an array capable of holding a joint distribution 
- *          matrix for all L_i,p RVs (i.e. for all ifaces in the router)
- *
- * since n-dimensional arrays in C/C++ are initialized in row major order, we 
- * access the contents of joint_f_pmf by 'smartly' dereferencing the pointer 
- * (wooo, watch out, we've got a rocket scientist over here...)
- * 
- * \param   joint_prob_matrix   the array to initialize
- */
-void RID_Router::init_joint_lpm_pmf(
-    __float080 ** joint_prob_matrix) {
+// /*
+//  * \brief   allocates memory for an array capable of holding a joint distribution 
+//  *          matrix for all L_{iface, ptree_size} RVs (i.e. for all ifaces in 
+//  *          the router)
+//  * 
+//  * \param   joint_prob_matrix   the array to initialize
+//  */
+// void RID_Router::init_joint_lpm_pmf(
+//     __float080 ** joint_prob_matrix) {
 
-    *joint_prob_matrix = (__float080 *) calloc(pow((this->f_max + 1), this->iface_num), sizeof(__float080));
-}
+//     *joint_prob_matrix = (__float080 *) calloc(pow((this->f_max + 1), this->iface_num), sizeof(__float080));
+// }
 
-/*
- * \brief   sets the joint prob distribution array to 0.0s. this is just a 
- *          wrapper for memset().
- * 
- * \param   joint_prob_matrix   the array to clear
- */
-void RID_Router::clear_joint_lpm_pmf(__float080 ** joint_prob_matrix) {
+// /*
+//  * \brief   sets the joint prob distribution array to 0.0s. this is just a 
+//  *          wrapper for memset().
+//  * 
+//  * \param   joint_prob_matrix   the array to clear
+//  */
+// void RID_Router::clear_joint_lpm_pmf(__float080 ** joint_prob_matrix) {
 
-    memset(*joint_prob_matrix, 0, pow((this->f_max + 1), this->iface_num) * sizeof(__float080));
-}
+
+//     memset(*joint_prob_matrix, 0, pow((this->f_max + 1), this->iface_num) * sizeof(__float080));
+// }
 
 /*
  * \brief   adds (as in 'sum', '+') a prob. value to the joint_prob_matrix 
@@ -673,18 +660,15 @@ void RID_Router::clear_joint_lpm_pmf(__float080 ** joint_prob_matrix) {
  * \param   value                   the prob. value to be added to the array.
  */
 void RID_Router::add_joint_lpm_prob(
-    __float080 * joint_prob_matrix,
+    std::map<std::string, __float080> * joint_prob_matrix,
     int * iface_pivots,
     __float080 value) {
 
-    uint32_t joint_prob_add = 0;
+    std::ostringstream iface_pivots_str("");
+    for (int i = 0; i < this->iface_num; i++)
+        iface_pivots_str << iface_pivots[i];
 
-    for (uint8_t i = 0; i < this->iface_num; i++) {
-
-        joint_prob_add += iface_pivots[i] * pow((this->f_max + 1), i);
-    }
-
-    *(joint_prob_matrix + joint_prob_add) += value;
+    (*joint_prob_matrix)[iface_pivots_str.str()] += value;
 }
 
 /*
@@ -707,79 +691,14 @@ void RID_Router::add_joint_lpm_prob(
  * \param   value                   the prob. value to be added to the array.
  */
 __float080 RID_Router::get_joint_lpm_prob(    
-    __float080 * joint_prob_matrix,
+    std::map<std::string, __float080> * joint_prob_matrix,
     int * iface_pivots) {
 
-    uint32_t joint_prob_add = 0;
+    std::ostringstream iface_pivots_str("");
+    for (int i = 0; i < this->iface_num; i++)
+        iface_pivots_str << iface_pivots[i];
 
-    for (int i = 0; i < this->iface_num; i++) {
-
-        joint_prob_add += iface_pivots[i] * pow((this->f_max + 1), i);
-    }
-
-    return *(joint_prob_matrix + joint_prob_add);
-}
-
-int RID_Router::calc_egress_ptree_probs(
-    uint8_t mode,
-    uint8_t iface,
-    __float080 * log_prob_fp_not_larger_than,
-    __float080 * log_prob_not_fp) {
-
-    if (mode == EGRESS_PTREE_PROB_MODE_GLOBAL) {
-
-        for (uint8_t f = 0; f <= this->f_max; f++)
-            this->egress_ptree_prob[iface][f] *= this->egress_iface_prob[iface][f];
-
-        return 0;
-    }
-
-    // intialize egress_ptree_prob[iface][f] w/ 0.0s
-    // FIXME : for now let's keep egress_ptree_prob[iface][0] = 0.0
-    for (uint8_t f = 0; f <= this->f_max; f++)
-        this->egress_ptree_prob[iface][f] = 0.0;
-
-    // there are 2 events which can make iface to belong to a FP prefix tree 
-    // of size p:
-    //
-    //  1) iface is in fact associated w/ the 'old' prefix tree of size p, i.e. 
-    //     the prefix tree chosen at a previous router. this can only happen 
-    //     if iface is eligible to be a continuation of the 'old' prefix tree.
-    //
-    //  2) iface is not associated w/ the 'old' prefix tree of size p BUT it 
-    //     experiences a FP match of size p. in this case, we say the 
-    //     request falls into a 'new' prefix tree.
-    //
-    // as such, egress_ptree_prob[iface][p] = P(event 1) + P(event 2). also, 
-    // note that P(event 2) = (1.0 - P(event 1)) * P('iface has FP size p'). 
-    int iface_bitmask = this->fwd_table[iface].f_bitmask;
-    for (uint8_t f = ffs(iface_bitmask); f != 0; f = ffs(iface_bitmask)) {
-        iface_bitmask = iface_bitmask & (iface_bitmask - 1);
-
-        // contribution of P(event 1)
-        // P(event 1) is the likelihood of having iface associated with an old 
-        // prefix tree. this happens if the iface is eligible and with a 
-        // probability equal to (fwd_table[iface].iface_proportion * 
-        // fwd_table[iface].f_distribution[p]) / M) in which M is the sum of 
-        // fwd_table[j].iface_proportion * fwd_table[j].f_distribution[p] for 
-        // all eligible ifaces j.
-        __float080 prob_iface_in_ptree = 0.0;
-        if (this->iface_on_ptree[iface]) {
-            prob_iface_in_ptree = this->ingress_ptree_prob[f];
-            prob_iface_in_ptree *= (fwd_table[iface].iface_proportion * fwd_table[iface].f_distribution[f - 1]) / this->ptree_iface_probs[f - 1];
-            this->egress_ptree_prob[iface][f] += prob_iface_in_ptree;
-        }
-
-        // contribution of P(event 2)
-        this->egress_ptree_prob[iface][f] +=
-            (1.0 - prob_iface_in_ptree)
-            * exp(log_prob_fp_not_larger_than[f])       // not having a FP > f
-            * (1.0 - exp(log_prob_not_fp[f - 1]))       // generating a FP of size f
-            * ((this->fwd_table[iface].num_entries > 0) ? 1.0 : 0.0)   // making sure that there are entries in this iface
-            * ((this->fwd_table[iface].f_distribution[f - 1] > 0.0) ? 1.0 : 0.0);
-    }
-
-    return 0;
+    return (*joint_prob_matrix)[iface_pivots_str.str()];
 }
 
 /*
@@ -1166,7 +1085,7 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
 int RID_Router::calc_joint_largest_match_distributions(
     uint8_t ptree_size,
     uint8_t ptree_iface,
-    __float080 * joint_prob_matrix) {
+    std::map<std::string, __float080> * joint_prob_matrix) {
 
     // we represent joint events as a pivot array of size iface_num. e.g.
     //
@@ -1287,11 +1206,11 @@ int RID_Router::calc_joint_largest_match_distributions(
 
                 // if (log_prob > 0.0) {
 
-                std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] JOINT_PROB" 
-                    << "(" << (int) ptree_iface << ", " << (int) ptree_size << ")";
-                for (int k = 0; k < this->iface_num; k++)
-                    std::cout << "[" << iface_pivots[k] << "]";
-                std::cout << " = " << prob << std::endl;
+                // std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] JOINT_PROB" 
+                //     << "(" << (int) ptree_iface << ", " << (int) ptree_size << ")";
+                // for (int k = 0; k < this->iface_num; k++)
+                //     std::cout << "[" << iface_pivots[k] << "]";
+                // std::cout << " = " << prob << std::endl;
 
                 // std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] (SUM) JOINT_PROB";
                 // for (int k = 0; k < this->iface_num; k++)
@@ -1362,7 +1281,7 @@ __float080 RID_Router::calc_cumulative_prob(
     uint8_t mode,
     uint8_t fixed_iface, 
     uint8_t fixed_iface_size,
-    __float080 * joint_prob_matrix) {
+    std::map<std::string, __float080> * joint_prob_matrix) {
 
     printf("RID_Router::calc_cumulative_prob() : [fixed_iface : %d][fixed_iface_size : %d][MODE : %s]\n", 
         fixed_iface, fixed_iface_size, CUMULATIVE_PROB_MODE_STR[mode]);
@@ -1463,11 +1382,11 @@ __float080 RID_Router::calc_cumulative_prob(
                     // iface pivots
                     prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
-                    std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
-                        << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
-                    for (int k = 0; k < this->iface_num; k++)
-                        std::cout << "[" << iface_pivots[k] << "]";
-                    std::cout << " = " << prob << std::endl;
+                    // std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
+                    //     << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
+                    // for (int k = 0; k < this->iface_num; k++)
+                    //     std::cout << "[" << iface_pivots[k] << "]";
+                    // std::cout << " = " << prob << std::endl;
                 }
 
                 // distribute the probabilities over the egress iface probabilities
@@ -1576,7 +1495,7 @@ __float080 RID_Router::calc_cumulative_prob(
 
 int RID_Router::calc_iface_events_distributions(
     int ptree_size,
-    __float080 * joint_prob_matrix) {
+    std::map<std::string, __float080> * joint_prob_matrix) {
 
     // // LOCAL MATCH (LLM event)
     // int local_iface_bitmask = this->fwd_table[IFACE_LOCAL].f_bitmask;
@@ -1679,11 +1598,6 @@ __float080 RID_Router::get_iface_events_prob(uint8_t event) {
     }
 
     return this->iface_events_pmf[event];
-}
-
-__float080 * RID_Router::get_egress_ptree_prob(uint8_t iface) {
-
-    return this->egress_ptree_prob[iface];
 }
 
 __float080 RID_Router::get_egress_iface_prob(uint8_t iface) {
@@ -1795,65 +1709,6 @@ void RID_Router::print_egress_iface_prob() {
         for (uint8_t _f = 0; _f < this->f_max + 1; _f++) {
 
             _prob = this->egress_iface_prob[_iface][_f];
-            printf(" %-.5LE|", _prob);
-
-            _cumulative_prob += _prob;
-        }
-
-        printf(" %-.5LE|", _cumulative_prob);
-        _cumulative_prob = 0.0;
-    }
-
-    printf("\n------------");
-    for (uint8_t _f = 0; _f < this->f_max + 2; _f++)
-        printf("-------------");
-
-    printf("\n");   
-}
-
-/*
- * \brief   prints the distribution of ptree size probabilities, for all 
- *          egress ifaces in the router (iface > IFACE_LOCAL).
- *
- * prints a table in the following format:
- *
- * ---------------------------------------------------------------------
- * [|L_i|]          : | 1          | 2 | ... | |R|_{max} | SUM(P(L_i)) |
- * ---------------------------------------------------------------------
- * [P(L_1)]         : | P(L_i = 1) | . | ... |     .     |       .     |
- * [P(L_2)]         : |     ...    | . | ... |     .     |       .     |
- *     ...          : |     ...    | . | ... |     .     |       .     |
- * [P(L_n)]         : |     ...    | . | ... |     .     |       .     |      
- * ---------------------------------------------------------------------
- *
- */
-void RID_Router::print_egress_ptree_prob() {
-
-    printf("\n------------");
-    for (uint8_t _f = 0; _f < this->f_max + 2; _f++)
-        printf("-------------");
-
-    printf("\n[|L_i|]  : |");
-
-    for (uint8_t _f = 0; _f < this->f_max + 1; _f++)
-        printf(" %-11d|", _f);
-
-    printf(" SUM P(L_i) |");
-
-    printf("\n------------");
-    for (uint8_t _f = 0; _f < this->f_max + 2; _f++)
-        printf("-------------");
-
-    __float080 _cumulative_prob = 0.0;
-    __float080 _prob = 0.0;
-
-    for (uint8_t _iface = IFACE_LOCAL + 1; _iface < (this->iface_num); _iface++) {
-
-        printf("\n[P(L_%d)] : |", _iface);
-
-        for (uint8_t _f = 0; _f < this->f_max + 1; _f++) {
-
-            _prob = this->egress_ptree_prob[_iface][_f];
             printf(" %-.5LE|", _prob);
 
             _cumulative_prob += _prob;

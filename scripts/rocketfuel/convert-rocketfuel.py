@@ -5,6 +5,7 @@ import glob
 import os
 import math
 import binascii
+import random
 
 import numpy as np
 import networkx as nx
@@ -19,40 +20,33 @@ from collections import OrderedDict
 
 DEFAULT_DIFF_DISTR_DIR = "/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions"
 
-# post simple statistics about each AS-level topology:
-#   - nr. of nodes
-#   - nr. of links
-#   - median outdegree
-def print_statistics(rocketfuel_dir):
+def get_pop_level_statistics(topology):
 
-    stats = OrderedDict()
+        stats = defaultdict()
 
-    for filename in sorted(glob.glob(os.path.join(rocketfuel_dir, '*r0.cch'))):
-
-        topology_id = filename.split("/")[-1]
-        topology_id = topology_id.split(".", 1)[0]
-        topology = parse_isp_map(filename)
-
-        stats[topology_id] = defaultdict()
-
-        stats[topology_id]['nodes'] = topology.number_of_nodes()
-        stats[topology_id]['links'] = topology.number_of_edges()
+        stats['nodes'] = topology.number_of_nodes()
+        stats['links'] = topology.number_of_edges()
+        stats['outdegree-list'] = nx.degree(topology)
         degree_sequence = sorted(nx.degree(topology).values(), reverse = True)
-        stats[topology_id]['outdegree'] = np.median(degree_sequence)
 
-    table = PrettyTable(['as id', '# nodes', '# links', 'median outdegree'])
+        avg_path_outdegrees = []
+        path_lengths = []
+        shortest_paths = get_shortest_paths(topology)
+        for source in shortest_paths:
+            for path in shortest_paths[source]:
 
-    for topology_id in stats:
-        table.add_row([
-            topology_id,
-            stats[topology_id]['nodes'],
-            stats[topology_id]['links'],
-            stats[topology_id]['outdegree']
-            ])
+                path_lengths.append(len(path.split(",")))
+                path_routers = [int(r) for r in path.split(",")]
+                avg_path_outdegrees.append(float(sum([stats['outdegree-list'][r] for r in path_routers])) / (float(len(path.split(",")))))
 
-    print("")
-    print(table)
-    print("")
+        stats['avg-path-outdegree'] = list(set(avg_path_outdegrees))
+        stats['path-lengths'] = list(set(path_lengths))
+
+        stats['min-outdegree'] = np.min(degree_sequence)
+        stats['med-outdegree'] = np.median(degree_sequence)
+        stats['max-outdegree'] = np.max(degree_sequence)
+
+        return stats
 
 # post simple statistics about each AS-level topology:
 #   - nr. of nodes
@@ -75,14 +69,7 @@ def print_pop_level_statistics(rocketfuel_dir):
             topology_id = topology_id.split(".", 1)[0]
             topology = parse_pop_level_map(filename)
 
-            stats[topology_id] = defaultdict()
-
-            stats[topology_id]['nodes'] = topology.number_of_nodes()
-            stats[topology_id]['links'] = topology.number_of_edges()
-            degree_sequence = sorted(nx.degree(topology).values(), reverse = True)
-            stats[topology_id]['min-outdegree'] = np.min(degree_sequence)
-            stats[topology_id]['med-outdegree'] = np.median(degree_sequence)
-            stats[topology_id]['max-outdegree'] = np.max(degree_sequence)
+            stats[topology_id] = get_pop_level_statistics(topology)
 
     table = PrettyTable(['as id', '# nodes', '# links', 'min. outdegree', 'median outdegree', 'max. outdegree'])
 
@@ -140,6 +127,13 @@ def add_content_route(topology, content_source_id, tp_size = 1, radius = -1):
 
     return 0
 
+def add_example_path(example_paths, length_cat, outdegree_cat, path_routers):
+
+    if length_cat not in example_paths:
+        example_paths[length_cat] = defaultdict(list)
+
+    example_paths[length_cat][outdegree_cat].append(path_routers)
+
 def get_shortest_paths(topology):
 
     # compute shortest paths from every node to every other node. the paths 
@@ -170,8 +164,82 @@ def get_shortest_paths(topology):
             # then allows for more convenient search on get_iface_distr()
             route = ','.join(("%03d" % (node)) for node in route)
             shortest_paths[source].append(route)
+        # print(shortest_paths[source])
 
     return shortest_paths
+
+def get_path_examples(topology):
+    # sample a small set of path examples to use in experiments. we vary the 
+    # topology aspects which affect efficiency and correctness:
+    #
+    #   1) nr. of hops, or path length : the more hops, the higher the chance of 
+    #                                    forwarding errors
+    #   2) outdegree    : the larger the outdegree, the larger the number of 
+    #                     links over which fps matches are forwarded
+    #
+    # as such, we choose paths w/ the following combinations:
+    #   1 2 3) short, low / median / high outdegree
+    #   4 5 6) median length, low / median / high outdegree
+    #   7 8 9) long length, low / median / high outdegree
+    #
+    # choosing 2 per example, we have a max. of 18 representative paths, which 
+    # should be ok for testing time purposes on a topology Telstra or AT&T
+    path_examples = defaultdict()
+    # get statistics of topology
+    stats = get_pop_level_statistics(topology)
+    shortest_paths = get_shortest_paths(topology)
+    print("outdegrees : %s" % (sorted(set(nx.degree(topology).values()), reverse = True)))
+    # # get outdegree sums of topologies
+    # print("path outdegree sums : %s" % (sorted(stats['outdegree-sums'], reverse = True)))
+
+    for source in shortest_paths:
+        for path in shortest_paths[source]:
+
+            path_length = len(path.split(","))
+            # don't gather paths for lengths equal to 1
+            if path_length < 2:
+                continue
+            path_routers = [int(r) for r in path.split(",")]
+            avg_path_outdegree = float(sum([stats['outdegree-list'][r] for r in path_routers])) / float(path_length)
+
+            # short lengths
+            if path_length < np.percentile(stats['path-lengths'], 25):
+
+                if avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 25):
+                    add_example_path(path_examples, 'short', 'low', path_routers)
+                elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 40) and avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 60):
+                    add_example_path(path_examples, 'short', 'median', path_routers)
+                elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 75):
+                    add_example_path(path_examples, 'short', 'high', path_routers)
+
+            # median lengths
+            if path_length > np.percentile(stats['path-lengths'], 40) and path_length < np.percentile(stats['path-lengths'], 60):
+
+                if avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 25):
+                    add_example_path(path_examples, 'median', 'low', path_routers)
+                elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 40) and avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 60):
+                    add_example_path(path_examples, 'median', 'median', path_routers)
+                elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 75):
+                    add_example_path(path_examples, 'median', 'high', path_routers)
+
+            # long lengths
+            if path_length > np.percentile(stats['path-lengths'], 75):
+
+                if avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 25):
+                    add_example_path(path_examples, 'long', 'low', path_routers)
+                elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 40) and avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 60):
+                    add_example_path(path_examples, 'long', 'median', path_routers)
+                elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 75):
+                    add_example_path(path_examples, 'long', 'high', path_routers)
+
+
+    random.seed(9001)
+    for path_length in path_examples:
+        for path_outdegree in path_examples[path_length]:
+
+            nr_paths = len(path_examples[path_length][path_outdegree])
+            print("shortest_paths[%s][%s] = %s" % 
+                (path_length, path_outdegree, str(path_examples[path_length][path_outdegree][random.randint(0, nr_paths - 1)])))
 
 # FIXME : this algorithm is terribly inefficient...
 def get_fwd_dist(topology, shortest_paths, router):
@@ -221,11 +289,13 @@ def to_tree_bitmask(topology, iface_trees):
     # calculate nr. of bytes of the bitmask. note we can represent 8 nodes per 
     # byte
     nr_bytes = int(math.ceil(float(len(topology.nodes())) / 8.0))
+    # print("got %d bytes" % (nr_bytes))
     # initialize tree bitmask to 0s
     tree_bitmask = [0] * nr_bytes
 
     for source in iface_trees:
         byte_index = int((source / 8))
+        # print("source %d, byte index : %d" % (source, byte_index))
         # print("source : %d, tree_bitmask[%d] = %d" % (source, byte_index, tree_bitmask[byte_index]))
         tree_bitmask[byte_index] |= (1 << (source % 8))
         # print("bit index = %d, tree_bitmask[%d] = %d" % ((source % 8), byte_index, tree_bitmask[byte_index]))
@@ -383,12 +453,87 @@ def draw_pop_level_map(topology):
     # save the figure in <rocketfuel-file>.pdf
     plt.savefig(args.data_path.split("/")[-2] + ".pdf", bbox_inches='tight', format = 'pdf')
 
+def trim_topology(topology, max_outdegree):
+
+    # extract stats from current topology
+    stats = get_pop_level_statistics(topology)
+
+    # check the outdegree list, look for nodes w/ outdegree > max_outdegree
+    for router, outdegree in stats['outdegree-list'].iteritems():
+
+        if outdegree <= max_outdegree:
+            continue
+
+        # get the nr. of neighbors of router in excess to trim
+        to_trim = outdegree - max_outdegree
+
+        # 1st remove neighbors w/ outdegree 1. if there are still neighbors 
+        # left, remove those w/ outdegree 2, and so on.
+        outdegrees_for_removal = [1, 2, 3]
+        for r in outdegrees_for_removal: 
+
+            if to_trim == 0:
+                break
+
+            for i, neighbor_router in enumerate(topology.neighbors(router)):
+
+                if to_trim == 0:
+                    break
+
+                if stats['outdegree-list'][neighbor_router] == r:
+                    topology.remove_node(neighbor_router)
+                    to_trim -= 1
+
+    # remove nodes with no neighbors
+    for node in topology.nodes():
+
+        if (len(topology.neighbors(node)) == 0):
+            topology.remove_node(node)
+
+    topology = nx.convert_node_labels_to_integers(topology)
+    return topology
+
+def annotate_edges(topology):
+
+    node_ifaces = defaultdict(defaultdict)
+    added_edges = set([])
+
+    for edge in topology.edges():
+
+        head_id = edge[0]
+        tail_id = edge[1]
+
+        if (edge not in added_edges):
+
+            # initialize the node_ifaces dict (if not already)
+            if 'prev' not in node_ifaces[head_id]:
+                node_ifaces[head_id]['prev'] = 0
+                node_ifaces[head_id]['ifaces'] = defaultdict(int)
+
+            if 'prev' not in node_ifaces[tail_id]:
+                node_ifaces[tail_id]['prev'] = 0
+                node_ifaces[tail_id]['ifaces'] = defaultdict(int)
+
+            node_ifaces[head_id]['prev'] += 1
+            node_ifaces[head_id]['ifaces'][tail_id] = node_ifaces[head_id]['prev']
+            # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[node]['prev'], node, node, link))
+
+            node_ifaces[tail_id]['prev'] += 1
+            node_ifaces[tail_id]['ifaces'][head_id] = node_ifaces[tail_id]['prev']
+            # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[link]['prev'], link, link, node))
+
+            added_edges.add(edge)
+
+        topology.add_edge(head_id, tail_id,
+            e1 = ("%d:%d"   % (head_id, node_ifaces[head_id]['ifaces'][tail_id])), 
+            e2 = ("%d:%d"   % (tail_id, node_ifaces[tail_id]['ifaces'][head_id])))
+
 def parse_pop_level_map(rocketfuel_file):
 
     topology = nx.Graph()
     comment_char = '#'
 
-    node_ifaces = defaultdict(defaultdict)
+    # node_ifaces = defaultdict(defaultdict)
 
     # extract the node names and edges
     node_id = 0
@@ -428,34 +573,18 @@ def parse_pop_level_map(rocketfuel_file):
             head_id = node_ids[head]
             tail_id = node_ids[tail]
 
-            if (topology.has_edge(head_id, tail_id) == False):
-
-                # initialize the node_ifaces dict (if not already)
-                if 'prev' not in node_ifaces[head_id]:
-                    node_ifaces[head_id]['prev'] = 0
-                    node_ifaces[head_id]['ifaces'] = defaultdict(int)
-
-                if 'prev' not in node_ifaces[tail_id]:
-                    node_ifaces[tail_id]['prev'] = 0
-                    node_ifaces[tail_id]['ifaces'] = defaultdict(int)
-
-                node_ifaces[head_id]['prev'] += 1
-                node_ifaces[head_id]['ifaces'][tail_id] = node_ifaces[head_id]['prev']
-                # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[node]['prev'], node, node, link))
-
-                node_ifaces[tail_id]['prev'] += 1
-                node_ifaces[tail_id]['ifaces'][head_id] = node_ifaces[tail_id]['prev']
-                # print("added iface %d @ %d for link (%d, %d)" % (node_ifaces[link]['prev'], link, link, node))
-
-            topology.add_edge(head_id, tail_id,
-                e1 = ("%d:%d"   % (head_id, node_ifaces[head_id]['ifaces'][tail_id])), 
-                e2 = ("%d:%d"   % (tail_id, node_ifaces[tail_id]['ifaces'][head_id])))
-
+            topology.add_edge(head_id, tail_id)
             # print("added edge (%d -> %d) (str : %s)" % (head_id, tail_id, str(topology.get_edge_data(head_id, tail_id))))
 
         except IndexError:
             raise ValueError('Invalid input file. Parsing failed '\
                              'while trying to parse an internal node')
+
+    # trim nodes w/ outdegrees > 20 in order to make the evaluation less 
+    # time consuming
+    topology = trim_topology(topology, 20)
+    # annotate edges w/ iface numbers
+    annotate_edges(topology)
 
     return topology
 
@@ -469,6 +598,10 @@ if __name__ == "__main__":
         "--data-path", 
          help = """path w/ topology files (e.g. .cch for isp maps, edge folders 
             for pop-level maps, etc.)""")
+
+    parser.add_argument(
+        "--req-size", 
+         help = """max nr. of prefix components which can be encoded in a BF""")
 
     parser.add_argument(
         "--add-tp-source", 
@@ -495,6 +628,10 @@ if __name__ == "__main__":
         for record in entry_size_records:
             entry_sizes[record.split(":", 1)[0]] = (float(record.split(":", 1)[1]) / 100.0)
 
+    req_size = 5
+    if args.req_size:
+        req_size = int(args.req_size)
+
     table_size = 10000000
     if args.table_size:
         table_size = int(args.table_size)
@@ -512,6 +649,7 @@ if __name__ == "__main__":
     # build a networkx topology out of a Rocketfuel pop-level topology
     topology = parse_pop_level_map(args.data_path)
     draw_pop_level_map(topology)
+    get_path_examples(topology)
 
     # if requested, add a true positive content source
     if args.add_tp_source:
@@ -521,4 +659,4 @@ if __name__ == "__main__":
             int(args.add_tp_source.split(':')[1]))
 
     # finally, convert the topology to an .scn file
-    convert_to_scn(topology, entry_sizes, table_size)
+    convert_to_scn(topology, entry_sizes, table_size, req_size)

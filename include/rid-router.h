@@ -51,6 +51,7 @@
 #include <set>
 #include <algorithm>
 #include <iostream>
+#include <sstream>      // std::ostringstream
 
 class RID_Router {
 
@@ -144,9 +145,6 @@ class RID_Router {
         __float080 get_iface_events_prob(uint8_t event);
         void print_iface_events_pmf();
 
-        __float080 * get_egress_ptree_prob(uint8_t iface);
-        void print_egress_ptree_prob();
-
         __float080 get_egress_iface_prob(uint8_t iface);
         __float080 * get_egress_iface_probs(uint8_t iface);
         void print_egress_iface_prob();
@@ -170,19 +168,19 @@ class RID_Router {
             __float080 * f_r_distribution);
 
         // computation of joint distribution of L_{i,p}, for all ifaces
-        void init_joint_lpm_pmf(__float080 ** joint_prob_matrix);
-        void clear_joint_lpm_pmf(__float080 ** joint_prob_matrix);
-        void add_joint_lpm_prob(__float080 * joint_prob_matrix, int * iface_pivots, __float080 value);
-        __float080 get_joint_lpm_prob(__float080 * joint_prob_matrix, int * iface_pivots);
+        // void init_joint_lpm_pmf(__float080 ** joint_prob_matrix);
+        // void clear_joint_lpm_pmf(__float080 ** joint_prob_matrix);
+        void add_joint_lpm_prob(std::map<std::string, __float080> * joint_prob_matrix, int * iface_pivots, __float080 value);
+        __float080 get_joint_lpm_prob(std::map<std::string, __float080> * joint_prob_matrix, int * iface_pivots);
         int calc_joint_largest_match_distributions(
             uint8_t ptree_size, 
             uint8_t ptree_iface,
-            __float080 * joint_prob_matrix);
+            std::map<std::string, __float080> * joint_prob_matrix);
 
         // computation of iface event & egress size probabilities
         int calc_iface_events_distributions(
             int ptree_size,
-            __float080 * joint_prob_matrix);
+            std::map<std::string, __float080> * joint_prob_matrix);
 
         int calc_log_prob_not_fp(
             __float080 m, 
@@ -197,7 +195,7 @@ class RID_Router {
             uint8_t mode,
             uint8_t fixed_iface, 
             uint8_t fixed_iface_size,
-            __float080 * joint_prob_matrix);
+            std::map<std::string, __float080> * joint_prob_matrix);
 
         __float080 calc_log_joint_largest_match_prob(
             uint8_t ptree_size,
@@ -210,11 +208,6 @@ class RID_Router {
 
         bool is_iface_on_ptree(int iface, uint8_t * tree_bitmask);
         int calc_ptree_iface_probs();
-        int calc_egress_ptree_probs(
-            uint8_t mode,
-            uint8_t iface,
-            __float080 * log_prob_fp_not_larger_than,
-            __float080 * log_prob_not_fp);
 
         RID_Router::lpm_pmf_row ** lpm_pmf;
         // probability of interface events (NIS, MIS, LI)
@@ -238,7 +231,6 @@ class RID_Router {
         //                          with 1 <= ptree_size <= f_max.
         __float080 ingress_prob;
         __float080 * ingress_ptree_prob;
-        __float080 ** egress_ptree_prob;
         // router id follows the format <tree_index>.<height>.<width>
         std::string id;
         // number of interfaces (at least 2 : LOCAL & // UPSTREAM)    
