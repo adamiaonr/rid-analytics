@@ -4,566 +4,639 @@
 		"selected_items":
 		[
 			[
-				"ed",
-				"edge_id"
+				"pat",
+				"path_examples"
 			],
 			[
-				"ne",
-				"neigh_node"
+				"top",
+				"topology_keys"
 			],
 			[
-				"id",
-				"id_str"
-			],
-			[
-				"po",
-				"pop_tail"
-			],
-			[
-				"re",
-				"req_size"
-			],
-			[
-				"li",
-				"link"
-			],
-			[
-				"conv",
-				"convert_to_scn"
-			],
-			[
-				"s",
-				"str"
-			],
-			[
-				"rr",
-				"router"
-			],
-			[
-				"pr",
-				"print"
-			],
-			[
-				"isp",
-				"isp_nr"
-			],
-			[
-				"topo",
-				"topology"
-			],
-			[
-				"dat",
-				"data_path"
-			],
-			[
-				"pars",
-				"parse_isp_map"
-			],
-			[
-				"par",
-				"parse_rocketfuel_isp_map"
-			],
-			[
-				"da",
-				"data_path"
-			],
-			[
-				"parse_",
-				"parse_pop_level_isp_map"
-			],
-			[
-				"add_",
-				"add_edge"
-			],
-			[
-				"add",
-				"add_node"
-			],
-			[
-				"pop_",
-				"pop_head"
-			],
-			[
-				"n",
-				"name"
-			],
-			[
-				"lo",
-				"long"
-			],
-			[
-				"rock",
-				"rocketfuel_path"
+				"tes",
+				"test_file"
 			],
 			[
 				"to",
-				"topology"
+				"topology_key"
 			],
 			[
-				"ro",
-				"rocketfuel_file"
+				"pa",
+				"path_lengths"
 			],
 			[
-				"ar",
-				"args"
+				"su",
+				"subcase"
 			],
 			[
-				"ta",
-				"table_sizes"
+				"topo",
+				"topology_colors"
 			],
 			[
-				"de",
-				"delivery_probs"
+				"la",
+				"label_prefix"
 			],
 			[
-				"req",
-				"req_size"
+				"len",
+				"length"
 			],
 			[
-				"tab",
-				"table_size"
+				"entry_",
+				"entry_length"
 			],
 			[
-				"r",
-				"radius"
+				"fwd",
+				"fwd_efficiency_array"
 			],
 			[
-				"cac",
-				"cache_distance"
+				"in",
+				"indices_to_remove"
 			],
 			[
-				"ca",
-				"cache_distance"
+				"fw",
+				"fwd_efficiency_array"
+			],
+			[
+				"ifa",
+				"iface_pivots"
+			],
+			[
+				"if",
+				"iface_pivots"
+			],
+			[
+				"ui",
+				"uint8_t"
+			],
+			[
+				"pt",
+				"ptree_iface"
+			],
+			[
+				"tp",
+				"tp_sizes"
+			],
+			[
+				"x",
+				"x_pos"
+			],
+			[
+				"set",
+				"set_yticks"
+			],
+			[
+				"get",
+				"get_bar_labels"
+			],
+			[
+				"se",
+				"set_yticks"
+			],
+			[
+				"line",
+				"linewidth"
+			],
+			[
+				"bar",
+				"bar_width"
+			],
+			[
+				"ba",
+				"bar_width"
+			],
+			[
+				"l",
+				"list"
 			],
 			[
 				"xp",
 				"x_pos"
 			],
 			[
-				"cach",
-				"cache_distance"
-			],
-			[
-				"cache_",
-				"cache_distance"
-			],
-			[
-				"path_markrs_",
-				"path_markrs_colors"
-			],
-			[
 				"path",
-				"path_markrs"
-			],
-			[
-				"path_m",
-				"path_markrs_colors"
-			],
-			[
-				"deli",
-				"delivery_probs"
-			],
-			[
-				"fp_",
-				"fp_rates_diff_labels"
-			],
-			[
-				"bf_",
-				"bf_size"
-			],
-			[
-				"bf",
-				"bf_fp_rates"
-			],
-			[
-				"ag",
-				"aggr_types"
-			],
-			[
-				"dif",
-				"diff_labels"
-			],
-			[
-				"agg",
-				"aggr_type"
-			],
-			[
-				"sub",
-				"sub_key"
-			],
-			[
-				"resol",
-				"resolv_mode"
-			],
-			[
-				"OPTION_RE",
-				"OPTION_RESOLV_MODE"
-			],
-			[
-				"res",
-				"resolution_mode"
-			],
-			[
-				"ent",
-				"entry"
-			],
-			[
-				"pa",
-				"path_values"
-			],
-			[
-				"inter",
-				"interleave"
-			],
-			[
-				"x_",
-				"x_pos"
-			],
-			[
-				"pat",
-				"path_labels"
-			],
-			[
-				"del",
-				"delivery_probs"
-			],
-			[
-				"path_",
-				"path_colors"
-			],
-			[
-				"even",
-				"events"
-			],
-			[
-				"si",
-				"size"
+				"path_lengths"
 			],
 			[
 				"en",
 				"entry_lengths"
 			],
 			[
-				"su",
-				"sub_key"
+				"h",
+				"high"
 			],
 			[
-				"plo",
-				"plot_global_hierarchical"
+				"lo",
+				"low"
 			],
 			[
-				"el",
-				"elif"
+				"ou",
+				"outdegree"
+			],
+			[
+				"le",
+				"length"
+			],
+			[
+				"out",
+				"outdegrees"
+			],
+			[
+				"de",
+				"defaultdict"
 			],
 			[
 				"eve",
-				"event_avgs"
+				"events"
 			],
 			[
-				"lin",
-				"links"
+				"av",
+				"avg_outdegrees"
 			],
 			[
-				"mat",
-				"matches"
+				"o",
+				"outdegree"
 			],
 			[
-				"prob_",
-				"prob_new_events"
+				"avg",
+				"avg_outdegrees"
 			],
 			[
-				"_p",
-				"_prob"
+				"sh",
+				"short"
 			],
 			[
-				"pt",
-				"ptree_size"
+				"ent",
+				"entry_length"
 			],
 			[
-				"EVE",
-				"EVENT_MLM"
+				"PA",
+				"path_length"
 			],
 			[
-				"ptree",
-				"ptree_size"
+				"def",
+				"defaultdict"
+			],
+			[
+				"th",
+				"this_scn_id"
+			],
+			[
+				"te",
+				"test_id"
+			],
+			[
+				"test",
+				"test_id"
+			],
+			[
+				"test_",
+				"test_file"
+			],
+			[
+				"plot_b",
+				"plot_base_case"
+			],
+			[
+				"del",
+				"delivery_probs"
+			],
+			[
+				"EV",
+				"EVENT_SLM"
+			],
+			[
+				"fil",
+				"file_label"
+			],
+			[
+				"fi",
+				"file_label"
+			],
+			[
+				"arg",
+				"args"
+			],
+			[
+				"sta",
+				"start_time"
+			],
+			[
+				"ar",
+				"arg"
+			],
+			[
+				"ttl",
+				"ttl_block"
+			],
+			[
+				"ro",
+				"route"
+			],
+			[
+				"con",
+				"continue"
+			],
+			[
+				"res",
+				"resolution-mode"
+			],
+			[
+				"re",
+				"request-size"
+			],
+			[
+				"par",
+				"param_block"
+			],
+			[
+				"entr",
+				"entry-sizes"
+			],
+			[
+				"mo",
+				"mode"
+			],
+			[
+				"tab",
+				"table_size"
+			],
+			[
+				"bf_",
+				"bf_size"
+			],
+			[
+				"req",
+				"req_size"
+			],
+			[
+				"ta",
+				"table_sizes"
+			],
+			[
+				"bf",
+				"bf_sizes"
+			],
+			[
+				"parse",
+				"parse_pop_level_map"
+			],
+			[
+				"entry_size_re",
+				"entry_size_records"
+			],
+			[
+				"tabl",
+				"table_sizes"
+			],
+			[
+				"enty",
+				"entry_sizes"
+			],
+			[
+				"entry",
+				"entry_sizes"
+			],
+			[
+				"scn",
+				"scn_filename"
+			],
+			[
+				"add",
+				"add_new_test"
+			],
+			[
+				"req_s",
+				"req_size"
+			],
+			[
+				"mode",
+				"modes"
+			],
+			[
+				"tal",
+				"table-sizes"
+			],
+			[
+				"outdegrees",
+				"outdegrees_for_removal"
+			],
+			[
+				"eli",
+				"eligible_outdegrees"
+			],
+			[
+				"no",
+				"node"
+			],
+			[
+				"rem",
+				"remove_node"
+			],
+			[
+				"byt",
+				"byte_index"
+			],
+			[
+				"nr",
+				"nr_bytes"
+			],
+			[
+				"trim",
+				"trim_topology"
+			],
+			[
+				"ed",
+				"edge"
+			],
+			[
+				"ann",
+				"annotate_edges"
+			],
+			[
+				"edg",
+				"edge"
+			],
+			[
+				"nei",
+				"neighbors"
+			],
+			[
+				"node",
+				"node_ids"
+			],
+			[
+				"ne",
+				"neighbor_router"
+			],
+			[
+				"max",
+				"max_outdegree"
+			],
+			[
+				"it",
+				"iteritems"
 			],
 			[
 				"get_",
-				"get_valid_ifaces"
+				"get_pop_level_statistics"
 			],
 			[
-				"get",
-				"get_valid_ifaces"
+				"path_",
+				"path_routers"
 			],
 			[
-				"ptr",
-				"ptree_size"
+				"exa",
+				"example_paths"
 			],
 			[
-				"ege",
-				"egress_ptree_prob"
+				"pr",
+				"print"
 			],
 			[
-				"ingr",
-				"ingress_ptree_prob"
+				"sho",
+				"shortest_paths"
 			],
 			[
-				"eg",
-				"egress_ptree_prob"
-			],
-			[
-				"egre",
-				"egress_ptree_prob"
-			],
-			[
-				"iface",
-				"ifaces"
-			],
-			[
-				"MM",
-				"MMH_RANDOM"
-			],
-			[
-				"OU",
-				"OUTCOME_FALLBACK_DELIVERY"
-			],
-			[
-				"iface_",
-				"iface_num"
-			],
-			[
-				"f_",
-				"f_max"
-			],
-			[
-				"lat",
-				"latency_probs"
-			],
-			[
-				"la",
-				"latency_probs"
-			],
-			[
-				"annc",
-				"anncs"
-			],
-			[
-				"cache_a",
-				"cache_anncs"
-			],
-			[
-				"ori",
-				"origin_server"
-			],
-			[
-				"set",
-				"set_path_length"
-			],
-			[
-				"beg",
-				"begin"
-			],
-			[
-				"if",
-				"iface"
-			],
-			[
-				"RD",
-				"RID_Router"
-			],
-			[
-				"new",
-				"new_router"
-			],
-			[
-				"tie",
-				"tier_index"
-			],
-			[
-				"acc",
-				"access_tree_height"
-			],
-			[
-				"f_d",
-				"f_dist"
-			],
-			[
-				"IFA",
-				"IFACE_LOCAL"
-			],
-			[
-				"IF",
-				"IFACE_LOCAL"
-			],
-			[
-				"ifa",
-				"iface_num"
-			],
-			[
-				"I",
-				"IFACE_LOCAL"
-			],
-			[
-				"flo",
-				"__float080"
-			],
-			[
-				"fwd",
-				"fwd_table"
-			],
-			[
-				"fw",
-				"fwd_table"
-			],
-			[
-				"_f",
-				"_f_entries"
-			],
-			[
-				"co",
-				"cout"
-			],
-			[
-				"OT",
-				"OUTCOME_FALLBACK_RELAY"
-			],
-			[
-				"set_",
-				"set_yticks"
-			],
-			[
-				"mm",
-				"mmh_mode"
-			],
-			[
-				"Fal",
-				"Fallback"
-			],
-			[
-				"on",
-				"on-path"
-			],
-			[
-				"subca",
-				"subcase"
+				"li",
+				"list"
 			],
 			[
 				"st",
-				"std"
+				"stats"
+			],
+			[
+				"so",
+				"source"
+			],
+			[
+				"oute",
+				"outdegree-list"
+			],
+			[
+				"lp",
+				"lpm_pmf_initialized"
+			],
+			[
+				"lpm",
+				"lpm_pmf_initialized"
+			],
+			[
+				"iface",
+				"iface"
+			],
+			[
+				"joi",
+				"joint_prob_matrix"
+			],
+			[
+				"cle",
+				"clear"
+			],
+			[
+				"str",
+				"string"
+			],
+			[
+				"pre",
+				"prev_path_state_itr"
 			],
 			[
 				"rou",
 				"router"
 			],
 			[
-				"PAT",
-				"PATH_TO_ORIGIN"
+				"next_",
+				"next_hop"
 			],
 			[
-				"ins",
-				"insert"
+				"run",
+				"run_record"
 			],
 			[
-				"PA",
-				"PATH_TO_ORIGIN_SIZE"
+				"RID",
+				"RID_Analytics"
 			],
 			[
-				"probs",
-				"probs_sum"
+				"get_e",
+				"get_egress_iface_prob"
 			],
 			[
 				"prob",
-				"probs_sum"
+				"prob_single"
 			],
 			[
-				"font",
-				"fontsize"
+				"fix",
+				"fixed_iface"
+			],
+			[
+				"ptr",
+				"ptree_size"
+			],
+			[
+				"ing",
+				"ingress"
+			],
+			[
+				"conti",
+				"continues"
+			],
+			[
+				"dis",
+				"distribute_probs"
+			],
+			[
+				"dist",
+				"distribute_probs"
+			],
+			[
+				"ptre",
+				"ptree_size"
+			],
+			[
+				"log",
+				"log_joint_prob_sum"
+			],
+			[
+				"get_j",
+				"get_joint_prob_sum"
+			],
+			[
+				"join_",
+				"joint_prob_sum"
+			],
+			[
+				"geT_joi",
+				"get_joint_prob_sum"
+			],
+			[
+				"sca",
+				"scaling_factor"
 			],
 			[
 				"pro",
-				"probs_sum"
-			],
-			[
-				"path_b",
-				"path_probs"
-			],
-			[
-				"fall",
-				"fallback_carry_prob"
-			],
-			[
-				"bar",
-				"bar_group_width"
-			],
-			[
-				"ba",
-				"bar_group_num"
-			],
-			[
-				"x",
-				"x_max"
-			],
-			[
-				"k",
-				"key"
-			],
-			[
-				"entr",
-				"entry_size"
-			],
-			[
-				"cache",
-				"cache_location"
+				"prob_iface_in_ptree"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "src/sanity-check.cpp",
+			"file": "src/rid-analytics.cpp",
 			"settings":
 			{
-				"buffer_size": 7792,
+				"buffer_size": 40615,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "scripts/rocketfuel/convert-rocketfuel.py",
+			"file": "src/rid-router.cpp",
 			"settings":
 			{
-				"buffer_size": 11712,
+				"buffer_size": 76157,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "scripts/rocketfuel/topology.scn",
+			"file": "include/rid-router.h",
 			"settings":
 			{
-				"buffer_size": 282984,
+				"buffer_size": 9942,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/home/adamiaonr/workbench/networking-sandbox/ping/src/pingy.cpp",
+			"file": "/home/adamiaonr/Downloads/test.cpp",
 			"settings":
 			{
-				"buffer_size": 14439,
+				"buffer_size": 7457,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
+			"file": "scripts/rocketfuel/generate_tests.py",
 			"settings":
 			{
-				"buffer_size": 53594,
+				"buffer_size": 6959,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/mnt/hgfs/adamiaonr/Downloads/rocketfuel_maps_cch/README.cch",
+			"file": "scripts/rocketfuel/convert_rocketfuel.py",
 			"settings":
 			{
-				"buffer_size": 3709,
+				"buffer_size": 27662,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "'long': defaultdict(<type 'list'>, {'median': [\n\n[43, 6, 4, 3, 1, 0], \n[43, 6, 4, 3, 1, 11], \n[43, 6, 4, 3, 1, 12], \n[43, 6, 4, 3, 1, 13], \n[43, 6, 4, 3, 1, 15, 14], \n[43, 6, 4, 3, 1, 16], \n[43, 6, 4, 3, 1, 17], \n[43, 6, 4, 3, 1, 15, 18], \n[43, 6, 4, 3, 1, 19], \n[43, 6, 4, 3, 1, 20], \n[43, 6, 4, 3, 1, 22], \n[43, 6, 4, 3, 1, 23], \n[43, 6, 4, 3, 1, 24], \n[43, 6, 4, 3, 1, 25], \n[43, 6, 4, 3, 1, 26], \n[43, 6, 4, 3, 1, 27], \n[43, 6, 4, 3, 1, 28], \n[43, 6, 4, 3, 1, 15, 34], \n[43, 6, 4, 3, 1, 15, 35], \n[43, 6, 4, 3, 1, 15, 36], \n[43, 6, 4, 3, 1, 15, 37], \n[43, 6, 4, 3, 1, 15, 38], \n[42, 6, 4, 3, 1, 0], \n[42, 6, 4, 3, 1, 11], \n[42, 6, 4, 3, 1, 12], \n[42, 6, 4, 3, 1, 13], \n[42, 6, 4, 3, 1, 15, 14], \n[42, 6, 4, 3, 1, 16], \n[42, 6, 4, 3, 1, 17], \n[42, 6, 4, 3, 1, 15, 18], \n[42, 6, 4, 3, 1, 19], \n[42, 6, 4, 3, 1, 20], \n[42, 6, 4, 3, 1, 22], \n[42, 6, 4, 3, 1, 23], [42, 6, 4, 3, 1, 24], [42, 6, 4, 3, 1, 25], [42, 6, 4, 3, 1, 26], [42, 6, 4, 3, 1, 27], [42, 6, 4, 3, 1, 28], [42, 6, 4, 3, 1, 15, 34], [42, 6, 4, 3, 1, 15, 35], [42, 6, 4, 3, 1, 15, 36], [42, 6, 4, 3, 1, 15, 37], [42, 6, 4, 3, 1, 15, 38], \n\n[39, 30, 3, 1, 15, 14], \n[39, 30, 3, 1, 15, 18], \n[39, 30, 3, 1, 15, 34], \n[39, 30, 3, 1, 15, 35], \n[39, 30, 3, 1, 15, 36], \n[39, 30, 3, 1, 15, 37], \n[39, 30, 3, 1, 15, 38], \n[38, 15, 1, 3, 4, 5], \n[38, 15, 1, 3, 4, 7], \n[38, 15, 1, 3, 4, 8], [38, 15, 1, 3, 4, 9], [38, 15, 1, 3, 4, 10], [38, 15, 1, 3, 30, 29], [38, 15, 1, 3, 30, 39], [38, 15, 1, 3, 4, 6, 42], [38, 15, 1, 3, 4, 6, 43], [37, 15, 1, 3, 4, 5], \n[37, 15, 1, 3, 4, 7], [37, 15, 1, 3, 4, 8], [37, 15, 1, 3, 4, 9], [37, 15, 1, 3, 4, 10], [37, 15, 1, 3, 30, 29], [37, 15, 1, 3, 30, 39], [37, 15, 1, 3, 4, 6, 42], [37, 15, 1, 3, 4, 6, 43], \n\n[36, 15, 1, 3, 4, 5], [36, 15, 1, 3, 4, 7], [36, 15, 1, 3, 4, 8], \n\n[36, 15, 1, 3, 4, 9], [36, 15, 1, 3, 4, 10], \n\n[36, 15, 1, 3, 30, 29], [36, 15, 1, 3, 30, 39], \n\n[36, 15, 1, 3, 4, 6, 42], \n\n[36, 15, 1, 3, 4, 6, 43], [35, 15, 1, 3, 4, 5], [35, 15, 1, 3, 4, 7], [35, 15, 1, 3, 4, 8], [35, 15, 1, 3, 4, 9], [35, 15, 1, 3, 4, 10], [35, 15, 1, 3, 30, 29], [35, 15, 1, 3, 30, 39], [35, 15, 1, 3, 4, 6, 42], [35, 15, 1, 3, 4, 6, 43], [34, 15, 1, 3, 4, 5], [34, 15, 1, 3, 4, 7], [34, 15, 1, 3, 4, 8], [34, 15, 1, 3, 4, 9], [34, 15, 1, 3, 4, 10], [34, 15, 1, 3, 30, 29], [34, 15, 1, 3, 30, 39], [34, 15, 1, 3, 4, 6, 42], [34, 15, 1, 3, 4, 6, 43], [29, 30, 3, 1, 15, 14], [29, 30, 3, 1, 15, 18], [29, 30, 3, 1, 15, 34], [29, 30, 3, 1, 15, 35], [29, 30, 3, 1, 15, 36], [29, 30, 3, 1, 15, 37], [29, 30, 3, 1, 15, 38], [28, 1, 3, 4, 6, 42], [28, 1, 3, 4, 6, 43], [27, 1, 3, 4, 6, 42], [27, 1, 3, 4, 6, 43], [26, 1, 3, 4, 6, 42], [26, 1, 3, 4, 6, 43], [25, 1, 3, 4, 6, 42], [25, 1, 3, 4, 6, 43], [24, 1, 3, 4, 6, 42], [24, 1, 3, 4, 6, 43], [23, 1, 3, 4, 6, 42], [23, 1, 3, 4, 6, 43], [22, 1, 3, 4, 6, 42], [22, 1, 3, 4, 6, 43], [20, 1, 3, 4, 6, 42], [20, 1, 3, 4, 6, 43], [19, 1, 3, 4, 6, 42], [19, 1, 3, 4, 6, 43], [18, 15, 1, 3, 4, 5], [18, 15, 1, 3, 4, 7], [18, 15, 1, 3, 4, 8], [18, 15, 1, 3, 4, 9], [18, 15, 1, 3, 4, 10], [18, 15, 1, 3, 30, 29], [18, 15, 1, 3, 30, 39], [18, 15, 1, 3, 4, 6, 42], [18, 15, 1, 3, 4, 6, 43], [17, 1, 3, 4, 6, 42], [17, 1, 3, 4, 6, 43], [16, 1, 3, 4, 6, 42], [16, 1, 3, 4, 6, 43], [14, 15, 1, 3, 4, 5], [14, 15, 1, 3, 4, 7], [14, 15, 1, 3, 4, 8], [14, 15, 1, 3, 4, 9], [14, 15, 1, 3, 4, 10], [14, 15, 1, 3, 30, 29], [14, 15, 1, 3, 30, 39], [14, 15, 1, 3, 4, 6, 42], [14, 15, 1, 3, 4, 6, 43], [13, 1, 3, 4, 6, 42], [13, 1, 3, 4, 6, 43], [12, 1, 3, 4, 6, 42], [12, 1, 3, 4, 6, 43], [11, 1, 3, 4, 6, 42], [11, 1, 3, 4, 6, 43], [10, 4, 3, 1, 15, 14], [10, 4, 3, 1, 15, 18], [10, 4, 3, 1, 15, 34], [10, 4, 3, 1, 15, 35], [10, 4, 3, 1, 15, 36], [10, 4, 3, 1, 15, 37], [10, 4, 3, 1, 15, 38], [9, 4, 3, 1, 15, 14], [9, 4, 3, 1, 15, 18], [9, 4, 3, 1, 15, 34], [9, 4, 3, 1, 15, 35], [9, 4, 3, 1, 15, 36], [9, 4, 3, 1, 15, 37], [9, 4, 3, 1, 15, 38], [8, 4, 3, 1, 15, 14], [8, 4, 3, 1, 15, 18], [8, 4, 3, 1, 15, 34], [8, 4, 3, 1, 15, 35], [8, 4, 3, 1, 15, 36], [8, 4, 3, 1, 15, 37], [8, 4, 3, 1, 15, 38], [7, 4, 3, 1, 15, 14], [7, 4, 3, 1, 15, 18], [7, 4, 3, 1, 15, 34], [7, 4, 3, 1, 15, 35], [7, 4, 3, 1, 15, 36], [7, 4, 3, 1, 15, 37], [7, 4, 3, 1, 15, 38], [5, 4, 3, 1, 15, 14], [5, 4, 3, 1, 15, 18], [5, 4, 3, 1, 15, 34], [5, 4, 3, 1, 15, 35], [5, 4, 3, 1, 15, 36], [5, 4, 3, 1, 15, 37], [5, 4, 3, 1, 15, 38], [0, 1, 3, 4, 6, 42], [0, 1, 3, 4, 6, 43]], \n\n'low': [[43, 6, 4, 3, 30, 29], [43, 6, 4, 3, 30, 39], [42, 6, 4, 3, 30, 29], [42, 6, 4, 3, 30, 39], [39, 30, 3, 4, 6, 42], [39, 30, 3, 4, 6, 43],",
+			"settings":
+			{
+				"buffer_size": 4522,
+				"line_ending": "Unix",
+				"name": "'long': defaultdict(<type 'list'>, {'median': ["
+			}
+		},
+		{
+			"file": "scripts/rocketfuel/run_test.py",
+			"settings":
+			{
+				"buffer_size": 3117,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripts/graphs/plot_base.py",
+			"settings":
+			{
+				"buffer_size": 9726,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripts/graphs/plot_global.py",
+			"settings":
+			{
+				"buffer_size": 8019,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripts/graphs/plot.py",
+			"settings":
+			{
+				"buffer_size": 2381,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripts/graphs/plot_utils.py",
+			"settings":
+			{
+				"buffer_size": 3411,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "experiments/evaluation/scenarios/global/bf-sizes/configs/1221.test",
+			"settings":
+			{
+				"buffer_size": 4316,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "experiments/evaluation/scenarios/global/bf-sizes/configs/7018.test",
+			"settings":
+			{
+				"buffer_size": 4292,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "include/rid-analytics.h",
+			"settings":
+			{
+				"buffer_size": 3747,
 				"line_ending": "Unix"
 			}
 		}
@@ -608,6 +681,76 @@
 	},
 	"file_history":
 	[
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/example.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.7018-512-10-05-10000000-0-0-median-median-108-5.1493580320.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/path.7018-512-10-05-10000000-0-0-median-median-108-5.1493580320.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.1221-192-10-01-10000000-0-0-median-median-41-0.1493594181.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/1221.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/4755.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/7018.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/7018-512-10-05-10000000-0-0-108-005.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/1221-192-10-01-10000000-0-0-041-000.scn",
+		"/home/adamiaonr/workbench/rid-analytics/Makefile",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/1221-192-10-05-10000000-0-0-043-006.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/events.1221-192-10-10-10000000-0-0-short-low-43-6.1493491711.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/include/rid-analytics.h",
+		"/home/adamiaonr/Downloads/plot.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/path.1221-192-10-10-10000000-0-0-short-low-43-6.1493491711.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/path.1221-192-10-10-10000000-0-0-short-high-28-1.1493491509.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/path.1221-192-10-01-10000000-0-0-short-low-43-6.1493486529.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/path.1221-192-10-01-10000000-0-0-short-median-30-3.1493486469.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/events.1221-192-10-01-10000000-0-0-short-median-3-30.1493476870.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/path.1221-192-10-01-10000000-0-0-short-median-3-30.1493476870.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/include/path-state.h",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot_utils.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/path.1221-192-10-01-10000000-0-0-long-low-43-39.1493391730.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/path.1221-192-10-01-10000000-0-0-short-median-3-30.1493391152.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.1221-192-10-05-10000000-0-0-short-median-3-30.1493392031.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/events.1221-192-10-01-10000000-0-0-long-low-43-39.1493391730.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/results/path.1221-192-10-10-10000000-0-0-long-median-38-39.1493393441.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/1221-192-10-10-10000000-0-0-038-039.scn",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/run-analytics/run-commands.sh",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/topology.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/1221-192-10-01-10000000-0-0-003-030.scn",
+		"/home/adamiaonr/Downloads/1221-192-10-01-10000000-0-0-003-030.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/1221-192-10-01-10000000-0-0-043-039.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/1221-192-10-01-10000000-0-0-015-037.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/1221-192-10-01-10000000-0-0-001-000.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/1221-192-10-01-10000000-0-0-028-036.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/7018-192-10-01-10000000-0-0-002-019.scn",
+		"/home/adamiaonr/workbench/rid-analytics/src/run-analysis.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/4755-192-05-01-10000000-0-0-001-007.scn",
+		"/home/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/7018-192-10-01-10000000-0-0-002-025.scn",
+		"/home/adamiaonr/workbench/rid-analytics/include/rid-router.h",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/configs/7018-192-10-01-10000000-0-0-002-045.scn",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/convert-rocketfuel.py",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/generate-tests.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global-reachability/hierarchical/h01-10k.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/15.fdist",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/10.fdist",
+		"/home/adamiaonr/Downloads/variables-to-watch.txt",
+		"/home/adamiaonr/workbench/epi/src/8-02-reverse-sublist/reverse-sublist.cpp",
+		"/home/adamiaonr/Downloads/test.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/src/rid-router.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/src/rid-analytics.cpp",
+		"/home/adamiaonr/workbench/epi/src/6-05-duplicates/duplicates.cpp",
+		"/home/adamiaonr/Downloads/test.c",
+		"/home/adamiaonr/workbench/epi/src/6-04-advance/advance.cpp",
+		"/mnt/hgfs/adamiaonr/Downloads/maps-n-paths/1221-1221/edges",
+		"/mnt/hgfs/adamiaonr/Downloads/maps-n-paths/1221-1221/edges.wt",
+		"/mnt/hgfs/adamiaonr/Downloads/rocketfuel_maps_cch/4755.r0.cch",
+		"/mnt/hgfs/adamiaonr/Downloads/rocketfuel_maps_cch/README.cch",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global-reachability/hierarchical/h01.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/caching/proactive/announcement-radius/f02-1.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/caching/proactive/announcement-radius/f02-3.scn",
+		"/mnt/hgfs/adamiaonr/Downloads/rocketfuel_maps_cch/1755.r0.cch",
+		"/mnt/hgfs/adamiaonr/Downloads/maps-n-paths/101:101",
+		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/rca.py",
+		"/home/adamiaonr/workbench/rid-testapp/scripts/plot-stats.py",
+		"/mnt/hgfs/adamiaonr/Downloads/rocketfuel_maps_cch/1221.r0.cch",
+		"/home/adamiaonr/workbench/networking-sandbox/ping/src/pingy.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
 		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/graph_utils.py",
 		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/maps-n-paths/README",
 		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/maps-n-paths/1221:1221/edges.wt",
@@ -617,22 +760,14 @@
 		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/metric_str_utils.py",
 		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/dependency_graph.py",
 		"/home/adamiaonr/workbench/openstack-kolla/scripts/dependency-graph/graphs.py",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
 		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/1221.r0.cch",
 		"/home/adamiaonr/workbench/fnss/core/fnss/topologies/topology.py",
 		"/home/adamiaonr/workbench/fnss/core/fnss/topologies/parsers.py",
 		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/2914.cch",
-		"/home/adamiaonr/workbench/rid-analytics/Makefile",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/plot.py",
 		"/home/adamiaonr/workbench/rid-analytics/run-dummy.sh",
 		"/home/adamiaonr/workbench/rid-analytics/run-analysis.sh",
-		"/home/adamiaonr/workbench/rid-analytics/include/path-state.h",
-		"/home/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/complex.scn",
-		"/home/adamiaonr/workbench/rid-analytics/include/rid-router.h",
-		"/home/adamiaonr/workbench/rid-analytics/src/rid-router.cpp",
-		"/home/adamiaonr/workbench/rid-analytics/include/rid-analytics.h",
-		"/home/adamiaonr/workbench/rid-analytics/src/rid-analytics.cpp",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/prefix-exclusion/scenarios/cache-distance/table-sizes/c33.03.1e5.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/prefix-exclusion/scenarios/cache-distance/table-sizes/c33.04.1e5.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/prefix-exclusion/scenarios/cache-distance/table-sizes/c33.05.1e5.scn",
@@ -673,73 +808,11 @@
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/prefix-exclusion/scenarios/cache-distance/c31.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/dumbbell/h01.scn",
 		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/f02.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-1.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/prefix-exclusion/scenarios/base/base.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h05.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h10.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/dumbbell/h15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/dumbbell/h10.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/dumbbell/h05.scn",
-		"/home/adamiaonr/Downloads/sdsadasdas",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/non-hierarchical/f01.scn",
-		"/home/adamiaonr/workbench/.test/configs/evaluation/global/scenarios/dumbbell/h01.scn",
-		"/home/adamiaonr/Downloads/fp-analysis/plot.py",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h01-10k.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/scenarios/hierarchical/h01-1M.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h10.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h05.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/hierarchical/h01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-4.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h10-05-01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/h05.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-3.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/global/f01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/off-path/a33-02-15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/on-path/f01-a20-15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/on-path/f01-a10-15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-2.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/off-path/a33-01-15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/off-path/a33-00-15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/f01-a20-15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/f01-a10-07.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/opportunistic/f01-a20-07.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f10.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f05.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f01.scn",
-		"/home/adamiaonr/workbench/dns-performance/src/dns-performance.cpp",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/fls",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/f02.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/request-sizes/r15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/request-sizes/r10.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/request-sizes/r05.scn",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/plot-events.py",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/plot-no-caching.py",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/fdist/10.fdist",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/fdist/5.fdist",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/request-sizes/f01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f15.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f10.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f05.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f01.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f02.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/data/events.f01.1475671819.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/plot-prefix-management.py",
-		"/home/adamiaonr/Downloads/output.out",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/r15-events/f1.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/example.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/fdist/15.fdist",
-		"/home/adamiaonr/Downloads/cli",
-		"/home/adamiaonr/workbench/rid-analytics/example.scn",
-		"/home/adamiaonr/workbench/rid-analytics/test/configs/example/data/events.1475591776.tsv"
+		"/home/adamiaonr/workbench/rid-analytics/test/configs/evaluation/cache/scenarios/pro-active/announce/f02-1.scn"
 	],
 	"find":
 	{
-		"height": 69.0
+		"height": 34.0
 	},
 	"find_in_files":
 	{
@@ -752,137 +825,137 @@
 	},
 	"find_state":
 	{
-		"case_sensitive": false,
+		"case_sensitive": true,
 		"find_history":
 		[
-			"r1",
-			"723",
-			"path",
-			"Directed",
-			"TARGET_SANITY",
-			"TARGET_SENSITIVITY",
-			":03",
-			"c33.03.",
-			"distance/strong-full",
-			"SF:",
-			"data/req-sizes",
-			"distance/strong-full",
-			"distance/strong/",
-			"S:",
-			"S:3",
-			"id=\"1.0\"",
-			"id=\"2.0\"",
-			"\"2.0\"",
-			"delivery_probs",
-			"id=\"3.1\"",
-			"id=\"3.3\"",
-			"id=\"2.1\"",
-			"id=\"1.0\"",
-			"size=\"15\">1.00</fwd",
-			"\"3.1\"",
-			"                <link local=\"0\" remote=\"0\" rrouter=\"3.3\">\n                    <fwd_size_dist size=\"1\">0.90</fwd_size_dist>\n                    <fwd_size_dist size=\"2\">0.10</fwd_size_dist>",
-			"\"3.3\"",
-			"\"2.1\"",
-			"\"1.0\"",
-			"\"3.1\"",
-			"\"3.0\"",
-			"<tp iface=\"0\">15</tp>",
-			"\"3.1\"",
-			"\"2.0\"",
-			"\"3.0\"",
-			"<tp iface=",
-			"<tp iface=\"0\">15</tp>",
-			"\"3.0\"",
-			"\"3.0",
-			"get_log_fp_rates(",
-			"fp_rate",
-			"get_log_fp_rates",
-			"\"3.3\"",
-			"\"3.1\"",
-			"\"2.0\"",
-			"\"1.0\"",
-			"\"2.0\"",
-			"\"1.0\"",
-			"1.0",
-			"2.0",
-			"3.1",
-			"0.97",
-			"3.1",
-			"size=\"2\">1",
-			"2.0",
-			"entry_lengths",
-			"mode",
-			"0.0",
-			"extract_data",
-			"plot_global_hierarchical_entry_sizes",
-			"resolution_state",
+			"set_ttl",
+			"41",
+			"&",
+			"tree_bitmask",
+			"tree_bitmask[i]",
+			"id=\"25\"",
+			"BY ROUTER : 4",
+			"BY ROUTER : 108",
+			"BY ROUTER : 5",
+			"BY ROUTER : 4",
+			"4	1",
+			"4	4",
+			"4	3",
+			"25	3",
+			"	1",
+			"5	",
+			"5	2",
+			"TTL",
+			"set_ttl",
+			"iface_pivots",
+			"new pr",
+			"tp_sizes",
+			"calc_log_joint_largest_match_prob",
+			"ingress_ptree_prob",
+			"f",
+			"is_iface_on_ptree",
+			"this->iface_on_ptree",
+			"this->iface_on_ptree[ptree_iface]",
+			"event B",
+			"egree_ptree",
+			"ingress_ptree",
+			"ingress_prob",
+			"fwd_efficiency_list",
+			"43",
+			"random",
+			"	3	",
+			"(int) 0x0",
+			"#define ",
+			"<tp iface=\"0\">",
+			"	0	",
+			"	0",
+			"this->resolution_mode",
+			"0	1",
+			"OUTCOME_CORRECT_DELIVERY",
+			"0",
+			"join",
+			"path_",
+			"parse_pop_level_map",
+			"print_pop_level_statistics",
+			"010000000000",
+			"trim_top",
+			"this->fwd_table[iface].num_entries",
+			"calc_log_prob_not_fp",
+			"f_entries",
+			"set_ttl",
+			"rtt",
+			"RTT",
+			"rtt",
+			"this->rtt",
+			"shortest_paths",
+			"get_shortest_paths",
+			"tp",
+			"	",
+			"tp",
+			"join",
+			"%03",
+			"join",
+			"eh",
 			"resolution_mode",
-			"resolv_mode",
-			"OPTION_RESOLV_MODE",
-			"plot(",
-			"ax1",
-			"mm_mode",
-			"plot_global_hierarchical_bf_sizes",
-			"entry_lengths",
-			"ROUTER[1][1]",
-			"_styles",
-			"event_avgs =",
-			"mode =",
-			"plot_global_hie",
-			"/tp",
-			"ROUTER[2][0",
-			"calc_cumulative_prob",
-			"ptree_size",
-			"pivot_to_int",
-			"calc_cumulative_prob",
-			"[0][2][0][2][1]",
-			"[0][2][0][2][0]",
-			"added eve",
-			"ROUTER[2][0",
-			"calc_iface_events_pmf",
-			"ROUTER[2][0",
-			"[0][2][0][2][0]",
-			"[0][1][0][2][1]",
-			"ROUTER[2][0",
-			"RID_Router::calc_lpm_pmf",
-			"[0][1][0][2][0]",
-			"[0][0][0][2][0]",
-			"ROUTER[2][0]",
-			"get_valid_ifaces",
-			"calc_cumulative_prob",
-			"pivot_to_int",
-			"added_pivots",
-			"this->added_pivots",
-			"id=\"2.0",
-			"ROUTER[2][1",
-			"lpm",
-			"this->ingress_ptree_prob",
-			"calc_joint_log_prob(",
-			"calc_joint_log",
-			"calc_joint_log_prob",
-			"log_pr",
-			"get_lpm_prob",
-			"[0][0][0][10]",
-			"ROUTER",
-			"ROUTER[0]",
-			"[0]",
-			"[0][0][1][12]",
-			"[0][0][1][10]",
-			"[0][0][0][10]",
-			"calc_joint_log_prob",
-			"calc_joint_log_prob(",
-			"calc_joint_lpm_pmf(",
-			"ROUTER[2][1]",
-			"calc_lpm_pmf",
-			"get_valid_ifaces(",
-			"ptree_iface",
-			"calc_lpm",
-			"calc_joint_log_prob",
+			"eh_mode",
+			"join",
+			"joi",
+			"SubElement",
+			"get_path_examples",
+			"get_fwd_dist",
+			"iface_trees",
+			"shortest_path_examples",
+			"get_pop_level_statistics",
+			"lower_outdegrees",
+			"higher_outdegrees",
+			"get_shortest_paths",
+			"[topology_id]",
+			"shortest_p",
+			"lpm_pmf_in",
+			"init_lpm",
+			"this->lpm_pmf",
+			"free(lpm_p",
+			"egress_p",
+			"calc_egress_ptree_",
+			"egress_ptree_prob",
+			"RTT LIMIT REACHED",
+			"RTT ",
+			"joint_prob_matrix",
+			"ostr",
+			"joint_prob_matrix",
+			"joint_lpm_matrix",
+			"joint_lpm_ma",
+			"joint_prob_matrix",
+			"memset(",
+			"init_joint_lpm_pmf",
+			"next_hop",
+			"nw_addre",
+			"nw_link",
+			"iterator",
+			"std::map",
+			"RTT L",
+			"this->egress_iface_prob",
 			"ingress_ptree_prob",
-			"ingress_p",
-			"ingress_ptree_prob",
-			"calc_joint_lpm_pmf",
-			"id=\"1.1"
+			"ingress_prob",
+			"iface_on_ptree",
+			"EGRESS_PTREE_PROB_MODE_GLOBAL",
+			"calc_iface_events_distributions",
+			"total_joint",
+			"total_joint_prob",
+			"no_fo",
+			"skipping",
+			"log_prob",
+			"table_size",
+			"add_fwd_",
+			"tree_bitmask",
+			"init(",
+			"this->routers",
+			"this->origin_server",
+			"tp_sizes",
+			"tp iface",
+			"tp",
+			"read_scn(",
+			"pivot_to_int"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -890,6 +963,55 @@
 		"regex": false,
 		"replace_history":
 		[
+			"ptree_size",
+			"fwd_efficiency_array",
+			" = ",
+			"",
+			"delivery_",
+			"delivery",
+			"ttl",
+			"TTL",
+			"ttl",
+			"    ",
+			"generate_path_examples",
+			"path_examples",
+			"l_outdegrees",
+			"h_outdegrees",
+			"",
+			"get_tree_bitmask(",
+			"topology",
+			"calc_iface_events_distributions",
+			"going_right",
+			"fixed_iface_size",
+			"fixed_iface",
+			"cumulative_prob",
+			"prob",
+			"f",
+			"IFACE_NUM",
+			"log_prob",
+			"f",
+			"ptree_size",
+			"iface",
+			"old_iface_probs",
+			"log_prob_not_fp",
+			"log_prob_fp_not_larger_than",
+			"k",
+			"largest",
+			"log_prob_fp_not_larger_than",
+			"iface",
+			"log_prob_not_fp",
+			"log_prob_fp_smaller_than",
+			"log_prob_not_fp",
+			"_log_prob_not_fp",
+			"_log_prob_fp_smaller_than",
+			"calc_log_fp_rates",
+			"RID_Router::calc_largest_match_distributions",
+			"egress_prob",
+			"rtr_map_it",
+			"tail_id",
+			"head_id",
+			"str(neighbor_router) + \"",
+			"str(router) + \"",
 			"rocketfuel_path",
 			"TARGET",
 			":10",
@@ -968,56 +1090,7 @@
 			"(\"index\")",
 			"index=",
 			"router",
-			"node",
-			"tier=",
-			",3",
-			",2",
-			"event",
-			"EVENT_LOCAL_IFACE_MATCH",
-			"EVENT_SINGLE_IFACE_MATCH",
-			"EVENT_MULTIPLE_IFACE_MATCHES",
-			"EVENT_NO_MATCHES",
-			"num_size_f_entries",
-			"0,1,0",
-			"0,2",
-			"0,1,",
-			"0,2",
-			"0,0,3",
-			"0,3,0",
-			"0,10,0",
-			"_real_dir",
-			"$scn_file",
-			"0,5,0",
-			"5,0",
-			"10,0",
-			"0,5,0",
-			"10,0",
-			"0,10,0",
-			"num_entries",
-			"0,10,0",
-			"0,9,0",
-			"0,8,0",
-			"0,7,0",
-			"0,6,0",
-			"0,5,0",
-			"0,4,0",
-			"MODE_LI",
-			"MODE_EI",
-			"MODE_MIS",
-			"MODE_LOCAL",
-			"_iface, _ptree_size,",
-			"_iface, _ptree_size,,",
-			"._iface, _ptree_size,,",
-			".lpm_not_in_ptree_pmf",
-			".lpm_in_ptree_pmf",
-			"get_lpm_prob",
-			"log_fp_rates[_f - 1]",
-			"_log_prob_not_fp[_f]",
-			"tp_sizes[_iface]",
-			"local",
-			"RID_Router::calc_lpm_pmf()",
-			"prefix",
-			"get_joint_lpm_prob"
+			"node"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1028,23 +1101,51 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "src/sanity-check.cpp",
+					"file": "src/rid-analytics.cpp",
 					"settings":
 					{
-						"buffer_size": 7792,
+						"buffer_size": 40615,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								7280,
-								7280
+								22545,
+								22545
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 7274.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/rid-router.cpp",
+					"settings":
+					{
+						"buffer_size": 76157,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								54836,
+								54836
 							]
 						],
 						"settings":
@@ -1059,77 +1160,296 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "scripts/rocketfuel/convert-rocketfuel.py",
-					"settings":
-					{
-						"buffer_size": 11712,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								6607,
-								6607
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-								80
-							],
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 2688.0,
+						"translation.y": 18278.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 2,
-					"file": "scripts/rocketfuel/topology.scn",
+					"file": "include/rid-router.h",
 					"settings":
 					{
-						"buffer_size": 282984,
+						"buffer_size": 9942,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								174521,
-								174521
+								9761,
+								9761
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"syntax": "Packages/C++/C++.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 727.0,
+						"translation.y": 3122.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 3,
-					"file": "/home/adamiaonr/workbench/networking-sandbox/ping/src/pingy.cpp",
+					"file": "/home/adamiaonr/Downloads/test.cpp",
 					"settings":
 					{
-						"buffer_size": 14439,
+						"buffer_size": 7457,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								868,
+								868
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "scripts/rocketfuel/generate_tests.py",
+					"settings":
+					{
+						"buffer_size": 6959,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1856,
+								1856
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1268.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "scripts/rocketfuel/convert_rocketfuel.py",
+					"settings":
+					{
+						"buffer_size": 27662,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								11344,
+								11344
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 3130.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"settings":
+					{
+						"buffer_size": 4522,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1901,
+								1901
+							]
+						],
+						"settings":
+						{
+							"auto_name": "'long': defaultdict(<type 'list'>, {'median': [",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 252.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "scripts/rocketfuel/run_test.py",
+					"settings":
+					{
+						"buffer_size": 3117,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								240,
+								240
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "scripts/graphs/plot_base.py",
+					"settings":
+					{
+						"buffer_size": 9726,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								9726,
+								9726
+							]
+						],
+						"settings":
+						{
+							"spell_check": true,
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1302.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "scripts/graphs/plot_global.py",
+					"settings":
+					{
+						"buffer_size": 8019,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								7803,
+								7803
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2240.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "scripts/graphs/plot.py",
+					"settings":
+					{
+						"buffer_size": 2381,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2044,
+								2044
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 336.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"file": "scripts/graphs/plot_utils.py",
+					"settings":
+					{
+						"buffer_size": 3411,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3410,
+								3410
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "experiments/evaluation/scenarios/global/bf-sizes/configs/1221.test",
+					"settings":
+					{
+						"buffer_size": 4316,
 						"regions":
 						{
 						},
@@ -1142,68 +1462,68 @@
 						],
 						"settings":
 						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 13,
+					"file": "experiments/evaluation/scenarios/global/bf-sizes/configs/7018.test",
+					"settings":
+					{
+						"buffer_size": 4292,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 14,
+					"file": "include/rid-analytics.h",
+					"settings":
+					{
+						"buffer_size": 3747,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3736,
+								3736
+							]
+						],
+						"settings":
+						{
 							"syntax": "Packages/C++/C++.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 3330.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "experiments/evaluation/scenarios/global-reachability/dumbbell/h01.scn",
-					"settings":
-					{
-						"buffer_size": 53594,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								887,
-								887
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 45.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "/mnt/hgfs/adamiaonr/Downloads/rocketfuel_maps_cch/README.cch",
-					"settings":
-					{
-						"buffer_size": 3709,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								949,
-								949
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 1176.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1403,6 +1723,6 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 348.0,
+	"side_bar_width": 579.0,
 	"status_bar_visible": true
 }

@@ -104,12 +104,12 @@ uint8_t * Path_State::get_tree_bitmask() {
     return this->tree_bitmask; 
 }
 
-void Path_State::set_rtt(int rtt) { 
-    this->rtt = rtt;
+void Path_State::set_ttl(int ttl) { 
+    this->ttl = ttl;
 }
 
-int Path_State::get_rtt() { 
-    return this->rtt; 
+int Path_State::get_ttl() { 
+    return this->ttl; 
 }
 
 RID_Router * Path_State::get_router() { 
@@ -139,8 +139,8 @@ char * Path_State::to_string() {
         case OUTCOME_PACKET_DROP:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "PACKET_DROP");
             break;
-        case OUTCOME_RTT_DROP:
-            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "RTT_DROP");
+        case OUTCOME_TTL_DROP:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "TTL_DROP");
             break;
         case STATUS_TP:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "STATUS_TP");

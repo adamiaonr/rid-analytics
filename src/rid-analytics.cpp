@@ -17,7 +17,6 @@ RID_Analytics::RID_Analytics(
     uint16_t bf_size,
     std::string origin_server_id,
     int mm_mode,
-    int eh_mode,
     int resolution_mode) {
 
     // initialize the scenario parameters set at runtime
@@ -31,7 +30,6 @@ RID_Analytics::RID_Analytics(
     //                  -# MMH_RANDOM   : forward over 1 random iface (not used)
     //                  -# MMH_FALLBACK : forward using the fallback address
     //
-    //  -# eh_mode : error handling mode (unused)
     //
     //  -# resolution_mode : specifies if wrong deliveries should be fixed 
     //                       or not. it influences the probability of (in)correct
@@ -42,7 +40,6 @@ RID_Analytics::RID_Analytics(
     //                             server if a wrong delivery occurs.  
     //                             
     this->mm_mode = mm_mode;
-    this->eh_mode = eh_mode;
     this->resolution_mode = resolution_mode;
 
     this->f_r_distribution = NULL;
@@ -55,6 +52,9 @@ RID_Analytics::RID_Analytics(
     this->origin_server = this->routers[origin_server_id];
     std::cout << "RID_Analytics::RID_Analytics() [INFO] : origin_server_id = " 
         << this->routers[origin_server_id]->get_id() << std::endl;
+
+    // // FIXME : hack to make simulations shorter
+    // this->hit = false;
 }
 
 RID_Analytics::~RID_Analytics() {
@@ -233,10 +233,17 @@ int RID_Analytics::build_network(std::string nw_filename) {
     // *** extract the fwd table size (a unique table size for the complete topology)
     // ***
     std::cout << "RID_Analytics::build_network() : [INFO] table size: ";
-    // table sizes saved in a std::map
     pugi::xml_node ts = topology.child("fwd_table_size");
     uint64_t table_size = ts.text().as_uint();
     std::cout << "\n\tSIZE = " << ts.text().as_uint() << " (" << table_size << ")" << std::endl;
+
+    // ***
+    // *** extract the ttl
+    // ***
+    std::cout << "RID_Analytics::build_network() : [INFO] ttl: ";
+    pugi::xml_node ttl_block = topology.child("ttl");
+    this->ttl = ttl_block.text().as_int();
+    std::cout << "\n\tTTL = " << ttl_block.text().as_int() << " (" << ttl << ")" << std::endl;
 
     // ***
     // *** start building the topology by reading the info for each router
@@ -545,6 +552,7 @@ int RID_Analytics::run_rec(
                     if (this->tp_sizes[router->get_id()][IFACE_LOCAL] > 0) {
 
                         path_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
+                        // this->hit = true;
 
                     } else {
 
@@ -658,18 +666,18 @@ int RID_Analytics::run_rec(
 
             bool event_added = false;
 
-            // if the packet's RTT goes below 0, the path ends here. each  
+            // if the packet's TTL goes below 0, the path ends here. each  
             // remaining event will be translated into a NLM event.
-            if (((*prev_path_state_itr)->get_rtt() - 1) < 0) {
+            if (((*prev_path_state_itr)->get_ttl() - 1) < 0) {
 
-                std::cout << "RID_Analytics::run_rec() : [INFO] RTT LIMIT REACHED" << std::endl;
+                std::cout << "RID_Analytics::run_rec() : [INFO] TTL LIMIT REACHED" << std::endl;
 
                 Path_State * path_state = new Path_State(router, this->request_size);
                 path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
 
-                path_state->set_path_status(OUTCOME_RTT_DROP);
+                path_state->set_path_status(OUTCOME_TTL_DROP);
                 path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
-                path_state->set_event(EVENT_RTT, router->get_iface_events_prob(event));
+                path_state->set_event(EVENT_TTL, router->get_iface_events_prob(event));
                 path_state->set_path_prob(router->get_iface_events_prob(event) + fallback_carry_prob);
 
                 // don't do anything else
@@ -694,13 +702,15 @@ int RID_Analytics::run_rec(
                 path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
 
                 // now, we deal with probabilities:
+                //
                 //  -# ingress_ptree_probs : the prob of having the packet 
                 //     bound to a prefix tree of size s (no TP info)
                 //
                 //  -# ingress_iface_probs : the prob of having a packet 
                 //     flow through iface i (takes TPs into account)
                 //
-                path_state->set_ingress_ptree_prob(router->get_egress_iface_probs(iface), this->f_max);
+                // path_state->set_ingress_ptree_prob(router->get_egress_iface_probs(iface), this->f_max);
+                path_state->set_ingress_ptree_prob(router->get_egress_ptree_prob(iface), this->f_max);
 
                 path_prob = router->get_egress_iface_prob(iface); 
                 if (on_path_to_origin(router, ingress_iface, iface) && (this->mm_mode == MMH_FALLBACK)) {
@@ -715,7 +725,7 @@ int RID_Analytics::run_rec(
 
                 path_state->set_path_prob(path_prob);
                 path_state->set_ingress_iface_prob(path_prob);
-                path_state->set_rtt((*prev_path_state_itr)->get_rtt() - 1);
+                path_state->set_ttl((*prev_path_state_itr)->get_ttl() - 1);
 
                 // add a record of an SLM event to the path state and its 
                 // probability
@@ -730,7 +740,7 @@ int RID_Analytics::run_rec(
                     << "\n\tEVENT : " << event << " EVENT PROB. : " << path_state->get_event_prob()
                     << "\n\tPATH PROB. : " << path_prob
                     << "\n\tPATH LATENCY : " << (*prev_path_state_itr)->get_path_length() + 1
-                    << "\n\tRTT : " << (*prev_path_state_itr)->get_rtt() - 1
+                    << "\n\tTTL : " << (*prev_path_state_itr)->get_ttl() - 1
                     << std::endl;
 
                 // determine the correctness of the forwarding decision
@@ -738,7 +748,9 @@ int RID_Analytics::run_rec(
 
                     // if router has a TP on iface, set the even as 
                     // an intermediate TP, i.e. "we're on the right path"
-                    path_state->set_path_status(STATUS_TP); 
+                    path_state->set_path_status(STATUS_TP);
+                    // if (!(this->hit))
+                    //     path_state->set_ttl((*prev_path_state_itr)->get_ttl());
 
                 } else {
 
@@ -772,7 +784,7 @@ int RID_Analytics::run_rec(
                 std::cout << "RID_Analytics::run_rec() : [INFO] saving slm record :"
                     << "\n\ton router[" << router->get_id() << "]"
                     << "\n\tforwarding to router[" << next_hop.router->get_id() << "]"
-                    << "\n\trtt = " << (int) path_state->get_rtt() << std::endl;
+                    << "\n\tttl = " << (int) path_state->get_ttl() << std::endl;
 
 
                 RID_Analytics::run_record slm_record;
@@ -790,7 +802,7 @@ int RID_Analytics::run_rec(
 
                 std::cout << "RID_Analytics::run_rec() : [INFO] on router[" << router->get_id() 
                     << "], forwarding to router[" << (*itr).next_router->get_id() 
-                    << "], rtt = " << (int) (*((*itr).prev_path_state_itr))->get_rtt() << std::endl;
+                    << "], ttl = " << (int) (*((*itr).prev_path_state_itr))->get_ttl() << std::endl;
                 run_rec((*itr).next_router, (*itr).ingress_iface, (*itr).prev_path_state_itr);
             }
         }
@@ -841,9 +853,9 @@ int RID_Analytics::run(
     int tree_bitmask_size = this->start_router->get_tree_bitmask_size(0);
     uint8_t * tree_bitmask = (uint8_t *) calloc(tree_bitmask_size, sizeof(uint8_t));
     initial_state->set_tree_bitmask(tree_bitmask, tree_bitmask_size);
-    // the initial rtt is set to the distance from starting router to the 
+    // the initial ttl is set to the distance from starting router to the 
     // origin server
-    initial_state->set_rtt(2 * get_origin_distance(this->start_router));
+    initial_state->set_ttl(this->ttl);
 
     // we always start at the ingress iface, so that we don't have a local 
     // match at the initial router (not sure if this can work directly like 

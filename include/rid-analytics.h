@@ -73,7 +73,6 @@ class RID_Analytics {
             uint16_t bf_size,
             std::string origin_server,
             int mm_mode,
-            int eh_mode,
             int resolution_mode);
         ~RID_Analytics();
 
@@ -109,7 +108,6 @@ class RID_Analytics {
         uint8_t request_size;
         uint16_t bf_size;
         int mm_mode;
-        int eh_mode;
         int resolution_mode;
         RID_TPMap tp_sizes;
         __float080 * f_r_distribution;
@@ -122,6 +120,10 @@ class RID_Analytics {
         RID_Router * start_router;
         // AS path to origin server
         std::set<std::string> origin_server_path;
+        // ttl for network topology
+        int ttl;
+
+        bool hit;
 };
 
 #endif

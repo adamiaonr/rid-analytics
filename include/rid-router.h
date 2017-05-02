@@ -14,13 +14,13 @@
 #define IFACE_LOCAL     0x00
 
 // interface events
-#define EVENT_NUM       0x04 // hack : we don't count w/ EVENT_RTT
+#define EVENT_NUM       0x04 // hack : we don't count w/ EVENT_TTL
 #define EVENT_NLM       0x00 // no link matches
 #define EVENT_MLM       0x01 // multiple link matches
 #define EVENT_LLM       0x02 // local link match
 #define EVENT_SLM       0x03 // single link match (other than local)
-#define EVENT_RTT       0x04 // drop due to rtt expiration
-#define EVENT_UNKNOWN   0x05
+#define EVENT_TTL       0x04 // drop due to rtt expiration
+#define EVENT_UNKNOWN   0x05    
 
 // modes for calc_cumulative_prob()
 #define MODE_EI_EXCLUSIVE   0x00
@@ -142,6 +142,9 @@ class RID_Router {
 
         void print_lpm_pmf(uint8_t iface);
 
+        __float080 * get_egress_ptree_prob(uint8_t iface);
+        void print_egress_ptree_prob();
+
         __float080 get_iface_events_prob(uint8_t event);
         void print_iface_events_pmf();
 
@@ -209,6 +212,12 @@ class RID_Router {
         bool is_iface_on_ptree(int iface, uint8_t * tree_bitmask);
         int calc_ptree_iface_probs();
 
+        int calc_egress_ptree_probs(
+            uint8_t mode,
+            uint8_t iface,
+            __float080 * log_prob_fp_not_larger_than,
+            __float080 * log_prob_not_fp);
+
         RID_Router::lpm_pmf_row ** lpm_pmf;
         // probability of interface events (NIS, MIS, LI)
         __float080 * iface_events_pmf;
@@ -231,6 +240,8 @@ class RID_Router {
         //                          with 1 <= ptree_size <= f_max.
         __float080 ingress_prob;
         __float080 * ingress_ptree_prob;
+        __float080 ** egress_ptree_prob;
+
         // router id follows the format <tree_index>.<height>.<width>
         std::string id;
         // number of interfaces (at least 2 : LOCAL & // UPSTREAM)    
@@ -249,6 +260,9 @@ class RID_Router {
         bool initialized;
         // multiple match handling mode
         uint8_t mm_mode;
+
+        // tp sizes for this router
+        int * tp_sizes;
 
         // tells if iface i is potentially a continuation of a prefix tree 
         std::vector<bool> iface_on_ptree;

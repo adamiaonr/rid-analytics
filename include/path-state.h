@@ -9,7 +9,7 @@
 #define OUTCOME_FALLBACK_DELIVERY   (int) 0x02
 #define OUTCOME_FALLBACK_RELAY      (int) 0x03
 #define OUTCOME_PACKET_DROP         (int) 0x04
-#define OUTCOME_RTT_DROP            (int) 0x05
+#define OUTCOME_TTL_DROP            (int) 0x05
 #define OUTCOME_UNDEF               (int) 0x06
 
 // path status
@@ -63,8 +63,8 @@ class Path_State {
         uint8_t * get_tree_bitmask();
         int get_tree_bitmask_size();
 
-        void set_rtt(int rtt);
-        int get_rtt();
+        void set_ttl(int ttl);
+        int get_ttl();
 
     private:
 
@@ -86,8 +86,8 @@ class Path_State {
         // tree bitmask of the path
         uint8_t * tree_bitmask;
         int tree_bitmask_size;
-        // rtt of packet
-        int rtt;
+        // ttl of packet
+        int ttl;
 };
 
 #endif
