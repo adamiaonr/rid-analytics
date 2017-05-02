@@ -40,7 +40,7 @@ def get_pop_level_statistics(topology):
                 avg_path_outdegrees.append(float(sum([stats['outdegree-list'][r] for r in path_routers])) / (float(len(path.split(",")))))
 
         stats['avg-path-outdegree'] = list(set(avg_path_outdegrees))
-        stats['path-lengths'] = list(set(path_lengths))
+        stats['path-lengths'] = sorted(list(set(path_lengths)), reverse = True)
 
         stats['min-outdegree'] = np.min(degree_sequence)
         stats['med-outdegree'] = np.median(degree_sequence)
@@ -71,7 +71,7 @@ def print_pop_level_statistics(rocketfuel_dir):
 
             stats[topology_id] = get_pop_level_statistics(topology)
 
-    table = PrettyTable(['as id', '# nodes', '# links', 'min. outdegree', 'median outdegree', 'max. outdegree'])
+    table = PrettyTable(['as id', '# nodes', '# links', 'min. outdegree', 'median outdegree', 'max. outdegree', 'diameter'])
 
     for topology_id in stats:
         table.add_row([
@@ -80,7 +80,8 @@ def print_pop_level_statistics(rocketfuel_dir):
             stats[topology_id]['links'],
             stats[topology_id]['min-outdegree'],
             stats[topology_id]['med-outdegree'],
-            stats[topology_id]['max-outdegree']
+            stats[topology_id]['max-outdegree'],
+            (stats[topology_id]['path-lengths'][0] - 1)
             ])
 
     print("")
@@ -168,7 +169,8 @@ def get_shortest_paths(topology):
 
     return shortest_paths
 
-def get_path_examples(topology):
+def generate_path_examples(topology, pick = (-1, -1)):
+
     # sample a small set of path examples to use in experiments. we vary the 
     # topology aspects which affect efficiency and correctness:
     #
@@ -192,7 +194,13 @@ def get_path_examples(topology):
     # # get outdegree sums of topologies
     # print("path outdegree sums : %s" % (sorted(stats['outdegree-sums'], reverse = True)))
 
-    for source in shortest_paths:
+    avg_path_outdegrees = defaultdict()
+    avg_path_outdegrees['short'] = defaultdict(list)
+    avg_path_outdegrees['median'] = defaultdict(list)
+    avg_path_outdegrees['long'] = defaultdict(list)
+
+
+    for source in reversed([s for s in shortest_paths]):
         for path in shortest_paths[source]:
 
             path_length = len(path.split(","))
@@ -207,39 +215,65 @@ def get_path_examples(topology):
 
                 if avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 25):
                     add_example_path(path_examples, 'short', 'low', path_routers)
+                    avg_path_outdegrees['short']['low'].append(avg_path_outdegree)
                 elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 40) and avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 60):
                     add_example_path(path_examples, 'short', 'median', path_routers)
+                    avg_path_outdegrees['short']['median'].append(avg_path_outdegree)
                 elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 75):
                     add_example_path(path_examples, 'short', 'high', path_routers)
+                    avg_path_outdegrees['short']['high'].append(avg_path_outdegree)
 
             # median lengths
             if path_length > np.percentile(stats['path-lengths'], 40) and path_length < np.percentile(stats['path-lengths'], 60):
 
                 if avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 25):
                     add_example_path(path_examples, 'median', 'low', path_routers)
+                    avg_path_outdegrees['median']['low'].append(avg_path_outdegree)
                 elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 40) and avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 60):
                     add_example_path(path_examples, 'median', 'median', path_routers)
+                    avg_path_outdegrees['median']['median'].append(avg_path_outdegree)
                 elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 75):
                     add_example_path(path_examples, 'median', 'high', path_routers)
+                    avg_path_outdegrees['median']['high'].append(avg_path_outdegree)
 
             # long lengths
             if path_length > np.percentile(stats['path-lengths'], 75):
 
                 if avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 25):
                     add_example_path(path_examples, 'long', 'low', path_routers)
+                    avg_path_outdegrees['long']['low'].append(avg_path_outdegree)
                 elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 40) and avg_path_outdegree < np.percentile(stats['avg-path-outdegree'], 60):
                     add_example_path(path_examples, 'long', 'median', path_routers)
+                    avg_path_outdegrees['long']['median'].append(avg_path_outdegree)
                 elif avg_path_outdegree > np.percentile(stats['avg-path-outdegree'], 75):
                     add_example_path(path_examples, 'long', 'high', path_routers)
+                    avg_path_outdegrees['long']['high'].append(avg_path_outdegree)
 
 
-    random.seed(9001)
-    for path_length in path_examples:
-        for path_outdegree in path_examples[path_length]:
+    # chosen_path = defaultdict()
+    # chosen_path_avg_outdegree = defaultdict()
 
-            nr_paths = len(path_examples[path_length][path_outdegree])
-            print("shortest_paths[%s][%s] = %s" % 
-                (path_length, path_outdegree, str(path_examples[path_length][path_outdegree][random.randint(0, nr_paths - 1)])))
+    # for path_length in path_examples:
+
+    #     chosen_path[path_length] = defaultdict()
+    #     chosen_path_avg_outdegree[path_length] = defaultdict()
+
+    #     for path_outdegree in path_examples[path_length]:
+
+    #         # nr_paths = len(path_examples[path_length][path_outdegree])
+
+    #         if pick != (-1, -1):
+    #             for i, path in enumerate(path_examples[path_length][path_outdegree]):
+    #                 if path[0] == pick[0] and path[-1] == pick[1]:
+    #                     chosen_path[path_length][path_outdegree] = path
+    #                     chosen_path_avg_outdegree[path_length][path_outdegree] = avg_path_outdegrees[path_length][path_outdegree][i]
+
+    #         else:
+    #             chosen_path[path_length][path_outdegree] = path_examples[path_length][path_outdegree][0]
+    #             chosen_path_avg_outdegree[path_length][path_outdegree] = avg_path_outdegrees[path_length][path_outdegree][0]
+
+    # return chosen_path, chosen_path_avg_outdegree
+    return path_examples, avg_path_outdegrees
 
 # FIXME : this algorithm is terribly inefficient...
 def get_fwd_dist(topology, shortest_paths, router):
@@ -316,13 +350,27 @@ def load_request_entry_diff_distributions(req_size, topology_block, diff_distr_t
                 break
             f_r_dist_block = et.SubElement(topology_block, "f_r_dist", diff = str(i + 1)).text = value
 
-def convert_to_scn(topology, entry_sizes, table_size = 100000000, req_size = 5):
+def convert_to_scn(topology, entry_sizes, table_size = 100000000, req_size = 5, scn_filename = 'topology.scn'):
 
-    shortest_paths = get_shortest_paths(topology)
     topology_block = et.Element("topology")
 
-    load_request_entry_diff_distributions(req_size, topology_block)
+    # get shortest path list and determine a ttl value for the 
+    # topology (2 * longest path, as in http://www.map.meteoswiss.ch/map-doc/ftp-probleme.htm)
+    shortest_paths = get_shortest_paths(topology)
 
+    ttl = 0
+    for source in shortest_paths:
+        for path in shortest_paths[source]:
+
+            path_length = (len(path.split(",")) - 1)
+            if ttl < path_length:
+                ttl = path_length
+
+    ttl_block = et.SubElement(topology_block, "ttl").text = str(ttl)
+
+    # load |F\R| distributions
+    load_request_entry_diff_distributions(req_size, topology_block)
+    # fwd table size
     fwd_table_size_block = et.SubElement(topology_block, "fwd_table_size").text = str(table_size)
 
     # cycle through each node in the topology. we then write 5 diff. types of 
@@ -380,11 +428,16 @@ def convert_to_scn(topology, entry_sizes, table_size = 100000000, req_size = 5):
                 tp_block = et.SubElement(router_block, "tp", iface = edge['tp'].split(':')[1]).text = edge['tp'].split(':')[2]
 
             # add tree_bitmask
-            nr_bytes, tree_bitmask = to_tree_bitmask(topology, list(iface_trees[neighbor_router]))
-            tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
-
             if (neighbor_router == router):
+                nr_bytes, tree_bitmask = to_tree_bitmask(topology, [router])
+                tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
+
                 added_local_iface = True
+            
+            else:
+                nr_bytes, tree_bitmask = to_tree_bitmask(topology, list(iface_trees[neighbor_router]))
+                tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
+
 
         # add a special local link (represents local delivery), if not added 
         # already
@@ -426,7 +479,7 @@ def convert_to_scn(topology, entry_sizes, table_size = 100000000, req_size = 5):
 
 
     xmlstr = minidom.parseString(et.tostring(topology_block)).toprettyxml(indent="    ")
-    with open("topology.scn", "w") as f:
+    with open(scn_filename, "w") as f:
         f.write(xmlstr)
 
 def draw_pop_level_map(topology):
@@ -582,7 +635,7 @@ def parse_pop_level_map(rocketfuel_file):
 
     # trim nodes w/ outdegrees > 20 in order to make the evaluation less 
     # time consuming
-    topology = trim_topology(topology, 20)
+    topology = trim_topology(topology, 18)
     # annotate edges w/ iface numbers
     annotate_edges(topology)
 
@@ -613,7 +666,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--entry-sizes", 
-         help = """e.g. '--entry-sizes <entry-size>:<size %>|<entry-size>:<size %>|...|<entry-size>:<size %>'""")
+         help = """e.g. '--entry-sizes <entry-size>:<size %%>|<entry-size>:<size %%>|...|<entry-size>:<size %%>'""")
 
     parser.add_argument(
         "--print-stats", 
@@ -649,7 +702,7 @@ if __name__ == "__main__":
     # build a networkx topology out of a Rocketfuel pop-level topology
     topology = parse_pop_level_map(args.data_path)
     draw_pop_level_map(topology)
-    get_path_examples(topology)
+    generate_path_examples(topology)
 
     # if requested, add a true positive content source
     if args.add_tp_source:
