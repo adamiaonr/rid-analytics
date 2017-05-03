@@ -88,6 +88,114 @@ def print_pop_level_statistics(rocketfuel_dir):
     print(table)
     print("")
 
+def get_neighbors_within_radius(topology, node_id, radius):
+    return nx.single_source_shortest_path(topology, node_id, radius)
+
+def add_fp(topology, src_id, dst_id = -1, fp_size = 2, fp_size_proportion = 10, radius = 1):
+
+    # note that fake announcements of size will only propagate for <radius> links
+    fake_routes = nx.single_source_shortest_path(topology, src_id, radius)
+    # for fake_route in fake_routes:
+    #     print("%d -> %d : %s" % (src_id, fake_route, str(fake_routes[fake_route])))
+
+    # add a fp entry to the local iface of src_id. this is basically 
+    # an edge with the same head and tail.
+
+    # get any fp edge attribute, if already existent. the point is to 
+    # update it if a previous entry for the same iface:size already exists
+    edge = topology.get_edge_data(src_id, src_id)
+    # we will save the pre-existing fp info on a dict
+    edge_fps = defaultdict()
+    if (edge is not None) and ('fp' in edge):
+        for fp_record in edge['fp'].split("|"):
+            edge_fps[':'.join(fp_record.split(":")[:3])] = fp_record.split(":")[3]
+    # prepare a key for the local iface on src_id
+    edge_fps_key = ("%d:%d:%d" % (src_id, 0, fp_size))
+    if edge_fps_key in edge_fps:
+        x = int(edge_fps[edge_fps_key])
+        edge_fps[edge_fps_key] = str(x + fp_size_proportion)
+    else:
+        edge_fps[edge_fps_key] = str(fp_size_proportion)
+    # convert edge_fps back to string form
+    edge_fps_str = ""
+    for edge_fps_key in edge_fps:
+        edge_fps_str += ("%s:%s|" % (edge_fps_key, edge_fps[edge_fps_key]))
+    # add an update 'fp' attribute to the local iface edge 
+    print(edge_fps_str)
+    topology.add_edge(src_id, src_id, 
+        e1 = ("%d:%d"   % (src_id, 0)), 
+        e2 = ("%d:%d"   % (src_id, 0)),
+        fp = (edge_fps_str.rstrip("|")))
+
+    # print("<router id='%d'>" % (int(src_id)))
+    # print("add <fwd_size_dist size='%d'>%.2f</fwd_size_dist> to <link local='%d'>\n" 
+    #     % (fp_size, (float(fp_size_proportion) / 100.0), 0))
+
+    # iterate through the links in the path, so that we add fp information 
+    # to them
+    for fake_route in fake_routes:
+
+        # don't add fp routes if the destination isn't the specified
+        if (dst_id != -1) and dst_id != fake_routes[fake_route][-1]:
+            continue
+
+        if ((len(fake_routes[fake_route]) - 1) < radius):
+            print("%d -> %d : %s (%d : no radius)" % (src_id, fake_route, str(fake_routes[fake_route]), len(fake_routes[fake_route]) - 1))
+            continue
+
+        print("adding fp route : %d -> %d : %s (%d)" % (src_id, fake_route, str(fake_routes[fake_route]), len(fake_routes[fake_route]) - 1))
+
+        for i in xrange(len(fake_routes[fake_route]) - 1):
+            # get src and dst ends of the edge. the announcement works 
+            # from src -> dst, as such, it should be stored in the iface 
+            # of dst.
+            src, dst = fake_routes[fake_route][i], fake_routes[fake_route][i + 1]
+            # determine the interface of dst to which we should add 
+            # the tp info
+            edge = topology.get_edge_data(src, dst);
+            # retrieve any pre-existing fp information in the form of a dict(), if any
+            edge_fps = defaultdict()
+            if 'fp' in edge:
+                # print("edge[fp] = %s" % (edge['fp']))
+                for fp_record in edge['fp'].split("|"):
+                    # print("fp_record = %s" % (fp_record))
+                    # print("manufactured key = %s" % (':'.join(fp_record.split(":")[:3])))
+                    edge_fps[':'.join(fp_record.split(":")[:3])] = fp_record.split(":")[3]
+            # find out the iface nr. on dst node, to which the fp info should 
+            # be added to
+            iface = 0
+            if int(edge['e1'].split(':', 1)[0]) == dst:
+                iface = edge['e1']
+            else:
+                iface = edge['e2']
+            # if a fp record for fp_size already exists on this iface, 
+            # update the proportion value. if not, just add a new key
+            edge_fps_key = ("%s:%d" % (iface, fp_size))
+            
+            # print("key = %s" % (edge_fps_key))
+            # print("keys = %s" % (str([k for k in edge_fps])))
+
+            if edge_fps_key in edge_fps:
+                x = int(edge_fps[edge_fps_key])
+                edge_fps[edge_fps_key] = str(x + fp_size_proportion)
+            else:
+                edge_fps[edge_fps_key] = str(fp_size_proportion)
+            # convert edge_fps back to string form
+            edge_fps_str = ""
+            for edge_fps_key in edge_fps:
+                edge_fps_str += ("%s:%s|" % (edge_fps_key, edge_fps[edge_fps_key]))
+            # the tp info is a tuple of the form <router>:<outgoing iface>:<size> 
+            print(edge_fps_str)
+            topology.add_edge(src, dst, fp = edge_fps_str.rstrip("|"))
+            # print("<router id='%d'>" % (int(dst)))
+            # print("add <fwd_size_dist size='%d'>%.2f</fwd_size_dist> to <link local='%d'>\n" 
+            #     % (fp_size, (float(fp_size_proportion) / 100.0), int(iface.split(":")[1])))
+
+    # for edge in topology.edges():
+    #     print(topology.get_edge_data(edge[0], edge[1]))
+
+    return 0
+
 # add true positive entries to a topology (.scn file). we start by applying 
 # changes in a networkx object, then call convert_to_scn() to generate a .scn 
 # file.
@@ -414,12 +522,26 @@ def convert_to_scn(topology, entry_sizes, table_size = 100000000, req_size = 5, 
 
             # add <fwd_size_dist> blocks, indicating the distribution of 
             # forwarding entry sizes at each link.
+
+            # check for 'fp' entries in the link
+            fwd_size_dist = defaultdict(float)
+            fwd_size_dist_total = 0.0
+            if 'fp' in edge:
+                fp_records = edge['fp'].split("|")
+                for fp_record in fp_records:
+                    if ((int(fp_record.split(':')[0]) == router) and (int(fp_record.split(':')[1]) == int(local_iface))):
+                        fwd_size_dist[int(fp_record.split(':')[2])] += (float(fp_record.split(':')[3]) / 100.0)
+                        fwd_size_dist_total += (float(fp_record.split(':')[3]) / 100.0)
+
             for i in xrange(req_size):
-
-                fwd_size_dist_block_text = "0.00"
                 if str(i + 1) in entry_sizes:
-                    fwd_size_dist_block_text = ("%.2f" % (entry_sizes[str(i + 1)]))
+                    fwd_size_dist[i + 1] += float(entry_sizes[str(i + 1)])
+                    fwd_size_dist_total += float(entry_sizes[str(i + 1)])
 
+            for i in xrange(req_size):
+                fwd_size_dist_block_text = "0.00"
+                if (i + 1) in fwd_size_dist:
+                    fwd_size_dist_block_text = ("%.2f" % (fwd_size_dist[i + 1] / fwd_size_dist_total))
                 fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = fwd_size_dist_block_text
 
             # add <tp> block (if edge has 'tp' attribute)

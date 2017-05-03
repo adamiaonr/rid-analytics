@@ -1500,11 +1500,11 @@ __float080 RID_Router::calc_cumulative_prob(
                     // iface pivots
                     prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
-                    std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
-                        << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
-                    for (int k = 0; k < this->iface_num; k++)
-                        std::cout << "[" << iface_pivots[k] << "]";
-                    std::cout << " = " << prob << std::endl;
+                    // std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
+                    //     << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
+                    // for (int k = 0; k < this->iface_num; k++)
+                    //     std::cout << "[" << iface_pivots[k] << "]";
+                    // std::cout << " = " << prob << std::endl;
                 }
 
                 // distribute the probabilities over the egress iface probabilities

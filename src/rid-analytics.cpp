@@ -678,7 +678,12 @@ int RID_Analytics::run_rec(
                 path_state->set_path_status(OUTCOME_TTL_DROP);
                 path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
                 path_state->set_event(EVENT_TTL, router->get_iface_events_prob(event));
-                path_state->set_path_prob(router->get_iface_events_prob(event) + fallback_carry_prob);
+
+                __float080 _prob = router->get_iface_events_prob(event) + fallback_carry_prob;
+                if (_prob > 0.0)
+                    _prob = 1.0;
+
+                path_state->set_path_prob(_prob);
 
                 // don't do anything else
                 continue;
@@ -721,6 +726,8 @@ int RID_Analytics::run_rec(
                         << iface << "] = " << path_prob << std::endl;
 
                     path_prob += fallback_carry_prob;
+                    if (path_prob > 1.0)
+                        path_prob = 1.0;
                 }
 
                 path_state->set_path_prob(path_prob);
@@ -730,7 +737,12 @@ int RID_Analytics::run_rec(
                 // add a record of an SLM event to the path state and its 
                 // probability
                 if (!event_added) {
-                    path_state->set_event(event, router->get_iface_events_prob(event) + fallback_carry_prob);
+
+                    __float080 _prob = router->get_iface_events_prob(event) + fallback_carry_prob;
+                    if (_prob > 1.0)
+                        _prob = 1.0;
+
+                    path_state->set_event(event, _prob);
                     event_added = true;
                 } else {
                     path_state->set_event(event, 0.0);

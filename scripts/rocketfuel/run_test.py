@@ -33,6 +33,8 @@ def run_analysis(params):
         "--origin-server", params['origin-server'], 
         "--start-router", params['start-router'])
 
+    print(args)
+
     start_time = time.time()
     with open(os.devnull, 'w') as devnull:
         subprocess.check_call(args, stdout=devnull)

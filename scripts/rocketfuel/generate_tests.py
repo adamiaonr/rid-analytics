@@ -57,7 +57,7 @@ def add_new_test(main_block, topology, test_parameters, path_examples, avg_outde
     paths_block = et.SubElement(test_block, "paths")
     for path_length in path_examples:
 
-        if path_length != 'median':
+        if path_length != 'long':
             continue
 
         for path_outdegree in path_examples[path_length]:
@@ -69,17 +69,50 @@ def add_new_test(main_block, topology, test_parameters, path_examples, avg_outde
             path = path_examples[path_length][path_outdegree]
             
             # generate the .scn filename for this scenario
-            scn_filename = ("configs/%s-%03d-%03d.scn" % (test_id, path[0], path[-1]))
+            scn_filename = ""
+            if len(add_suffixes) > 0:
+                scn_filename_suffix = '-'.join([x for x in add_suffixes])
+                scn_filename = ("configs/%s-%03d-%03d-%s.scn" % (test_id, path[0], path[-1], scn_filename_suffix))
+            else:
+                scn_filename = ("configs/%s-%03d-%03d.scn" % (test_id, path[0], path[-1]))                
+
             scn_filename = os.path.join(test_dir, scn_filename)
 
             new_path_block = et.SubElement(paths_block, "path", length = path_length, outdegre = path_outdegree, avg_outdegree = str(avg_outdegrees[path_length][path_outdegree]), file = scn_filename).text = str(','.join(("%03d" % (x)) for x in path))
 
             # add true positives
             _topology = topology.copy()
+            print("tp path : %s" % (path))
             convert_rocketfuel.add_content_route(
                 _topology, 
                 path[-1], 
                 int([x for x in test_parameters['entry-sizes']][0]))
+
+            # add fp records
+            for fp_record in test_parameters['fps']:
+
+                fp_record = fp_record.split(":")
+                if fp_record[0] == 'S':
+
+                    neighbors = convert_rocketfuel.get_neighbors_within_radius(_topology, path[0], int(fp_record[3]))
+                    print([n for n in neighbors])
+                    for neighbor in neighbors:
+
+                        if neighbors[neighbor][-1] == path[0]:
+                            continue
+
+                        print("%d -(%d)-> %d" % (path[0], len(neighbors[neighbor]) - 1, neighbor))
+
+                        convert_rocketfuel.add_fp(
+                            _topology,
+                            src_id = neighbors[neighbor][-1],
+                            dst_id = path[0],
+                            fp_size = int(fp_record[1]),
+                            fp_size_proportion = int(fp_record[2]),
+                            radius = int(fp_record[3]))
+
+                else:
+                    print("not adding additional fp sources")
 
             # now save the actual .scn file
             convert_rocketfuel.convert_to_scn(
@@ -93,7 +126,7 @@ def add_new_test(main_block, topology, test_parameters, path_examples, avg_outde
 
     return 0
 
-def generate_test(test_dir, topology_file, req_sizes, bf_sizes, entry_size_records, table_sizes, modes, picks):
+def generate_test(test_dir, topology_file, req_sizes, bf_sizes, entry_size_records, table_sizes, fps, modes, picks, add_suffixes):
 
     main_block = et.Element("test_run")
 
@@ -126,8 +159,15 @@ def generate_test(test_dir, topology_file, req_sizes, bf_sizes, entry_size_recor
                         chosen_path_avg_outdegree[path_length][path_outdegree] = avg_outdegrees[path_length][path_outdegree][i]
 
             else:
-                chosen_path[path_length][path_outdegree] = path_examples[path_length][path_outdegree][0]
-                chosen_path_avg_outdegree[path_length][path_outdegree] = avg_outdegrees[path_length][path_outdegree][0]
+
+                i = 0
+                for i, p in enumerate(path_examples[path_length][path_outdegree]):
+                    if (len(p) - 1) > 4:
+                        continue
+                    print("%s.%s : %s" % (path_length, path_outdegree, str(p)))
+
+                chosen_path[path_length][path_outdegree] = path_examples[path_length][path_outdegree][i]
+                chosen_path_avg_outdegree[path_length][path_outdegree] = avg_outdegrees[path_length][path_outdegree][i]
 
     # build the test cases w/ good ol' nested for loops
     for req_size in req_sizes:
@@ -151,7 +191,9 @@ def generate_test(test_dir, topology_file, req_sizes, bf_sizes, entry_size_recor
                         test_parameters['bf-size'] = bf_size
                         test_parameters['entry-sizes'] = entry_sizes
                         test_parameters['table-size'] = int(table_size)
+                        test_parameters['fps'] = fps
                         test_parameters['modes'] = mode.replace(":", "-")
+                        test_parameters['add-suffixes'] = add_suffixes
 
                         add_new_test(main_block, topology, test_parameters, chosen_path, chosen_path_avg_outdegree, test_dir)
 
@@ -193,12 +235,22 @@ if __name__ == "__main__":
          help = """e.g. '--table-sizes 10000000:100'""")
 
     parser.add_argument(
+        "--add-fps", 
+         help = """e.g. add 'fake' content around some node. syntax is <source id>:<annc. size>:<size %%>:<annc. radius>.
+         <source id> == 'S' means the source of request.
+         e.g. '--add-fp "S:2:10:1' """)
+
+    parser.add_argument(
         "--modes", 
          help = """MM_MODE (0 for 'flood', 1 for 'random', or 2 for 'fallback'), RES_MODE (0 for 'drop packets', 1 for 'resolve w/ fallback'), in that order, separated by ':' and '|' e.g. '--modes 0:0|0:1'""")
 
     parser.add_argument(
         "--pick", 
-         help = """e.g. '--pick long:median:36:42|short:median:5:78'""")    
+         help = """e.g. '--pick long:median:36:42|short:median:5:78'""")
+
+    parser.add_argument(
+        "--add-suffix", 
+         help = """add an extra suffix to the results and .scn file.""")
 
     args = parser.parse_args()
 
@@ -218,6 +270,10 @@ if __name__ == "__main__":
     if args.table_sizes:
         table_sizes = args.table_sizes.split(":")
 
+    fps = []
+    if args.add_fps:
+        fps = args.add_fps.split("|")
+
     modes = []
     if args.modes:
         modes = args.modes.split("|")
@@ -226,12 +282,15 @@ if __name__ == "__main__":
     if args.pick:
 
         pick = args.pick.split("|")
+
         for p in pick:
             pp = p.split(":")
             picks[("%s:%s" % (pp[0], pp[1]))] = (int(pp[2]), int(pp[3]))
 
-    print(picks)
+    add_suffixes = []
+    if args.add_suffix:
+        add_suffixes = args.add_suffix.split(":")
 
     generate_test(
         args.test_dir, args.topology_file, 
-        req_sizes, bf_sizes, entry_size_records, table_sizes, modes, picks)
+        req_sizes, bf_sizes, entry_size_records, table_sizes, fps, modes, picks, add_suffixes)

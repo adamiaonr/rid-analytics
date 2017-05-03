@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<test_run>
+    <topology file="/mnt/hgfs/adamiaonr/Downloads/maps-n-paths/7018/edges.wt">7018</topology>
+    <test id="7018-256-10-01-10000000-0-1-R1">
+        <table-size>10000000</table-size>
+        <modes>0-1</modes>
+        <bf-size>256</bf-size>
+        <add-suffixes>['R1']</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <fps>['S:2:10:1']</fps>
+        <req-size>10</req-size>
+        <topology-nr>7018</topology-nr>
+        <paths>
+            <path avg_outdegree="9.0" file="/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/configs/7018-256-10-01-10000000-0-1-105-005-R1.scn" length="median" outdegre="median">105,025,004,005</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/</results_dir>
+    </test>
+    <test id="7018-256-10-01-10000000-0-1-R2">
+        <table-size>10000000</table-size>
+        <modes>0-1</modes>
+        <bf-size>256</bf-size>
+        <add-suffixes>['R2']</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <fps>['S:2:10:2']</fps>
+        <req-size>10</req-size>
+        <topology-nr>7018</topology-nr>
+        <paths>
+            <path avg_outdegree="9.0" file="/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/configs/7018-256-10-01-10000000-0-1-105-005-R2.scn" length="median" outdegre="median">105,025,004,005</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/</results_dir>
+    </test>
+    <test id="7018-256-10-01-10000000-2-0-R1">
+        <table-size>10000000</table-size>
+        <modes>2-0</modes>
+        <bf-size>256</bf-size>
+        <add-suffixes>['R1']</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <fps>['S:2:10:1']</fps>
+        <req-size>10</req-size>
+        <topology-nr>7018</topology-nr>
+        <paths>
+            <path avg_outdegree="9.0" file="/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/configs/7018-256-10-01-10000000-2-0-105-005-R2.scn" length="median" outdegre="median">105,025,004,005</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/</results_dir>
+    </test>
+    <test id="7018-256-10-01-10000000-2-0-R2">
+        <table-size>10000000</table-size>
+        <modes>2-0</modes>
+        <bf-size>256</bf-size>
+        <add-suffixes>['R2']</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <fps>['S:2:10:2']</fps>
+        <req-size>10</req-size>
+        <topology-nr>7018</topology-nr>
+        <paths>
+            <path avg_outdegree="9.0" file="/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/configs/7018-256-10-01-10000000-2-0-105-005-R2.scn" length="median" outdegre="median">105,025,004,005</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/</results_dir>
+    </test>
+</test_run>
