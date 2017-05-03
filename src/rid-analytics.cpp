@@ -95,6 +95,10 @@ int RID_Analytics::on_path_to_origin(
     int ingress_iface, 
     int egress_iface = -1) {
 
+    // trivial case : router is THE origin server
+    if (router->get_id() == this->origin_server->get_id())
+        return 1;
+
     uint8_t bitmask_value = (1 << (std::stoi(this->origin_server->get_id()) % 8));
     uint8_t bitmask_byte = (std::stoi(this->origin_server->get_id()) / 8);
     uint8_t tree_bitmask_value = 0;
@@ -476,7 +480,7 @@ int RID_Analytics::run_rec(
             // all events < EVENT_SINGLE_IFACE_MATCH are 'ends of the line' 
             // in a way.
             path_state->set_path_prob(router->get_iface_events_prob(event));
-            path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+            path_state->set_path_length((*prev_path_state_itr)->get_path_length());
 
             std::cout << "RID_Analytics::run_rec() : [INFO] ADDED NODE TO PATH STATE TREE: "
                 << "\n\tEVENT : " << event << " EVENT PROB : " << path_state->get_event_prob()
@@ -505,7 +509,8 @@ int RID_Analytics::run_rec(
                             // if the router is on the path to origin, we save 
                             // the MLM event probability for later use while 
                             // processing SLM events
-                            fallback_carry_prob += router->get_iface_events_prob(event);
+                            if (router->get_id() != this->origin_server->get_id())
+                                fallback_carry_prob += router->get_iface_events_prob(event);
                             // ... and set the path length of this state to 0.0
                             // FIXME: this shouldn't be necessary
                             path_state->set_path_length(0.0);
@@ -515,7 +520,7 @@ int RID_Analytics::run_rec(
                             // otherwise, we set the path length for this MLM 
                             // event
                             path_state->set_path_length(
-                                (*prev_path_state_itr)->get_path_length() + 1);
+                                (*prev_path_state_itr)->get_path_length());
 
                             // we add a new state representing the fallback 
                             // delivery, appending it to the MLM event state
@@ -534,7 +539,7 @@ int RID_Analytics::run_rec(
                             resolution_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
                             resolution_state->set_path_prob(router->get_iface_events_prob(event));
                             resolution_state->set_path_length(
-                                (*prev_path_state_itr)->get_path_length() + 1 + get_origin_distance(router));
+                                (*prev_path_state_itr)->get_path_length() + get_origin_distance(router));
                         }
 
                     } else {
@@ -557,7 +562,7 @@ int RID_Analytics::run_rec(
                     } else {
 
                         path_state->set_path_status(OUTCOME_INCORRECT_DELIVERY);
-                        path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+                        path_state->set_path_length((*prev_path_state_itr)->get_path_length());
 
                         int penalty = 0;
                         if (this->mm_mode == MMH_FALLBACK) {
@@ -567,7 +572,8 @@ int RID_Analytics::run_rec(
                                 // if the router is on the path to origin, we save 
                                 // the LLM event probability for later use while 
                                 // processing SLM events
-                                fallback_carry_prob += router->get_iface_events_prob(event);
+                                if (router->get_id() != this->origin_server->get_id())
+                                    fallback_carry_prob += router->get_iface_events_prob(event);
                                 // ... and set the path length of this state to 0.0
                                 // FIXME: this shouldn't be necessary
                                 path_state->set_path_length(0.0);
@@ -582,7 +588,7 @@ int RID_Analytics::run_rec(
                                 resolution_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
                                 resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
                                 resolution_state->set_path_prob(router->get_iface_events_prob(event));
-                                resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                                resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + penalty);
                             }
 
                         } else {
@@ -602,7 +608,7 @@ int RID_Analytics::run_rec(
                                 resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
                                 resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
                                 resolution_state->set_path_prob(router->get_iface_events_prob(event));
-                                resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                                resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + penalty);
                             }
                         }
                     }
@@ -613,7 +619,7 @@ int RID_Analytics::run_rec(
                 // if an NLM event, it is just dropped. some resolution 
                 // method may kick in (e.g. fallbacks or feedback).
                 path_state->set_path_status(OUTCOME_PACKET_DROP);
-                path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+                path_state->set_path_length((*prev_path_state_itr)->get_path_length());
 
                 int penalty = 0;
                 if (this->mm_mode == MMH_FALLBACK) {
@@ -623,7 +629,8 @@ int RID_Analytics::run_rec(
                         // if the router is on the path to origin, we save 
                         // the LLM event probability for later use while 
                         // processing SLM events
-                        fallback_carry_prob += router->get_iface_events_prob(event);
+                        if (router->get_id() != this->origin_server->get_id())
+                            fallback_carry_prob += router->get_iface_events_prob(event);
                         // ... and set the path length of this state to 0.0
                         // FIXME: this shouldn't be necessary, now to calculate 
                         // avg. latencies you should only look into correct 
@@ -641,7 +648,7 @@ int RID_Analytics::run_rec(
                         resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
                         resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
                         resolution_state->set_path_prob(router->get_iface_events_prob(event));
-                        resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                        resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + penalty);
                     }
 
                 } else {
@@ -657,7 +664,7 @@ int RID_Analytics::run_rec(
                         resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
                         resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
                         resolution_state->set_path_prob(router->get_iface_events_prob(event));
-                        resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1 + penalty);
+                        resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + penalty);
                     }
                 }
             }
@@ -676,7 +683,7 @@ int RID_Analytics::run_rec(
                 path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
 
                 path_state->set_path_status(OUTCOME_TTL_DROP);
-                path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
+                path_state->set_path_length((*prev_path_state_itr)->get_path_length());
                 path_state->set_event(EVENT_TTL, router->get_iface_events_prob(event));
 
                 __float080 _prob = router->get_iface_events_prob(event) + fallback_carry_prob;

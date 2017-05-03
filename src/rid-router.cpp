@@ -265,8 +265,15 @@ int RID_Router::calc_egress_ptree_probs(
 
     if (mode == EGRESS_PTREE_PROB_MODE_GLOBAL) {
 
+        __float080 egress_ptree_prob_sum = 0.0;
         for (uint8_t f = 0; f <= this->f_max; f++)
-            this->egress_ptree_prob[iface][f] *= this->egress_iface_prob[iface][f];
+            egress_ptree_prob_sum += this->egress_ptree_prob[iface][f];
+
+        if (egress_ptree_prob_sum == 0.0)
+            return 0;
+
+        for (uint8_t f = 0; f <= this->f_max; f++)
+            this->egress_ptree_prob[iface][f] /= egress_ptree_prob_sum;
 
         return 0;
     }
@@ -507,6 +514,9 @@ int RID_Router::forward(
         << "\n\t P('SLM') = " << this->iface_events_pmf[EVENT_SLM]
         << "\n\t P('MLM') = " << this->iface_events_pmf[EVENT_MLM]
         << std::endl;
+
+    for (uint8_t i = 0; i < this->iface_num; i++)
+        calc_egress_ptree_probs(EGRESS_PTREE_PROB_MODE_GLOBAL, i, NULL, NULL);
 
     this->print_iface_events_pmf();
     this->print_egress_iface_prob();
@@ -1270,7 +1280,7 @@ int RID_Router::calc_joint_largest_match_distributions(
                 log_prob = this->calc_log_joint_largest_match_prob(ptree_size, ptree_iface, iface_pivots);
 
                 // scale the event probability by the following factors:
-                //  1) probability of having a request coming into the router
+                //  1) probability of having a request coming into the router (ingress_prob)
                 //  2) probability of having ptree_iface as the continuation 
                 //     of a prefix tree of size ptree_size
                 //  3) sum of all individual possible joint events, in order 
@@ -1281,15 +1291,15 @@ int RID_Router::calc_joint_largest_match_distributions(
                     // FIXME: this sounds hack-ish... but it works!
                     // check if iface_pivots encodes an event in which the 2 
                     // sub-events happen:
+                    //
                     //  1) ptree_size == tp_sizes[ptree_iface]
                     //  2) other iface_pivots[] indexes other than ptree_iface 
                     //     is 0
-
+                    //
                     // this represents the event of having the prefix tree of 
                     // size ptree_size continuing on ptree_iface AND having 
                     // a true positive entry of size ptree_size on ptree_iface.
-                    // in this case, we should not multiply log_prob by 
-                    // prob_iface_in_ptree, rather by this->ingress_prob, since 
+                    // if this event happens (...)
                     // 
                     int iface_pivots_sum = 0;
                     for (uint8_t k = 0; k < this->iface_num; k++)
@@ -1500,11 +1510,11 @@ __float080 RID_Router::calc_cumulative_prob(
                     // iface pivots
                     prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
-                    // std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
-                    //     << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
-                    // for (int k = 0; k < this->iface_num; k++)
-                    //     std::cout << "[" << iface_pivots[k] << "]";
-                    // std::cout << " = " << prob << std::endl;
+                    std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
+                        << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
+                    for (int k = 0; k < this->iface_num; k++)
+                        std::cout << "[" << iface_pivots[k] << "]";
+                    std::cout << " = " << prob << std::endl;
                 }
 
                 // distribute the probabilities over the egress iface probabilities
