@@ -25,7 +25,11 @@ def get_path_info(test_file, file_label):
 
     # use test_id to get additional information about the 
     # test from the .test file
-    test_id = '-'.join(file_label.split("-")[:7])
+    test_id = ""
+    if 'R' in file_label:
+        test_id = '-'.join(file_label.split("-")[:8])
+    else:
+        test_id = '-'.join(file_label.split("-")[:7])
     # print("get_path_length() : test_id = %s" % (test_id))
 
     for test in test_run.findall('test'):
@@ -38,20 +42,21 @@ def get_path_info(test_file, file_label):
 
 def plot_fallbacks(data, test_dir):
 
-    # the efficiency values are saved in a dict, indexed by the length of the 
-    # path (1, 3 and 6 hops). each key points to a list of 3 values, for the 3 
-    # diff. entry sizes : 1, 5 and 10. 
+    # forwarding efficiency values
     fwd_events = defaultdict()
     fwd_efficiency = defaultdict()
-    latency_avgs = defaultdict(list)
+    # latency averages
+    avg_delivery_latencies = defaultdict()
+    # delivery probs
+    avg_delivery_probs = defaultdict()
 
     # labels and colors for bars (topologies)
     topology_keys = ['1221', '4755', '7018']
     topology_colors = ['#000000', '#708090', '#bebebe']
-    bf_keys = ['192', '256']
+    radius_keys = ['1', '2']
 
-    # x-axis labels (|f| values)
-    req_sizes = []
+    # modes : '0' flood, '2' fallback
+    modes = []
 
     # path info
     path_lengths = defaultdict()
@@ -65,15 +70,15 @@ def plot_fallbacks(data, test_dir):
 
             # collect topology and bf-size keys
             topology_key = file_label.split("-")[0]
-            bf_key = file_label.split("-")[1]
+            radius_key = file_label.split("-")[7].lstrip("R")
 
             if topology_key not in got_path_info:
                 path_lengths[topology_key], avg_outdegrees[topology_key] = get_path_info(os.path.join(test_dir, ("%s.test" % (topology_key))), file_label)
                 got_path_info.append(topology_key)
 
+            # collect the mode as int
             mode = int(file_label.split("-")[5])
             if mode not in modes:
-                # print("scanning |f| = %d" % (req_size))
                 modes.append(mode)
 
             if file_type == "events":
@@ -87,36 +92,65 @@ def plot_fallbacks(data, test_dir):
                     fwd_efficiency[topology_key] = defaultdict()
                     fwd_events[topology_key] = defaultdict()
 
-                if bf_key not in fwd_efficiency[topology_key]:
-                    fwd_efficiency[topology_key][bf_key] = []
-                    fwd_events[topology_key][bf_key] = []
+                if radius_key not in fwd_efficiency[topology_key]:
+                    fwd_efficiency[topology_key][radius_key] = []
+                    fwd_events[topology_key][radius_key] = []
 
                 events = event_probs[EVENT_MLM] + event_probs[EVENT_SLM]
 
-                fwd_events[topology_key][bf_key].append(events)
-                fwd_efficiency[topology_key][bf_key].append(float(path_lengths[topology_key]) / float(events))
+                fwd_events[topology_key][radius_key].append(events)
+                fwd_efficiency[topology_key][radius_key].append(float(path_lengths[topology_key]) / float(events))
 
             if file_type == "path":
 
-                avg_latency = 0.0
-                latency_probs = data[key][sub_key].groupby(by = ["LATENCY"])["PROB"].sum()
+                # this will save the average delivery latency value
+                avg_delivery_latency = 0.0
+                # keep track of the delivery probability
+                delivery_prob = 0.0
+                delivery_probs = data[file_type][file_label].groupby(by = ["STATUS"])["PROB"].sum()
 
-                # avg. latency is generally calculated as sum(latency * prob), 
-                # but if the MMH_MODE is 'flood', we simply take the min() 
-                # of the keys for which prob > 0.0
-                if mode == 0:
-                    avg_latency = float(min(latency_probs.loc[latency_probs > 0.0].index.tolist()))
-                else:
-                    for lat, prob in latency_probs.iteritems():
-                        avg_latency += (lat * prob)
+                if topology_key not in avg_delivery_latencies:
+                    avg_delivery_latencies[topology_key] = defaultdict()
+                    avg_delivery_probs[topology_key] = defaultdict()
 
-                latency_avgs[mode].append(avg_latency)
+                if radius_key not in avg_delivery_latencies[topology_key]:
+                    avg_delivery_latencies[topology_key][radius_key] = []
+                    avg_delivery_probs[topology_key][radius_key] = []
+
+                avg_delivery_probs[topology_key][radius_key].append((delivery_probs[0], delivery_probs[1]))
+
+                # order dataframe values by STATUS and LATENCY. the objective is 
+                # to only look at the STATUS = 0 (correct delivery) and keep 
+                # multiplying LATENCY * PROB until we reach a delivery prob of 1.0
+                delivery_latency = data[file_type][file_label].sort(["STATUS","LATENCY"])
+                
+                for index, row in delivery_latency.iterrows():
+
+                    print("%s.%s.%d : %d, %d, %.2f" % (topology_key, radius_key, mode, row['STATUS'], row['LATENCY'], row['PROB']))
+                    if (delivery_prob + row['PROB']) >= 1.0:
+                        avg_delivery_latency += ((1.0 - delivery_prob) * row['LATENCY'])
+                        break
+
+                    delivery_prob += row['PROB']
+                    avg_delivery_latency += (row['PROB'] * row['LATENCY'])
+
+                avg_delivery_latencies[topology_key][radius_key].append(avg_delivery_latency)
 
     print("fwd_efficiency : %s" % (fwd_efficiency))
     print("fwd_events :")
     for t in fwd_events:
         for b in fwd_events[t]:
             print("%s.%s = %s" % (t, b, str(fwd_events[t][b])))
+
+    print("avg_delivery_latencies :")
+    for t in avg_delivery_latencies:
+        for b in avg_delivery_latencies[t]:
+            print("%s.%s = %s" % (t, b, str(avg_delivery_latencies[t][b])))
+
+    print("avg_delivery_probs :")
+    for t in avg_delivery_probs:
+        for b in avg_delivery_probs[t]:
+            print("%s.%s = %s" % (t, b, str(avg_delivery_probs[t][b])))
 
     for t in path_lengths:
         print("%s : %d" % (t, path_lengths[t]))
@@ -130,11 +164,8 @@ def plot_fallbacks(data, test_dir):
     ax1.xaxis.grid(False)
     ax1.yaxis.grid(True)
 
-    # each |f| slot will have 3 groups of bars, w/ 
-    # 3 bars each. there will be a total of 
-    # 18 bars in the graph
     bar_group_size = len(topology_keys)
-    bar_group_num = 3
+    bar_group_num = 2
 
     # assumes the inter bar group space is half a bar. also, for n groups of bars 
     # we have n - 1 inter bar group spaces
@@ -146,9 +177,9 @@ def plot_fallbacks(data, test_dir):
 
     show_legend = True
     i = 0
-    for bf_key in bf_keys:
+    for radius_key in radius_keys:
 
-        if bf_key != '192':
+        if radius_key != '1':
             show_legend = False
 
         for t, topology_key in enumerate(topology_keys):
@@ -158,28 +189,28 @@ def plot_fallbacks(data, test_dir):
             else:
                 leg = None
 
-            xx_pos[i] = (np.arange(1, (2 * len(req_sizes)), step = 2) + (m * bar_width) + (bar_width / 2.0))
+            xx_pos[i] = (np.arange(1, (2 * len(modes)), step = 2) + (m * bar_width) + (bar_width / 2.0))
             i += 1
-            ax1.bar(np.arange(1, (2 * len(req_sizes)), step = 2) + (m * bar_width), np.array(fwd_events[topology_key][bf_key]), color = topology_colors[t], linewidth = 1.5, alpha = 0.55, width = bar_width, label = leg)
+            ax1.bar(np.arange(1, (2 * len(modes)), step = 2) + (m * bar_width), np.array(avg_delivery_latencies[topology_key][radius_key]), color = topology_colors[t], linewidth = 1.5, alpha = 0.55, width = bar_width, label = leg)
             m += 1.0
 
-        x_pos[bf_key] = np.arange(1, (2 * len(req_sizes)), step = 2) + ((m - 1.5) * bar_width)
+        x_pos[radius_key] = np.arange(1, (2 * len(modes)), step = 2) + ((m - 1.5) * bar_width)
         m += 1.0
 
-    ax1.set_xlabel("BF sizes\nRequest size")
-    ax1.set_ylabel("Avg. # of used links")
+    ax1.set_xlabel("Annc. radius\nMultiple match res. mode")
+    ax1.set_ylabel("Avg. latency (# of hops)")
     # ax1.set_yscale('log')
-    ax1.set_ylim(0, 50)
-    ax1.set_yticks([0, 10, 20, 30])
+    ax1.set_ylim(0, 12)
+    ax1.set_yticks(np.arange(0, 8 + 1, step = 2))
 
-    xxticks = x_pos['192'] + ((x_pos['256'][0] - x_pos['192'][0]) / 2.0)
-    xticks = interleave_n(x_pos['192'], xxticks, x_pos['256'])
+    xxticks = x_pos['1'] + ((x_pos['2'][0] - x_pos['1'][0]) / 2.0)
+    xticks = interleave_n(x_pos['1'], xxticks, x_pos['2'])
     # a convoluted way to set the x-axis labels?
     xtick_labels = []
-    for req_size in req_sizes:
-        xtick_labels.append("%s" % ('192'))
-        xtick_labels.append("\n%d" % (req_size))
-        xtick_labels.append("%s" % ('256'))
+    for mode_str in ['Flood', 'Fallback']:
+        xtick_labels.append("%s" % ('1'))
+        xtick_labels.append("\n%s" % (mode_str))
+        xtick_labels.append("%s" % ('2'))
 
     ax1.set_xticks(xticks)
     ax1.set_xticklabels(xtick_labels)
@@ -191,32 +222,35 @@ def plot_fallbacks(data, test_dir):
     # a convoluted way to transform a dictionary into a list, 
     # ready to use in plot(). the outermost guide of the cycle 
     # is the entry size |f|
-    fwd_efficiency_array = []
-    for f, el in enumerate(req_sizes):
-        for bf_key in bf_keys:
-            for topology_key in topology_keys:
+    avg_correct_delivery_probs_array = []
+    avg_incorrect_delivery_probs_array = []
 
-                fwd_efficiency_array.append(int(fwd_efficiency[topology_key][bf_key][f] * 100.0))
+    for f, el in enumerate(modes):
+        for radius_key in radius_keys:
+            for topology_key in topology_keys:
+                avg_correct_delivery_probs_array.append(int(avg_delivery_probs[topology_key][radius_key][f][0]))
+                avg_incorrect_delivery_probs_array.append(int(avg_delivery_probs[topology_key][radius_key][f][1]))
 
     # another convoluted way to create the x-axis for the fwd efficiency graph
     # FIXME: interleave_n() accepts a list of lists
     print(xx_pos)
     xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2], xx_pos[3], xx_pos[4], xx_pos[5])
 
-    ax2.plot(xx_pos, fwd_efficiency_array, linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = 'o', label = 'Fwd. effic.')
+    ax2.plot(xx_pos, avg_correct_delivery_probs_array, linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = '^', label = 'Corr. del.')
+    ax2.plot(xx_pos, avg_incorrect_delivery_probs_array, linewidth = 1.5, color = 'black', linestyle = '--', markersize = 5, marker = 'v', label = 'Incorr. del.')
     # ax2.axhspan(0, 100, linewidth = 0.0, facecolor = '#bebebe', alpha=0.20)
 
     ax2.set_xlim(xx_pos[0] - (3 * bar_width), xx_pos[-1] + (3 * bar_width))
     ax2.set_xticks(xticks)
     ax2.set_xticklabels(xtick_labels)
 
-    ax2.set_ylim(-50, 200)
-    ax2.set_yticks([0, 50, 100])
-    ax2.set_ylabel("Fwd. efficiency (%)")
+    ax2.set_ylim(-20, 40)
+    ax2.set_yticks([0, 10, 20])
+    ax2.set_ylabel("Avg. # of deliveries")
 
     ax2.legend(fontsize=12, ncol=1, loc='upper right')
 
-    plt.savefig("global-req-size-efficiency.pdf", bbox_inches='tight', format = 'pdf')
+    plt.savefig("cdn-fallbacks.pdf", bbox_inches='tight', format = 'pdf')
 
 def plot_reqs(data, test_dir):
 

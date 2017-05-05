@@ -95,7 +95,10 @@ def get_path_info(test_file, file_label):
 
     # use test_id to get additional information about the 
     # test from the .test file
-    test_id = '-'.join(file_label.split("-")[:7])
+    test_id_components = file_label.split("-")
+    if 'R' in file_label:
+        del test_id_components[7]
+    test_id = '-'.join(test_id_components[:7])
     # print("get_path_length() : test_id = %s" % (test_id))
 
     for test in test_run.findall('test'):

@@ -73,6 +73,8 @@ if __name__ == "__main__":
             plot_global.plot_bfs(data, args.test_file)
         elif args.subcase == 'req-sizes':
             plot_global.plot_reqs(data, args.test_file)
+        elif args.subcase == 'fallbacks':
+            plot_global.plot_fallbacks(data, args.test_file)
         else:
             sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
             parser.print_help()

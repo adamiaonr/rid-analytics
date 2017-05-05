@@ -874,7 +874,7 @@ int RID_Analytics::run(
     initial_state->set_tree_bitmask(tree_bitmask, tree_bitmask_size);
     // the initial ttl is set to the distance from starting router to the 
     // origin server
-    initial_state->set_ttl(this->ttl);
+    initial_state->set_ttl(4);
 
     // we always start at the ingress iface, so that we don't have a local 
     // match at the initial router (not sure if this can work directly like 

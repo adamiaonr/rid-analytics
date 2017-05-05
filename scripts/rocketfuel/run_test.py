@@ -13,6 +13,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 import xml.etree.cElementTree as et
+import multiprocessing as mp
 
 from xml.dom import minidom
 from prettytable import PrettyTable
@@ -20,36 +21,37 @@ from prettytable import PrettyTable
 from collections import defaultdict
 from collections import OrderedDict
 
-def run_analysis(params):
+def run_analysis(
+    scn_file,
+    data_dir,
+    output_label,
+    bf_size,
+    request_size,
+    mm_mode,
+    resolution_mode,
+    origin_server,
+    start_router):
 
     args = ("/home/adamiaonr/workbench/rid-analytics/run-analysis", 
-        "--scn-file", params['scn-file'], 
-        "--data-dir", params['data-dir'], 
-        "--output-label", params['output-label'], 
-        "--bf-size", params['bf-size'], 
-        "--request-size", params['request-size'], 
-        "--mm-mode", params['mm-mode'], 
-        "--resolution-mode", params['resolution-mode'], 
-        "--origin-server", params['origin-server'], 
-        "--start-router", params['start-router'])
+        "--scn-file", scn_file, 
+        "--data-dir", data_dir, 
+        "--output-label", output_label, 
+        "--bf-size", bf_size, 
+        "--request-size", request_size, 
+        "--mm-mode", mm_mode, 
+        "--resolution-mode", resolution_mode, 
+        "--origin-server", origin_server, 
+        "--start-router", start_router)
 
     print(args)
 
     start_time = time.time()
     with open(os.devnull, 'w') as devnull:
         subprocess.check_call(args, stdout=devnull)
-    print("run_analysis for %s finished. [time : %s]\n" % (params['output-label'], time.time() - start_time))
+    
+    print("run_analysis for %s finished. [time : %s]\n" % (output_label, time.time() - start_time))
 
-    # command = "/home/adamiaonr/workbench/rid-analytics/run-analysis "
-    # for arg in params:
-    #     command += "--" + arg + " " + params[arg] + " "
-    # command += "&> /dev/null"
-
-    # start_time = time.time()
-    # os.system(command)
-
-    # popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-    # popen.wait()
+    return output_label
 
 if __name__ == "__main__":
 
@@ -59,8 +61,7 @@ if __name__ == "__main__":
     # options (self-explanatory)
     parser.add_argument(
         "--test-file", 
-         help = """path w/ topology files (e.g. .cch for isp maps, edge folders 
-            for pop-level maps, etc.)""")
+         help = """.test file w/ description of tests to run""")
 
     args = parser.parse_args()
 
@@ -73,7 +74,7 @@ if __name__ == "__main__":
     test_run = et.parse(args.test_file)
     test_run_root = test_run.getroot()
 
-    params = defaultdict()
+    params = dict()
     for test in test_run.findall('test'):
 
         # test id to use as prefix to output labels
@@ -85,16 +86,45 @@ if __name__ == "__main__":
         params['mm-mode'] = test.find('modes').text.split("-", 1)[0]
         params['resolution-mode'] = test.find('modes').text.split("-", 1)[1]
 
+        # we use a thread pool to run tests in parallel
+        pool = mp.Pool(mp.cpu_count())
+        tasks = []
+
         for path in test.find('paths').findall('path'):
 
             params['scn-file'] = path.get('file')
             params['start-router'] = str(int(path.text.split(",")[0]))
             params['origin-server'] = str(int(path.text.split(",")[-1]))
 
-            length = path.get('length')
-            outdegree = path.get('outdegre')
-            params['output-label'] = ("%s-%s-%s-%s-%s" % ( 
-                test_id, length, outdegree,
+            params['output-label'] = ("%s-%s-%s" % ( 
+                test_id,
                 params['start-router'], params['origin-server']))
 
-            run_analysis(params)
+            tasks.append((
+                params['scn-file'], 
+                params['data-dir'], 
+                params['output-label'], 
+                params['bf-size'], 
+                params['request-size'], 
+                params['mm-mode'], 
+                params['resolution-mode'], 
+                params['origin-server'], 
+                params['start-router']))
+
+        if len(tasks) > 0:
+
+            jobs_remaining = len(tasks)
+            results = [pool.apply_async(run_analysis, task) for task in tasks]
+
+            for result in results:
+
+                jobs_remaining = jobs_remaining - 1
+                test_label = result.get()
+                
+                if test_label is not None:
+                    print("finished %s. %d jobs remaining." 
+                        % (test_label, jobs_remaining))
+
+        # keep things tidy
+        pool.close()
+        pool.join()
