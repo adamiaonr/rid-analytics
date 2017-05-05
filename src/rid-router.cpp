@@ -1258,7 +1258,7 @@ int RID_Router::calc_joint_largest_match_distributions(
     // calc_joint_largest_match_distributions(), and its invocation here 
     // seems overkill. unfortunately, i haven't found another way to deal 
     // with this issue.
-    __float080 log_joint_prob_sum = log(calc_joint_largest_match_prob_sum(ptree_size, ptree_iface));
+    __float080 joint_prob_sum = calc_joint_largest_match_prob_sum(ptree_size, ptree_iface);
 
     while (curr_i > -1) {
 
@@ -1315,7 +1315,8 @@ int RID_Router::calc_joint_largest_match_distributions(
                     log_prob += log(prob_iface_in_ptree);
                 }
 
-                log_prob -= log_joint_prob_sum;
+                if (joint_prob_sum > 0.0)
+                    log_prob -= log(joint_prob_sum);
 
                 // add the calculated probability to the matrix of joint 
                 // probabilities
@@ -1512,11 +1513,11 @@ __float080 RID_Router::calc_cumulative_prob(
                     // iface pivots
                     prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
-                    std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
-                        << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
-                    for (int k = 0; k < this->iface_num; k++)
-                        std::cout << "[" << iface_pivots[k] << "]";
-                    std::cout << " = " << prob << std::endl;
+                    // std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
+                    //     << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
+                    // for (int k = 0; k < this->iface_num; k++)
+                    //     std::cout << "[" << iface_pivots[k] << "]";
+                    // std::cout << " = " << prob << std::endl;
                 }
 
                 // distribute the probabilities over the egress iface probabilities
