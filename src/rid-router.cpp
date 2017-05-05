@@ -1420,7 +1420,9 @@ __float080 RID_Router::calc_cumulative_prob(
     bool distribute_probs = false;
     if (this->mm_mode == MMH_FLOOD && mode == MODE_EI_INCLUSIVE) {
         distribute_probs = true;
-    } else if (this->mm_mode != MMH_FLOOD && mode == MODE_EI_EXCLUSIVE) {
+    } else if (this->mm_mode == MMH_RANDOM && mode == MODE_EI_INCLUSIVE) {
+        distribute_probs = true;
+    } else if (this->mm_mode == MMH_FALLBACK && mode == MODE_EI_EXCLUSIVE) {
         distribute_probs = true;
     }
 
@@ -1519,9 +1521,22 @@ __float080 RID_Router::calc_cumulative_prob(
 
                 // distribute the probabilities over the egress iface probabilities
                 if (distribute_probs) {
+
+                    __float080 prob_multiplier = 1.0;
+                    if (this->mm_mode == MMH_RANDOM) {
+
+                        for (int k = 0; k < this->iface_num; k++) {
+                            if ((iface_pivots[k]) > 0 && (iface_pivots[k] == fixed_iface_size))
+                                prob_multiplier += 1.0;
+                        }
+
+                        if (prob_multiplier > 1.0)
+                            prob_multiplier = (1.0 / (prob_multiplier - 1.0));
+                    }
+
                     for (int k = 0; k < this->iface_num; k++) {
                         if ((iface_pivots[k]) > 0 && (iface_pivots[k] == fixed_iface_size))
-                            this->egress_iface_prob[k][iface_pivots[k]] += prob;
+                            this->egress_iface_prob[k][iface_pivots[k]] += (prob_multiplier * prob);
                     }
                 }
 
