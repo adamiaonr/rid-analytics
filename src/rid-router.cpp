@@ -1325,25 +1325,27 @@ int RID_Router::calc_joint_largest_match_distributions(
                 //     to allow normalization of their probabilities
                 log_prob += log(prob_iface_in_ptree);
                 log_prob += log(this->ingress_prob);
-                log_prob -= log(joint_prob_sum);
+
+                if (joint_prob_sum > 0.0)
+                    log_prob -= log(joint_prob_sum);
                 // add the calculated probability to the matrix of joint 
                 // probabilities
                 __float080 prob = exp(log_prob);
                 this->add_joint_lpm_prob(joint_prob_matrix, iface_pivots, prob);
 
-                if (prob > 0.0) {
+                // if (prob > 0.0) {
 
-                    std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] JOINT_PROB" 
-                        << "(" << (int) ptree_iface << ", " << (int) ptree_size << ")";
-                    for (int k = 0; k < this->iface_num; k++)
-                        std::cout << "[" << iface_pivots[k] << "]";
-                    std::cout << " = " << prob << std::endl;
+                //     std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] JOINT_PROB" 
+                //         << "(" << (int) ptree_iface << ", " << (int) ptree_size << ")";
+                //     for (int k = 0; k < this->iface_num; k++)
+                //         std::cout << "[" << iface_pivots[k] << "]";
+                //     std::cout << " = " << prob << std::endl;
 
-                    std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] (SUM) JOINT_PROB";
-                    for (int k = 0; k < this->iface_num; k++)
-                        std::cout << "[" << iface_pivots[k] << "]";
-                    std::cout << " = " << this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots) << std::endl;
-                }
+                //     std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] (SUM) JOINT_PROB";
+                //     for (int k = 0; k < this->iface_num; k++)
+                //         std::cout << "[" << iface_pivots[k] << "]";
+                //     std::cout << " = " << this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots) << std::endl;
+                // }
 
                 std::set<uint8_t>::iterator it = this->no_forwarding.find((uint8_t) curr_i);
                 if (it != this->no_forwarding.end()) {
@@ -1521,11 +1523,11 @@ __float080 RID_Router::calc_cumulative_prob(
                     // iface pivots
                     prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
 
-                    std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
-                        << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
-                    for (int k = 0; k < this->iface_num; k++)
-                        std::cout << "[" << iface_pivots[k] << "]";
-                    std::cout << " = " << prob << std::endl;
+                    // std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
+                    //     << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
+                    // for (int k = 0; k < this->iface_num; k++)
+                    //     std::cout << "[" << iface_pivots[k] << "]";
+                    // std::cout << " = " << prob << std::endl;
                 }
 
                 // distribute the probabilities over the egress iface probabilities
