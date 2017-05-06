@@ -441,7 +441,7 @@ def plot_bf_sizes(data, test_dir):
     fwd_efficiency = defaultdict()
 
     # labels and colors for bars (topologies)
-    topology_keys = ['1221', '4755', '7018']
+    topology_keys = ['1221', '4755']
     topology_colors = ['#000000', '#708090', '#bebebe']
 
     # x-axis labels (|f| values)
@@ -608,7 +608,8 @@ def plot_bf_sizes(data, test_dir):
     # another convoluted way to create the x-axis for the fwd efficiency graph
     # FIXME: interleave_n() accepts a list of lists
     print(xx_pos)
-    xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2], xx_pos[3], xx_pos[4], xx_pos[5], xx_pos[6], xx_pos[7], xx_pos[8])
+    xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2], xx_pos[3], xx_pos[4], xx_pos[5])
+    # xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2], xx_pos[3], xx_pos[4], xx_pos[5], xx_pos[6], xx_pos[7], xx_pos[8])
 
     ax2.plot(xx_pos, fwd_efficiency_array, linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = 'o', label = 'Fwd. effic.')
     # ax2.axhspan(0, 100, linewidth = 0.0, facecolor = '#bebebe', alpha=0.20)
