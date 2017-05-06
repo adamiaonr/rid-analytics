@@ -218,6 +218,8 @@ class RID_Router {
             __float080 * log_prob_fp_not_larger_than,
             __float080 * log_prob_not_fp);
 
+        int normalize_probs(__float080 ingress_prob);
+
         RID_Router::lpm_pmf_row ** lpm_pmf;
         // probability of interface events (NIS, MIS, LI)
         __float080 * iface_events_pmf;
