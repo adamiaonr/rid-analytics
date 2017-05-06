@@ -40,7 +40,7 @@ def get_path_info(test_file, file_label):
         for path in test.find('paths').findall('path'):
             return (len(path.text.split(',')) - 1), float(path.get('avg_outdegree'))
 
-def plot_fallbacks(data, test_dir):
+def plot_bf_sizes_fallbacks(data, test_dir):
 
     # forwarding efficiency values
     fwd_events = defaultdict()
@@ -252,11 +252,8 @@ def plot_fallbacks(data, test_dir):
 
     plt.savefig("cdn-fallbacks.pdf", bbox_inches='tight', format = 'pdf')
 
-def plot_reqs(data, test_dir):
+def plot_request_sizes(data, test_dir):
 
-    # the efficiency values are saved in a dict, indexed by the length of the 
-    # path (1, 3 and 6 hops). each key points to a list of 3 values, for the 3 
-    # diff. entry sizes : 1, 5 and 10. 
     fwd_events = defaultdict()
     fwd_efficiency = defaultdict()
 
@@ -417,7 +414,7 @@ def plot_reqs(data, test_dir):
 
     plt.savefig("global-req-size-efficiency.pdf", bbox_inches='tight', format = 'pdf')
 
-def plot_bfs(data, test_dir):
+def plot_bf_sizes(data, test_dir):
 
     # we plot 2 things : forwarding efficiency and avg. nr. of deliveries. the 
     # objective is to plot a bar chart for fwd efficiency values, together with 
@@ -448,11 +445,14 @@ def plot_bfs(data, test_dir):
     topology_colors = ['#000000', '#708090', '#bebebe']
 
     # x-axis labels (|f| values)
-    entry_lengths = []
+    entry_lengths = [1, 5]
 
     # path info
     path_lengths = defaultdict()
     avg_outdegrees = defaultdict()
+
+    # nr. of samples
+    num_samples = defaultdict()
 
     # populate the fwd_* dicts w/ data obtained from .tsv files
     got_path_info = []
@@ -469,9 +469,9 @@ def plot_bfs(data, test_dir):
                 got_path_info.append(topology_key)
 
             entry_length = int(file_label.split("-")[3])
-            if entry_length not in entry_lengths:
-                # print("scanning |f| = %d" % (entry_length))
-                entry_lengths.append(entry_length)
+            # if entry_length not in entry_lengths:
+            #     # print("scanning |f| = %d" % (entry_length))
+            #     entry_lengths.append(entry_length)
 
             if file_type == "events":
 
@@ -483,27 +483,49 @@ def plot_bfs(data, test_dir):
                 if topology_key not in fwd_efficiency:
                     fwd_efficiency[topology_key] = defaultdict()
                     fwd_events[topology_key] = defaultdict()
+                    num_samples[topology_key] = defaultdict()
 
                 if bf_key not in fwd_efficiency[topology_key]:
-                    fwd_efficiency[topology_key][bf_key] = []
-                    fwd_events[topology_key][bf_key] = []
+                    fwd_efficiency[topology_key][bf_key] = [0.0, 0.0]
+                    fwd_events[topology_key][bf_key] = [0.0, 0.0]
+                    num_samples[topology_key][bf_key] = [0, 0]
 
                 events = event_probs[EVENT_MLM] + event_probs[EVENT_SLM]
 
-                fwd_events[topology_key][bf_key].append(events)
-                fwd_efficiency[topology_key][bf_key].append(float(path_lengths[topology_key]) / float(events))
+                # if len(fwd_events[topology_key][bf_key]) < 2:
+                #     fwd_events[topology_key][bf_key].append(events)
+                #     fwd_efficiency[topology_key][bf_key].append(float(path_lengths[topology_key]) / float(events))
+                #     num_samples[topology_key][bf_key].append(1)
+                # else:
+                fwd_events[topology_key][bf_key][entry_lengths.index(entry_length)] += events
+                print("fwd_efficiency %s:%s:%d : %f" % (topology_key, bf_key, entry_length, (float(path_lengths[topology_key]) / float(events))))
+                fwd_efficiency[topology_key][bf_key][entry_lengths.index(entry_length)] += (float(path_lengths[topology_key]) / float(events))
+                num_samples[topology_key][bf_key][entry_lengths.index(entry_length)] += 1
 
-    print("fwd_efficiency : %s" % (fwd_efficiency))
+                print("num_samples %s:%s:%d : %s" % (topology_key, bf_key, entry_length, str(num_samples[topology_key][bf_key])))
+
+
+    print("fwd_efficiency :")
+    for t in fwd_efficiency:
+        for b in fwd_efficiency[t]:
+            print("%s.%s = %s" % (t, b, str(fwd_efficiency[t][b])))
+
     print("fwd_events :")
     for t in fwd_events:
         for b in fwd_events[t]:
             print("%s.%s = %s" % (t, b, str(fwd_events[t][b])))
 
+    print("num_samples :")
+    for t in num_samples:
+        for b in num_samples[t]:
+            print("%s.%s = %s" % (t, b, str(num_samples[t][b])))
+
+    print("path_lengths :")
     for t in path_lengths:
         print("%s : %d" % (t, path_lengths[t]))
 
     # create labels for the bars
-    topology_labels = {'1221': 'Telstra (1221)', '3257': 'Tiscali (3257)', '4755': 'VSNL (4755', '7018': 'AT&T (7018)'}
+    topology_labels = {'1221': 'Telstra (1221)', '3257': 'Tiscali (3257)', '4755': 'VSNL (4755)', '7018': 'AT&T (7018)'}
 
     #matplotlib.style.use('ggplot')
     fig = plt.figure(figsize=(5, 3.5))
@@ -541,7 +563,10 @@ def plot_bfs(data, test_dir):
 
             xx_pos[i] = (np.arange(1, (2 * len(entry_lengths)), step = 2) + (m * bar_width) + (bar_width / 2.0))
             i += 1
-            ax1.bar(np.arange(1, (2 * len(entry_lengths)), step = 2) + (m * bar_width), np.array(fwd_events[topology_key][bf_key]), color = topology_colors[t], linewidth = 1.5, alpha = 0.55, width = bar_width, label = leg)
+            ax1.bar(
+                np.arange(1, (2 * len(entry_lengths)), step = 2) + (m * bar_width), 
+                np.array(fwd_events[topology_key][bf_key]) / np.array(num_samples[topology_key][bf_key]), 
+                color = topology_colors[t], linewidth = 1.5, alpha = 0.55, width = bar_width, label = leg)
             m += 1.0
 
         x_pos[bf_key] = np.arange(1, (2 * len(entry_lengths)), step = 2) + ((m - 1.5) * bar_width)
@@ -550,8 +575,8 @@ def plot_bfs(data, test_dir):
     ax1.set_xlabel("BF sizes\nFwd. entry size")
     ax1.set_ylabel("Avg. # of used links")
     # ax1.set_yscale('log')
-    ax1.set_ylim(0, 50)
-    ax1.set_yticks([0, 10, 20, 30])
+    ax1.set_ylim(0, 200)
+    ax1.set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
 
     xticks = interleave_n(x_pos['192'], x_pos['256'], x_pos['512'])
     # a convoluted way to set the x-axis labels?
@@ -578,7 +603,7 @@ def plot_bfs(data, test_dir):
         for bf_key in ['192', '256', '512']:
             for topology_key in topology_keys:
 
-                fwd_efficiency_array.append(int(fwd_efficiency[topology_key][bf_key][f] * 100.0))
+                fwd_efficiency_array.append(int((fwd_efficiency[topology_key][bf_key][f] / num_samples[topology_key][bf_key][f]) * 100.0))
 
     # another convoluted way to create the x-axis for the fwd efficiency graph
     # FIXME: interleave_n() accepts a list of lists
@@ -598,4 +623,4 @@ def plot_bfs(data, test_dir):
 
     ax2.legend(fontsize=12, ncol=1, loc='upper right')
 
-    plt.savefig("global-bf-efficiency.pdf", bbox_inches='tight', format = 'pdf') 
+    plt.savefig("global-bf-sizes.pdf", bbox_inches='tight', format = 'pdf') 

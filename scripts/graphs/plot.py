@@ -69,12 +69,12 @@ if __name__ == "__main__":
             parser.print_help()
             sys.exit(1)
 
-        if args.subcase == 'bfs':
-            plot_global.plot_bfs(data, args.test_file)
-        elif args.subcase == 'req-sizes':
-            plot_global.plot_reqs(data, args.test_file)
-        elif args.subcase == 'fallbacks':
-            plot_global.plot_fallbacks(data, args.test_file)
+        if args.subcase == 'bf-sizes':
+            plot_global.plot_bf_sizes(data, args.test_file)
+        elif args.subcase == 'request-sizes':
+            plot_global.plot_request_sizes(data, args.test_file)
+        elif args.subcase == 'bf-sizes-fallbacks':
+            plot_global.plot_bf_sizes_fallbacks(data, args.test_file)
         else:
             sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
             parser.print_help()

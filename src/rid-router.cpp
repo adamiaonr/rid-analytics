@@ -1258,7 +1258,7 @@ int RID_Router::calc_joint_largest_match_distributions(
     // calc_joint_largest_match_distributions(), and its invocation here 
     // seems overkill. unfortunately, i haven't found another way to deal 
     // with this issue.
-    __float080 joint_prob_sum = calc_joint_largest_match_prob_sum(ptree_size, ptree_iface);
+    // __float080 joint_prob_sum = calc_joint_largest_match_prob_sum(ptree_size, ptree_iface);
 
     while (curr_i > -1) {
 
@@ -1315,8 +1315,8 @@ int RID_Router::calc_joint_largest_match_distributions(
                     log_prob += log(prob_iface_in_ptree);
                 }
 
-                if (joint_prob_sum > 0.0)
-                    log_prob -= log(joint_prob_sum);
+                // if (joint_prob_sum > 0.0)
+                //     log_prob -= log(joint_prob_sum);
 
                 // add the calculated probability to the matrix of joint 
                 // probabilities
