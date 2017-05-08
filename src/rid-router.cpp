@@ -1240,7 +1240,12 @@ int RID_Router::calc_joint_largest_match_distributions(
         int max_pivot = 0;
 
         if ((ptree_size > 0) && (i == ptree_iface)) {
-            iface_pivots_max[i] = ptree_size;
+
+            if (this->tp_sizes[i] > ptree_size)
+                iface_pivots_max[i] = this->tp_sizes[i];
+            else
+                iface_pivots_max[i] = ptree_size;
+
         } else {
 
             do {
@@ -1459,10 +1464,29 @@ __float080 RID_Router::calc_cumulative_prob(
     // initialize the iface_pivots_max array for f
     if (mode == MODE_EI_INCLUSIVE) {
 
-        for (uint8_t k = 0; k < fixed_iface; k++)
-            iface_pivots_max[k] = (fixed_iface_size - 1);
+        for (uint8_t k = 0; k < fixed_iface; k++) {
+
+            int prev_max_pivot = 0;
+            int max_pivot = 0;
+            int f_bitmask = this->fwd_table[k].f_bitmask;
+
+            do {
+                prev_max_pivot = max_pivot;
+
+                max_pivot = ffs(f_bitmask);
+                if (max_pivot >= fixed_iface_size)
+                    break;
+
+                f_bitmask = f_bitmask & (f_bitmask - 1);
+                
+            } while(ffs(f_bitmask) != 0);
+
+            iface_pivots_max[k] = std::min(prev_max_pivot, (int) fixed_iface_size);
+        }
+
         for (uint8_t k = fixed_iface; k < this->iface_num; k++) {
 
+            int fixed_iface_max_size = 0;
             int max_pivot = 0;
             int f_bitmask = this->fwd_table[k].f_bitmask;
 
@@ -1471,22 +1495,35 @@ __float080 RID_Router::calc_cumulative_prob(
                 f_bitmask = f_bitmask & (f_bitmask - 1);
             } while(ffs(f_bitmask) != 0);
 
-            iface_pivots_max[k] = std::min(max_pivot, (int) fixed_iface_size);
+            if (k == fixed_iface)
+                fixed_iface_max_size = max_pivot;
+
+            if (max_pivot > fixed_iface_max_size)
+                iface_pivots_max[k] = max_pivot;
+            else
+                iface_pivots_max[k] = std::min(max_pivot, (int) fixed_iface_size);
         }
 
     } else {
 
         for (uint8_t k = 0; k < this->iface_num; k++) {
 
+            int prev_max_pivot = 0;
             int max_pivot = 0;
             int f_bitmask = this->fwd_table[k].f_bitmask;
-            
+
             do {
+                prev_max_pivot = max_pivot;
+
                 max_pivot = ffs(f_bitmask);
+                if (max_pivot >= fixed_iface_size)
+                    break;
+
                 f_bitmask = f_bitmask & (f_bitmask - 1);
+
             } while(ffs(f_bitmask) != 0);
 
-            iface_pivots_max[k] = std::min(max_pivot, (int) fixed_iface_size);
+            iface_pivots_max[k] = std::min(prev_max_pivot, (int) fixed_iface_size);
         }
     }
 
@@ -1543,21 +1580,34 @@ __float080 RID_Router::calc_cumulative_prob(
                 // distribute the probabilities over the egress iface probabilities
                 if (distribute_probs) {
 
-                    __float080 prob_multiplier = 1.0;
+                    int max_match = 0;
+                    for (int k = 0; k < this->iface_num; k++)
+                        if (iface_pivots[k] > max_match)
+                            max_match = iface_pivots[k];
+
                     if (this->mm_mode == MMH_RANDOM) {
 
+                        __float080 prob_multiplier = 0.0;
                         for (int k = 0; k < this->iface_num; k++) {
-                            if ((iface_pivots[k]) > 0 && (iface_pivots[k] == fixed_iface_size))
+                            if ((iface_pivots[k]) > 0 && (iface_pivots[k] == max_match))
                                 prob_multiplier += 1.0;
                         }
 
-                        if (prob_multiplier > 1.0)
-                            prob_multiplier = (1.0 / (prob_multiplier - 1.0));
-                    }
+                        if (prob_multiplier > 0.0)
+                            prob_multiplier = (1.0 / (prob_multiplier));
 
-                    for (int k = 0; k < this->iface_num; k++) {
-                        if ((iface_pivots[k]) > 0 && (iface_pivots[k] == fixed_iface_size))
-                            this->egress_iface_prob[k][iface_pivots[k]] += (prob_multiplier * prob);
+
+                        for (int k = 0; k < this->iface_num; k++) {
+                            if ((iface_pivots[k]) > 0 && (iface_pivots[k] == max_match))
+                                this->egress_iface_prob[k][iface_pivots[k]] += (prob_multiplier * prob);
+                        }
+
+                    } else {
+
+                        for (int k = 0; k < this->iface_num; k++) {
+                            if ((iface_pivots[k]) > 0 && (iface_pivots[k] == max_match))
+                                this->egress_iface_prob[k][iface_pivots[k]] += (prob);
+                        }
                     }
                 }
 
