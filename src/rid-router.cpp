@@ -1476,8 +1476,18 @@ __float080 RID_Router::calc_cumulative_prob(
 
     } else {
 
-        for (uint8_t k = 0; k < this->iface_num; k++)
-            iface_pivots_max[k] = (fixed_iface_size - 1);
+        for (uint8_t k = 0; k < this->iface_num; k++) {
+
+            int max_pivot = 0;
+            int f_bitmask = this->fwd_table[k].f_bitmask;
+            
+            do {
+                max_pivot = ffs(f_bitmask);
+                f_bitmask = f_bitmask & (f_bitmask - 1);
+            } while(ffs(f_bitmask) != 0);
+
+            iface_pivots_max[k] = std::min(max_pivot, (int) fixed_iface_size);
+        }
     }
 
     int curr_i = (this->iface_num - 1);

@@ -84,6 +84,36 @@ def extract_data(data_dir):
 
     return data
 
+def get_path(test_file, file_label):
+
+    # extract info from .test file
+    test_run = et.parse(test_file)
+    test_run_root = test_run.getroot()
+
+    path_lengths = defaultdict()
+    avg_outdegrees = defaultdict()
+
+    # use test_id to get additional information about the 
+    # test from the .test file
+    test_id_components = file_label.split("-")
+
+    src_id = int(test_id_components[7])
+    dst_id = int(test_id_components[8])
+
+    if 'R' in file_label:
+        del test_id_components[7]
+    test_id = '-'.join(test_id_components[:7])
+    # print("get_path_length() : test_id = %s" % (test_id))
+
+    for test in test_run.findall('test'):
+        # test id to use as prefix to output labels
+        if test.get('id') != test_id:
+            continue
+
+        for path in test.find('paths').findall('path'):
+            if int(path.text.split(',')[0]) == src_id and int(path.text.split(',')[-1]) == dst_id:
+                return [int(p) for p in path.text.split(',')]
+
 def get_path_info(test_file, file_label):
 
     # extract info from .test file

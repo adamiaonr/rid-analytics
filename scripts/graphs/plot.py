@@ -15,6 +15,7 @@ from collections import OrderedDict
 # custom imports
 import plot_base
 import plot_global
+import plot_cdn
 import plot_utils
 
 if __name__ == "__main__":
@@ -75,6 +76,22 @@ if __name__ == "__main__":
             plot_global.plot_request_sizes(data, args.test_file)
         elif args.subcase == 'bf-sizes-fallbacks':
             plot_global.plot_bf_sizes_fallbacks(data, args.test_file)
+        else:
+            sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
+            parser.print_help()
+            sys.exit(1)
+
+    elif args.case == 'cdn':
+
+        if not args.subcase:
+            sys.stderr.write("""%s: [ERROR] please supply a subcase for %s case\n""" % (sys.argv[0], args.case))
+            parser.print_help()
+            sys.exit(1)
+
+        if args.subcase == 'fallbacks':
+            plot_cdn.plot_fallbacks(data, args.test_file)
+        if args.subcase == 'fallbacks-no-tps':
+            plot_cdn.plot_fallbacks_no_tps(data, args.test_file)
         else:
             sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
             parser.print_help()
