@@ -268,17 +268,19 @@ int RID_Router::calc_egress_ptree_probs(
         // FIXME: this special case handling sounds hack-ish... but it works!
         if (this->tp_sizes[iface] > 0) {
 
-            int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
-
-            for (uint8_t i = IFACE_LOCAL; i < this->iface_num; i++)
-                iface_pivots[i] = this->tp_sizes[i];
-
-            this->egress_ptree_prob[iface][0] += exp(this->calc_log_joint_largest_match_prob(this->tp_sizes[iface], iface, iface_pivots));
+            // int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
+            // for (uint8_t i = IFACE_LOCAL; i < this->iface_num; i++)
+            //     iface_pivots[i] = this->tp_sizes[i];
+            // this->egress_ptree_prob[iface][0] += exp(this->calc_log_joint_largest_match_prob(this->tp_sizes[iface], iface, iface_pivots));
+            this->egress_ptree_prob[iface][0] += this->prob_true_negative;
 
             std::cout << "RID_Router::calc_egress_ptree_probs() : [INFO] added ptree_size 0 prob" 
                 << " = " << this->egress_ptree_prob[iface][0] << std::endl;
 
-            free(iface_pivots);
+            std::cout << "RID_Router::calc_egress_ptree_probs() : [INFO] shouldn't it be" 
+                << " = " << this->prob_true_negative << " ?" << std::endl;
+
+            // free(iface_pivots);
         }
 
         __float080 egress_ptree_prob_sum = 0.0;
@@ -791,9 +793,20 @@ void RID_Router::add_joint_lpm_prob(
     int * iface_pivots,
     __float080 value) {
 
+    // pad 1 digit numbers w/ zeros to form unique keys. e.g. [1][1][0][0][0][10]
+    // the same as [1][10][0][0][1][0] without the padding
     std::ostringstream iface_pivots_str("");
-    for (int i = 0; i < this->iface_num; i++)
+    for (int i = 0; i < this->iface_num; i++) {
+
+        if (iface_pivots[i] < 10)
+            iface_pivots_str << 0;
         iface_pivots_str << iface_pivots[i];
+    }
+
+    // std::cout << "RID_Router::add_joint_lpm_prob() : [INFO] key for ";
+    // for (int k = 0; k < this->iface_num; k++)
+    //     std::cout << "[" << iface_pivots[k] << "]";
+    // std::cout << " = " << iface_pivots_str.str() << std::endl;
 
     (*joint_prob_matrix)[iface_pivots_str.str()] += value;
 }
@@ -822,8 +835,12 @@ __float080 RID_Router::get_joint_lpm_prob(
     int * iface_pivots) {
 
     std::ostringstream iface_pivots_str("");
-    for (int i = 0; i < this->iface_num; i++)
+    for (int i = 0; i < this->iface_num; i++) {
+
+        if (iface_pivots[i] < 10)
+            iface_pivots_str << 0;
         iface_pivots_str << iface_pivots[i];
+    }
 
     return (*joint_prob_matrix)[iface_pivots_str.str()];
 }
@@ -867,6 +884,8 @@ int RID_Router::calc_largest_match_distributions(
     __float080 * log_prob_not_fp = (__float080 *) calloc(this->f_max, sizeof(__float080));
     // the k used in the FP rate formulas (see paper)
     __float080 k = (log(2) * ((__float080) this->bf_size)) / ((__float080) request_size);
+
+    this->prob_true_negative = 1.0;
 
     // calculation of L_{i,ptree_size} for iface i starts here...
     for (uint8_t iface = IFACE_LOCAL; iface < this->iface_num; iface++) {
@@ -935,6 +954,8 @@ int RID_Router::calc_largest_match_distributions(
             iface,
             log_prob_fp_not_larger_than,
             log_prob_not_fp);
+
+        this->prob_true_negative *= exp(log_prob_fp_not_larger_than[0]);
 
         for (int ptree_size = this->f_max; ptree_size >= 0; ptree_size--) {
             for (int f = this->f_max; f >= 0; f--) {
@@ -1103,7 +1124,12 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
         int max_pivot = 0;
 
         if ((ptree_size > 0) && (i == ptree_iface)) {
-            iface_pivots_max[i] = ptree_size;
+
+            if (this->tp_sizes[i] > ptree_size)
+                iface_pivots_max[i] = this->tp_sizes[i];
+            else
+                iface_pivots_max[i] = ptree_size;
+
         } else {
 
             do {

@@ -269,6 +269,8 @@ class RID_Router {
         // tells if iface i is potentially a continuation of a prefix tree 
         std::vector<bool> iface_on_ptree;
         std::vector<__float080> ptree_iface_probs;
+
+        __float080 prob_true_negative;
 };
 
 #endif
