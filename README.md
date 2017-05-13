@@ -119,6 +119,7 @@ In this step, we calculate the probability of having a packet match a forwarding
 
 Calculation of $P(L_{i} = m)$ is based on the basic formulas for [Bloom filter false positive rates](https://en.wikipedia.org/wiki/Bloom_filter), namely
 
+![equation](http://www.sciweavers.org/tex2img.php?eq=1%2Bsin%28mc%5E2%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=)
 
 
 ### *P(L<sub>i,p</sub>, ..., L<sub>j,p</sub>)*: Probability of forwarding events
