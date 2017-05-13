@@ -53,7 +53,7 @@ def plot_bf_sizes_fallbacks(data, test_dir):
     # labels and colors for bars (topologies)
     topology_keys = ['1221', '4755', '7018']
     topology_colors = ['#000000', '#708090', '#bebebe']
-    bf_keys = ['256']
+    bf_keys = ['192', '256']
 
     # modes : '1' relf, '2' fallback
     modes = [0, 1, 2]
@@ -74,6 +74,9 @@ def plot_bf_sizes_fallbacks(data, test_dir):
             # collect topology and bf-size keys
             topology_key = file_label.split("-")[0]
             bf_key = file_label.split("-")[1]
+
+            if bf_key == '512':
+                continue
 
             # if topology_key not in got_path_info:
             #     path_lengths[topology_key], avg_outdegrees[topology_key] = get_path_info(os.path.join(test_dir, ("%s.test" % (topology_key))), file_label)
@@ -190,12 +193,12 @@ def plot_bf_sizes_fallbacks(data, test_dir):
     ax1.yaxis.grid(True)
 
     bar_group_size = len(topology_keys)
-    bar_group_num = 1
+    bar_group_num = 2
 
     # assumes the inter bar group space is half a bar. also, for n groups of bars 
     # we have n - 1 inter bar group spaces
     m = -(float(bar_group_num * bar_group_size) / 2.0) - ((bar_group_num - 1) / 2.0)
-    bar_width = 0.25
+    bar_width = 0.225
 
     x_pos = defaultdict(list)
     xx_pos = defaultdict(list)
@@ -204,7 +207,7 @@ def plot_bf_sizes_fallbacks(data, test_dir):
     i = 0
     for bf_key in bf_keys:
 
-        if bf_key != '256':
+        if bf_key != '192':
             show_legend = False
 
         for t, topology_key in enumerate(topology_keys):
@@ -225,18 +228,17 @@ def plot_bf_sizes_fallbacks(data, test_dir):
     ax1.set_xlabel("Multiple match res. mode\n")
     ax1.set_ylabel("Avg. latency (# of hops)")
     # ax1.set_yscale('log')
-    ax1.set_ylim(0, 10)
-    ax1.set_yticks([0, 2, 4, 6, 8, 10])
+    ax1.set_ylim(0, 12)
+    ax1.set_yticks([0, 2, 4, 6, 8, 10, 12])
 
-    xticks = x_pos['256']
-    # xxticks = x_pos['1'] + ((x_pos['2'][0] - x_pos['1'][0]) / 2.0)
-    # xticks = interleave_n(x_pos['1'], xxticks, x_pos['2'])
-    # a convoluted way to set the x-axis labels?    
+    xxticks = x_pos['192'] + ((x_pos['256'][0] - x_pos['192'][0]) / 2.0)
+    xticks = interleave_n(x_pos['192'], xxticks, x_pos['256'])
+    # a convoluted way to set the x-axis labels?
     xtick_labels = []
     for mode_str in ['AML$^{*}$', 'RML$^{*}$', 'Fallback']:
-        # xtick_labels.append("%s" % ('1'))
-        xtick_labels.append("%s\n" % (mode_str))
-        # xtick_labels.append("%s" % ('2'))
+        xtick_labels.append("%s" % ('192'))
+        xtick_labels.append("\n%s" % (mode_str))
+        xtick_labels.append("%s" % ('256'))
 
     ax1.set_xticks(xticks)
     ax1.set_xticklabels(xtick_labels)
@@ -254,26 +256,27 @@ def plot_bf_sizes_fallbacks(data, test_dir):
     for f, el in enumerate(modes):
         for bf_key in bf_keys:
             for topology_key in topology_keys:
-                avg_correct_delivery_probs_array.append(int(avg_delivery_probs[topology_key][bf_key][f][0] / num_samples[topology_key][bf_key][f]))
-                avg_incorrect_delivery_probs_array.append(int(avg_delivery_probs[topology_key][bf_key][f][1] / num_samples[topology_key][bf_key][f]))
+                avg_correct_delivery_probs_array.append(float(avg_delivery_probs[topology_key][bf_key][f][0] / num_samples[topology_key][bf_key][f]))
+                avg_incorrect_delivery_probs_array.append(float(avg_delivery_probs[topology_key][bf_key][f][1] / num_samples[topology_key][bf_key][f]))
 
     # another convoluted way to create the x-axis for the fwd efficiency graph
     # FIXME: interleave_n() accepts a list of lists
     print(xx_pos)
-    # xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2], xx_pos[3], xx_pos[4], xx_pos[5])
-    xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2])
+    xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2], xx_pos[3], xx_pos[4], xx_pos[5])
+    # xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2])
+    # xx_pos = interleave_n(xx_pos[0], xx_pos[1], xx_pos[2], xx_pos[3], xx_pos[4], xx_pos[5], xx_pos[6], xx_pos[7], xx_pos[8])
 
-    ax2.plot(xx_pos, avg_correct_delivery_probs_array, linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = '^', label = 'Corr. del.')
+    ax2.plot(xx_pos, avg_correct_delivery_probs_array, linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = 'o', label = 'Corr. del.')
     ax2.plot(xx_pos, avg_incorrect_delivery_probs_array, linewidth = 1.5, color = 'black', linestyle = '--', markersize = 5, marker = 'v', label = 'Incorr. del.')
-    ax2.axhspan(1, 100, linewidth = 0.0, facecolor = '#bebebe', alpha=0.20)
+    ax2.axhspan(1, 1000, linewidth = 0.0, facecolor = '#bebebe', alpha=0.20)
 
     ax2.set_xlim(xx_pos[0] - (3 * bar_width), xx_pos[-1] + (3 * bar_width))
     ax2.set_xticks(xticks)
     ax2.set_xticklabels(xtick_labels)
 
-    ax2.set_ylim(0.1, 10000)
+    ax2.set_ylim(0.1, 100000)
     ax2.set_yscale('log')
-    ax2.set_yticks([1, 10, 100])
+    ax2.set_yticks([1, 10, 100, 1000])
     ax2.set_ylabel("Avg. # of deliveries")
 
     ax2.legend(fontsize=12, ncol=1, loc='upper right')
@@ -291,7 +294,7 @@ def plot_request_sizes(data, test_dir):
     bf_keys = ['192', '256']
 
     # x-axis labels (|f| values)
-    req_sizes = [5, 10]
+    req_sizes = [5, 7, 10]
 
     # path info
     path_lengths = defaultdict()
@@ -336,9 +339,9 @@ def plot_request_sizes(data, test_dir):
                     num_samples[topology_key] = defaultdict()
 
                 if bf_key not in fwd_efficiency[topology_key]:
-                    fwd_efficiency[topology_key][bf_key] = [0.0, 0.0]
-                    fwd_events[topology_key][bf_key] = [0.0, 0.0]
-                    num_samples[topology_key][bf_key] = [0, 0]
+                    fwd_efficiency[topology_key][bf_key] = [0.0, 0.0, 0.0]
+                    fwd_events[topology_key][bf_key] = [0.0, 0.0, 0.0]
+                    num_samples[topology_key][bf_key] = [0, 0, 0]
 
                 events = (event_probs[EVENT_LLM] - 1) + event_probs[EVENT_SLM]
 
@@ -388,7 +391,7 @@ def plot_request_sizes(data, test_dir):
     # assumes the inter bar group space is half a bar. also, for n groups of bars 
     # we have n - 1 inter bar group spaces
     m = -(float(bar_group_num * bar_group_size) / 2.0) - ((bar_group_num - 1) / 2.0)
-    bar_width = 0.15
+    bar_width = 0.225
 
     x_pos = defaultdict(list)
     xx_pos = defaultdict(list)
@@ -418,7 +421,7 @@ def plot_request_sizes(data, test_dir):
     ax1.set_xlabel("BF sizes\nRequest size")
     ax1.set_ylabel("Avg. # of used links")
     # ax1.set_yscale('log')
-    ax1.set_ylim(0, 300)
+    ax1.set_ylim(0, 250)
     ax1.set_yticks([0, 50, 100, 150, 200])
 
     xxticks = x_pos['192'] + ((x_pos['256'][0] - x_pos['192'][0]) / 2.0)
@@ -460,7 +463,7 @@ def plot_request_sizes(data, test_dir):
     ax3.set_xticks(xticks)
     ax3.set_xticklabels(xtick_labels)
 
-    ax3.set_ylim(-75, 225)
+    ax3.set_ylim(-50, 200)
     ax3.set_yticks([0, 50, 100])
     ax3.set_ylabel("Fwd. efficiency (%)")
 

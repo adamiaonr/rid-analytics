@@ -1,125 +1,134 @@
 <a name="sec:intro"></a>
 # rid-analytics
 
-Tool to perform simple analytical evaluations on a network using RIDs (i.e. Bloom Filters) for packet forwarding.
+Implementation of an analytical model of a forwarding method based on [Bloom filters](https://en.wikipedia.org/wiki/Bloom_filter). This forwarding method is designated as 'RID forwarding' in the [eXpressive Internet Architecture](http://www.cs.cmu.edu/~xia/resources/Documents/XIA-nsdi.pdf) (XIA) (check [this repo](https://github.com/adamiaonr/xia-core/tree/xia-v2-rids) for an implementation), and was adapted from an initial proposal published in [Papalini et al. 2014](http://nis-ita.org/ITA_static/attachments/2791/icn8945.pdf).
+
+`rid-analytics`' uderlying engine is based on a probabilistic graphical model which determines the probability of having an RID packet follow any given path in a network topology (e.g. PoP-level topologies made available by the [Rocketfuel ISP mapping engine](http://research.cs.washington.edu/networking/rocketfuel/)).
 
 <a name="sec:usage"></a>
 # Usage
 
-Test rid-analytics quickly by running a simple example (tested on OS X El Capitan 10.11.2, 
-Darwin Kernel Version 15.2.0). 
-
-Hopefully, the complaints from the command line will be informative enough to tell you if you need to install anything :P
-
 <a name="subsec:scn"></a>
-## Example scenario
-
-We will be testing the scenario depicted below
-
-![](https://www.dropbox.com/s/v2vcngxt2t1gurc/example.png?raw=1)
-
-Here we consider a requester R<sub>1</sub> requesting name N from the network. Content reachable via name N can be stored by producers C<sub>1,2 or 3</sub> at different points in the network.
-
-The network is hierarchically organized in tiers. Endpoints (e.g. R<sub>1</sub> and C<sub>1,2 or 3</sub>) connect to the network via the lowest tier (t1 or 'tier 1'). The request is first looked up in a router @t1. If no positive matches happen (either false or true), the request is sent up to tier 2 and so on.
-
-A few more characteristics for our scenario:
-
-* 3 tiers
-* 4<sup>(4-t)</sup> domains per tier
-* We consider 4 FP rate distributions per tier:
-	* H(igh) FP: All tiers 10<sup>-1</sup>
-	* L(ow) FP: All tiers 10<sup>-6</sup>
-	* I(ncreasing) FP (from t1 to t3): {10<sup>-6</sup>, 10<sup>-3</sup>, 10<sup>-1</sup>}
-	* D(ecreasing) FP: {10<sup>-1</sup>, 10<sup>-3</sup>, 10<sup>-6</sup>}
-* 2 ALPHA distributions per tier:
-	* H(igh)A: 10<sup>-1</sup>
-	* L(ow)A: 10<sup>-3</sup>
-* 3 cases for cache locations {# of content sources @t1,@t2,@t3}: 
-	* {1,1,1}
-	* {0,1,1} 
-	* {0,0,1}	
+## Example
 
 <a name="subsec:run"></a>
-## Running the example
+## Scenario file generation
 
-Open Terminal and run the following list of commands:
+## Running the analytics engine on scenario files
 
-`$ git clone https://github.com/adamiaonr/rid-analytics.git`
+## Output files and visualization
 
-`$ cd rid-analytics`
+<a name="sec:analytical-model"></a>
+# Analytical Model
 
-`$ git checkout present`
+<a name="subsec:analytical-model-overview"></a>
+## Overview
 
-`$ make`
+At its core, the analytical model of RID forwarding calculates the probability of specific forwarding decisions within a router, assuming Longest Prefix Matching (LPM) semantics. E.g. say a router has 3 interfaces - 0, 1 and 2 - each with associated forwarding entries which can go from sizes 1 to *p*. At its core, our model calculates the probability of events such as 'having the router decide to send the packet over interface 1 due to a match of size 3'.
 
-`$ bash run-example.sh --config-dir test/configs/example --data-dir test/data/example --graph-dir test/graphs/example`
+To better illustrate how this works, we introduce a simple example, depicted in the diagram below. 
 
-<a name="subsec:output"></a>
-## Output
+The main characteristics of this example are:
+* A topology with 5 routers: R0 to R4
+* Each router holds forwarding entries of size 1 or 2 
+* Imagine each router is the gateway to a lower-level access network which advertises 1 million prefixes (represented as caches in the diagram). As such, each router has 1 million forwarding entries associated with the local interface (interface 0), and 4 million entries distributed over the remaining interfaces.
+* Following from above, the forwarding table at each router holds a total of 5 million entries
+* The flow of the packet - say a request for some piece of content - starts at router R0
+* The requested content is held by router R2 **only**. Other routers don't hold the requested content. Let's assume R2 announces that content using a prefix of size 1.
+* The shortest paths from R0 to any other router are represented by green dotted lines
 
-After running `run-example.sh` you should have some .png and pdf files on `test/graphs/example/`. Look below for a description.
+<a name="subsec:analytical-model-step-1"></a>
+## Step 1 : Forwarding at the initial router (R0)
 
-<a name="subsubsec:outcomes"></a>
-### Outcomes
+### Forwarding events
 
-![](https://www.dropbox.com/s/p0hlgk5jot1ipzc/stackd.cache.3.png?raw=1)
+We're interested in calculating the probabilities of forwarding events at router R0. We can represent such events as an array with size 3 - one index for each interface - with each position capable of holding values from 0 to 2, indicating the size of the *largest* match at the interface associated with that index. E.g. the array \[0,1,1\] represents the event of having no matches at interface 0, and the largest match of size 1 at interfaces 1 and 2.
 
-The chart above shows the relative frequency (in %) of each possible outcome on the network shown above. In particular, 
-the chart shows the outcome distribution for the {0,0,1} cache configuration (i.e. a request has to go up to tier 3 to get to the content, at C<sub>3</sub>). The x axis shows all possible FP & ALPHA combinations. 
+Let's list the events which can happen at the initial router. These events will ultimately decide the fate of a packet flow in the topology:
+1. Since the shortest path from R0 to R2 goes through interface 1, the probability of having a match of size 1 over interface 1 is 1.0 (i.e. certain). In our model, this constraint is modeled by the presence of a true positive (TP) entry of size 1 at interface 1.
+2. Following from the above, it is impossible to have no match at any of the interfaces (since a match of size 1 is guaranteed at interface 1). In other words, the probability of event \[0,0,0\] is impossible: in fact, any event like \[\*,0,\*\] is impossible, since index 1 must at least have value 1. 
+3. A false positive match of size *p* (with *p* equal to 1 or 2) happens at interface *i*. Note that this includes having more than 1 interface experiencing a match of size *p* simultaneously.
+4. Note that the occurrence of FP matches at an interface also determine the probability of having a packet `bind' to a false positive tree of size *p*. E.g. if the event is \[0,1,1\] happens at the first router, the packet will surely bind to a FP tree of size 1 starting at interface 2. In addition, if a FP match of size 1 happened at interface 1 (together with the TP match), the packet will also bind to a FP tree of size 1 at interface 1.
 
-By the way, the possible outcomes are:
+To calculate the probability of each of the different events listed above, we follow the algorithm below. We will explain each step in detail in the subsequent sub-sections.
 
-* **Correct:** Request is delivered to the correct cache, i.e. C<sub>3</sub>.
-* **Incorrect:** Request is delivered to an incorrect destination (due to the occurrence FPs). In this case, this never happens.
-* **Feedback/Fallback:** Request is relayed to the origin server (which in this case coincides with C<sub>3</sub>). There are two strategies for relays:
-	* **Feedback:** Say that a FP is detected at router in t2. The request is sent back to the source, which then sends it towards C<sub>3</sub>.
-	* **Fallback:** If a FP is detected at a router, it is immediately sent towards C<sub>3</sub> and not sent back to the requester. This results in lower latencies (more on latencies [here](#subsubsec:avg-lat)).
-* **Dropped:** If a router doesn't know what to do with a request, it simply drops the packet.
+```
+// probability of having a match of size m on iface i, when iface i is part of 
+// a tree of size p
+largest_match_prob[len(router.get_ifaces())][max_fwd_entry_size][max_tree_size]
 
-<a name="subsubsec:avg-lat"></a>
-### Avg. Latencies
+// hash table of joint event probabilities. event keys follow a specific 
+// string format. e.g. for event [0,1,1], the key is '000101'. only events 
+// with probability > 0.0 are added to the table.
+joint_largest_match_prob[event_key_str]
 
-![](https://www.dropbox.com/s/auxh8j6p11fnela/bar.cache.2.png?raw=1)
+// probability of having the packet forwarded over iface i due to a match of 
+// size m
+iface_probs[len(router.get_ifaces())][max_fwd_entry_size]
 
-This one shows how avg. latencies vary for each FP & ALPHA combination. This is for a {0,1,1} cache configuration, i.e. both C<sub>2</sub> and C<sub>3</sub> can correctly serve the request. Therefore, the minimum latency is 5 hops (green line): 2 hops to get up to t2, 1 hop to peer to another domain in t2, 2 more hops down to C<sub>2</sub>. The origin server is considered to be at C<sub>3</sub>: by the same reasoning, its latency can be easily derived to be 7 hops (red line). As stated [above](#subsubsec:outcomes), we consider 2 strategies to relay a request which is determined to be following the 'wrong' path: 'Feedback' (pink) and 'Fallback' (light green).
+for iface in router.get_ifaces():
+    
+    // if iface doesn't have any associated entries,
+    // add it to a 'no forwarding' list and skip any 
+    // iface processing
+    if iface.get_number_of_entries() == 0:
+        invalid_ifaces.add(iface)
+        continue
 
-**How do we calculate this avg. value?** Each outcome can happen with a certain probability. Our model calculates the probability for each possible outcome, given a particular <FP per tier, ALPHA per tier, cache distance> configuration (editable via `.scn` files in `test/configs/example/`. Also, each one of these outcomes will have an associated latency (in nr. of hops). All we have to do in the end is:
+    // calculate the probabilities of having matches 
+    // of any size (0, 1 or 2) for iface. this fills 
+    // largest_match_prob[iface].
+    calc_largest_match_probs(iface)
 
-$\text{avg. latency}=\sum^{\forall O_i} P_i\,L_i$
+// calculate the event probabilities for the case of having 
+// a packet bound to a prefix tree of size tree_size
+for tree_size in [0, ..., max_fwd_entry_size]:
 
-, in which:
+    // if the probability of having a packet enter the router 
+    // while bound to a tree of size tree_size is 0.0, then 
+    // the contribution of any related events to final event 
+    // probabilities is also 0.0. as such, skip any subsequent calculations. 
+    if prob_ingress_tree[tree_size] == 0.0:
+        continue
 
-* $O_i$: Some outcome $i$, e.g. 'request packet delivered to a particular incorrect destination through t2'.
-* $P_i$: Probability of $O_i$ happening. $\sum^{\forall i} P_i = 1$.
-* $L_i$: Latency for outcome $O_i$ (in nr. of hops).
+    // calculate the contribution to the final event probabilities 
+    // for the case of having the prefix tree of size ptree_size on 
+    // iface
+    for iface in router.get_ifaces():
 
-<a name="subsubsec:prob-dag"></a>
-### Probability DAGs
+        if iface in invalid_ifaces:
+            continue
 
-You can visualize what the possible outcomes are, along with their associated probabilities, in the form of a probability Directed Acyclic Graph (DAG). We use a tool called [Graphviz](http://www.graphviz.org/) for that. E.g. to do so for the case of high FP rates (`hfp`) and low ALPHA (`la`), you have to run:
+        // calculate the probability of all events, for the 
+        // case of having the prefix tree of size ptree_size 
+        // continue over iface, and add this contribution to 
+        // joint_largest_match_prob
+        add_joint_largest_match_probs(tree_size, iface)
 
-`$ cd test/data/example/cache.2/`
+// finally, by scanning joint_largest_match_prob, calculate the 
+// cumulative probabilities which give the probability of having 
+// the router forward a packet over iface, with a match of size m
+calc_iface_probs()
 
-`$ dot -Tpdf hfp.la.dot -o ../../../graphs/example/hfp.la.cache.2.pdf`
+return iface_probs
+```
 
-`$ open ../../../graphs/example/hfp.la.cache.2.pdf`
+### Largest match distributions per interface
 
-This will yield the following DAG:
+In this step, we calculate the probability of having a packet match a forwarding entry of size *m*, at some interface *i*. We represent the match size per interface as a random variable *L<sub>i</sub>*, In our example, this step should output an array of size 3 for each of the interfaces, one value for each of the possible match lengths: 0 (i.e. no match, 1 and 2).
 
-![](https://www.dropbox.com/s/d33ck2jsn7jumfr/hfp.la.cache.2.png?raw=1)
+Calculation of $P(L_{i} = m)$ is based on the basic formulas for [Bloom filter false positive rates](https://en.wikipedia.org/wiki/Bloom_filter), namely
 
-Here's how you roughly read it:
 
-* Each node in the DAG corresponds to a **lookup result** at 1 particular router in-between R<sub>1</sub> and some destination. A lookup result is a possible output of the lookup of the requested RID in a router's RID table. A particular succession of lookup results determines a possible path and the **final outcome** of an RID request packet: here **final outcome** has the meaning given in section [Outcomes](#subsubsec:outcomes).
-* We consider the following classes of **lookup results**:
-	* `TPO`: Lookup **O**nly returns **T**RUE **P**ostive entries. In this case, the packet is forwarded towards a correct destination.
-	* `SFP`: Lookup yields a **S**ingle match, and it's a **F**ALSE **P**ositive. Our model considers the packet to be forwarded towards an incorrect destination in this case.
-	* `MHS`: Lookup yields **M**ultiple matches (or **H**its), all pointing to the **S**ame interface. This could include both TRUE and FALSE positives. If there are TRUE positives in the RID table, the packet is forwarded towards a correct destination (notice how the FPs and TPs all point to the same interface); if not, the packet is incorrectly forwarded.
-	* `MHD`: Lookup yields multiple matches, pointing to **D**ifferent interface. A FP is detected mid-way. The packet is immediately relayed (using either the 'Feedback' or 'Fallback' methods).
-	* `DEF`: Lookup cannot find a positive entry in the RID table, either FALSE or TRUE. Packet is either sent to the tier above OR dropped (if we're already at the top tier).
-* `ORI(0:0)`: The succession of lookup results starts with a single initial result, i.e. 'the request is issued by R<sub>1</sub>'.
-* `<result>(<curr. tier>:<to tier>)`: A possible router lookup resul (`result`), which makes an RID packet jump from `curr. tier` to `to tier`. E.g. 
-	* `DEF(0:1)` corresponds to a `DEF` lookup result occurring at tier 1, which sends the packet up to tier 2. 
-	* `TPO(1:1)` corresponds to a `TPO` lookup result, which results in having the packet forwarded between 2 peering domains at tier 2.
-* `<result>(<curr. tier>:EOP)`: Similar to the above, but in this case, the packet reaches reaches the end of its life as an RID packet ('**E**nd **O**f **P**ath'). This can happen if the packet is delivered to a correct/incorrect destination, or if it is relayed upon the occurrence of an `MHD` lookup result at some router.
-* The value of each edge is the associated probability of jumping between 2 particular lookup results, between successive routers in a path. To calculate the probability of a final outcome, we follow a path in the DAG from `ORI(0:0)` to the leaf node (marked with `EOP`), and multiply the probability values in the edges.
+
+### *P(L<sub>i,p</sub>, ..., L<sub>j,p</sub>)*: Probability of forwarding events
+
+### *P(L<sub>i,p</sub>, ..., L<sub>j,p</sub>)*: Probability of FP tree bindings
+
+<a name="subsec:analytical-model-step-2"></a>
+## Step 2 : Forwarding at router R1
+
+After router R0, the packet arrives at router R1 (it can also arrive at R4, but we skip that step in this description). There, we calculate the same probabilities listed above. Since R1 is not the initial router, there are some differences in the calculations, due to the effect FP tree bindings. We explain them below.
+
+### *P(L<sub>i,p</sub>, ..., L<sub>j,p</sub>)*: Probability of forwarding events w/ FP tree bindings
+

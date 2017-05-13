@@ -86,6 +86,9 @@ def extract_data(data_dir):
 
 def get_path(test_file, file_label):
 
+    print(test_file)
+    print(file_label)
+
     # extract info from .test file
     test_run = et.parse(test_file)
     test_run_root = test_run.getroot()
@@ -97,13 +100,31 @@ def get_path(test_file, file_label):
     # test from the .test file
     test_id_components = file_label.split("-")
 
-    src_id = int(test_id_components[7])
-    dst_id = int(test_id_components[8])
+    src_id = 0
+    dst_id = 0
+    if ('tp' in file_label) or ('fp' in file_label):
+        src_id = int(test_id_components[8])
+        dst_id = int(test_id_components[9])
+    else:
+        src_id = int(test_id_components[7])
+        dst_id = int(test_id_components[8])
 
-    if 'R' in file_label:
-        del test_id_components[7]
-    test_id = '-'.join(test_id_components[:7])
+    test_id = ''
+    if 'tp5' in file_label:
+        test_id = '-'.join(test_id_components[:7])
+        test_id += '-tp5'
+        print(test_id)
+    elif 'fp5' in file_label:
+        test_id = '-'.join(test_id_components[:7])
+        test_id += '-fp5'
+    elif 'tp' in file_label:
+        test_id = '-'.join(test_id_components[:8])
+    else:
+        test_id = '-'.join(test_id_components[:7])
+
     # print("get_path_length() : test_id = %s" % (test_id))
+
+    print(test_id)
 
     for test in test_run.findall('test'):
         # test id to use as prefix to output labels

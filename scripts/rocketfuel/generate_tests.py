@@ -117,7 +117,7 @@ def add_new_test(main_block, topology_obj, test_parameters, path_examples, test_
 
 def generate_test(
     test_dir, topology_file, 
-    req_sizes, bf_sizes, entry_size_records, table_sizes, fps, tps, modes, path_sizes,
+    req_sizes, bf_sizes, entry_size_records, table_sizes, fps, tps, modes, path_sizes, selected_paths,
     add_suffixes):
 
     main_block = et.Element("test_run")
@@ -131,7 +131,12 @@ def generate_test(
     topology_obj.draw_pop_level_map(os.path.join(test_dir, ("topologies/%d.pdf" % (topology_nr))))
 
     # get n examples of paths of size s
-    path_examples = topology_obj.generate_paths(int(path_sizes.split(":")[0]), int(path_sizes.split(":")[1]))
+    if len(selected_paths) > 0:
+        path_examples = topology_obj.get_paths(selected_paths)
+    else:
+        path_examples = topology_obj.generate_paths(int(path_sizes.split(":")[0]), int(path_sizes.split(":")[1]))
+
+    print(path_examples)
 
     # build the test cases w/ good ol' nested for loops
     for req_size in req_sizes:
@@ -173,14 +178,19 @@ if __name__ == "__main__":
     # use an ArgumentParser for a nice CLI
     parser = argparse.ArgumentParser()
 
+    parser.add_argument(
+        "--topology-file", 
+         help = """filename of edge.wt topology file (or dir for 'print-stats' option)""")
+
+    parser.add_argument(
+        "--print-stats", 
+         help = """print statistics about RocketFuel dataset""",
+         action = "store_true")
+
     # options (self-explanatory)
     parser.add_argument(
         "--test-dir", 
          help = """dir on which to save .test and .scn files""")
-
-    parser.add_argument(
-        "--topology-file", 
-         help = """filename of edge.wt topology file""")
 
     parser.add_argument(
         "--req-sizes", 
@@ -223,10 +233,18 @@ if __name__ == "__main__":
          help = """pick (up to) n paths of a particular size s. e.g. '--path-sizes 5:4' for (up to) 10 paths of size 4.""")
 
     parser.add_argument(
+        "--selected-paths", 
+         help = """specify the paths to choose""")
+
+    parser.add_argument(
         "--add-suffix", 
          help = """add an extra suffix to the results and .scn file.""")
 
     args = parser.parse_args()
+
+    if args.print_stats:
+        print_pop_level_statistics(args.topology_file)
+        sys.exit(0)
 
     req_sizes = []
     if args.req_sizes:
@@ -268,11 +286,15 @@ if __name__ == "__main__":
     if not args.path_sizes:
         args.path_sizes = "1:4"
 
+    selected_paths = []
+    if args.selected_paths:
+        selected_paths = args.selected_paths.split("|")
+
     add_suffixes = []
     if args.add_suffix:
         add_suffixes = args.add_suffix.split(":")
 
     generate_test(
         args.test_dir, args.topology_file, 
-        req_sizes, bf_sizes, entry_size_records, table_sizes, fps, tps, modes, args.path_sizes,
+        req_sizes, bf_sizes, entry_size_records, table_sizes, fps, tps, modes, args.path_sizes, selected_paths,
         add_suffixes)

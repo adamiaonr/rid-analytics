@@ -16,6 +16,7 @@ from collections import OrderedDict
 import plot_base
 import plot_global
 import plot_cdn
+import plot_opportunistic
 import plot_utils
 
 if __name__ == "__main__":
@@ -90,8 +91,22 @@ if __name__ == "__main__":
 
         if args.subcase == 'fallbacks':
             plot_cdn.plot_fallbacks(data, args.test_file)
-        if args.subcase == 'fallbacks-no-tps':
+        elif args.subcase == 'fallbacks-no-tps':
             plot_cdn.plot_fallbacks_no_tps(data, args.test_file)
+        else:
+            sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
+            parser.print_help()
+            sys.exit(1)
+
+    elif args.case == 'opportunistic':
+
+        if not args.subcase:
+            sys.stderr.write("""%s: [ERROR] please supply a subcase for %s case\n""" % (sys.argv[0], args.case))
+            parser.print_help()
+            sys.exit(1)
+
+        if args.subcase == 'fallbacks':
+            plot_opportunistic.plot_fallbacks(data, args.test_file)
         else:
             sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
             parser.print_help()

@@ -115,11 +115,11 @@ def print_pop_level_statistics(rocketfuel_dir):
 
             topology_id = filename.split("/")[-2]
             topology_id = topology_id.split(".", 1)[0]
-            topology = parse_pop_level_map(filename)
 
-            stats[topology_id] = get_pop_level_statistics(topology)
+            topology_obj = parse_pop_level_map(filename)
+            stats[topology_id] = topology_obj.get_pop_level_statistics()
 
-    table = PrettyTable(['as id', '# nodes', '# links', 'min. outdegree', 'median outdegree', 'max. outdegree', 'diameter'])
+    table = PrettyTable(['as id', '# nodes', '# links', 'min. outdegree', 'median outdegree', 'max. outdegree', 'median length', 'max. length'])
 
     for topology_id in stats:
         table.add_row([
@@ -129,6 +129,7 @@ def print_pop_level_statistics(rocketfuel_dir):
             stats[topology_id]['min-outdegree'],
             stats[topology_id]['med-outdegree'],
             stats[topology_id]['max-outdegree'],
+            (np.median(stats[topology_id]['path-lengths']) - 1),
             (stats[topology_id]['path-lengths'][0] - 1)
             ])
 
@@ -512,6 +513,25 @@ class Topology:
         print(paths)
         return paths
 
+    def get_paths(self, selected_path_list):
+
+        paths = defaultdict()
+
+        stats = self.get_pop_level_statistics()
+        shortest_paths = self.get_shortest_paths()
+
+        for selected_path in selected_path_list:
+
+            for path in [p.split(",") for p in shortest_paths[int(selected_path.split(":")[0])]]:
+
+                if int(path[-1]) == int(selected_path.split(":")[1]):
+                    avg_path_outdegree = float(sum([stats['outdegree-list'][int(r)] for r in path])) / float(len(path) - 1)
+                    paths[("%d:%d:%.2f" % (int(path[0]), int(path[-1]), avg_path_outdegree))] = [int(p) for p in path]
+                    break
+
+        print(paths)
+        return paths
+
     def get_pop_level_statistics(self, force = False):
 
         if (len(self.stats) > 0) and (force == False):
@@ -831,76 +851,3 @@ def parse_pop_level_map(rocketfuel_file):
     topology_obj.get_pop_level_statistics(force = True)
 
     return topology_obj
-
-# if __name__ == "__main__":
-
-#     # use an ArgumentParser for a nice CLI
-#     parser = argparse.ArgumentParser()
-
-#     # options (self-explanatory)
-#     parser.add_argument(
-#         "--data-path", 
-#          help = """path w/ topology files (e.g. .cch for isp maps, edge folders 
-#             for pop-level maps, etc.)""")
-
-#     parser.add_argument(
-#         "--req-size", 
-#          help = """max nr. of prefix components which can be encoded in a BF""")
-
-#     parser.add_argument(
-#         "--add-tp-source", 
-#          help = """e.g. '--add-tp-source <source id>:<size>:<radius>'""")
-
-#     parser.add_argument(
-#         "--table-size", 
-#          help = """e.g. '--table-size 10000000'""")
-
-#     parser.add_argument(
-#         "--entry-sizes", 
-#          help = """e.g. '--entry-sizes <entry-size>:<size %%>|<entry-size>:<size %%>|...|<entry-size>:<size %%>'""")
-
-#     parser.add_argument(
-#         "--print-stats", 
-#          help = """print statistics about RocketFuel dataset""",
-#          action = "store_true")
-
-#     args = parser.parse_args()
-
-#     entry_sizes = defaultdict();
-#     if args.entry_sizes:
-#         entry_size_records = args.entry_sizes.split("|")
-#         for record in entry_size_records:
-#             entry_sizes[record.split(":", 1)[0]] = (float(record.split(":", 1)[1]) / 100.0)
-
-#     req_size = 5
-#     if args.req_size:
-#         req_size = int(args.req_size)
-
-#     table_size = 10000000
-#     if args.table_size:
-#         table_size = int(args.table_size)
-
-#     if not args.data_path:
-#         sys.stderr.write("""%s: [ERROR] please supply a data path\n""" % sys.argv[0]) 
-#         parser.print_help()
-#         sys.exit(1)
-
-#     if args.print_stats:
-#         print_pop_level_statistics(args.data_path)
-#         # print_statistics(args.data_path)
-#         sys.exit(0)
-
-#     # build a networkx topology out of a Rocketfuel pop-level topology
-#     topology = parse_pop_level_map(args.data_path)
-#     draw_pop_level_map(topology)
-#     generate_path_examples(topology)
-
-#     # if requested, add a true positive content source
-#     if args.add_tp_source:
-#         add_content_route(
-#             topology, 
-#             int(args.add_tp_source.split(':')[0]), 
-#             int(args.add_tp_source.split(':')[1]))
-
-#     # finally, convert the topology to an .scn file
-#     convert_to_scn(topology, entry_sizes, table_size, req_size)
