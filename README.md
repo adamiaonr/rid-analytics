@@ -26,7 +26,9 @@ Implementation of an analytical model of a forwarding method based on [Bloom fil
 
 At its core, the analytical model of RID forwarding calculates the probability of specific forwarding decisions within a router, assuming Longest Prefix Matching (LPM) semantics. E.g. say a router has 3 interfaces - 0, 1 and 2 - each with associated forwarding entries which can go from sizes 1 to *p*. At its core, our model calculates the probability of events such as 'having the router decide to send the packet over interface 1 due to a match of size 3'.
 
-To better illustrate how this works, we introduce a simple example, depicted in the diagram below. 
+To better illustrate how this works, we introduce a simple example, depicted in the diagram below.
+
+![](https://www.dropbox.com/s/2c9y0882dcejtma/model-example-crop.png?raw=1)
 
 The main characteristics of this example are:
 * A topology with 5 routers: R0 to R4
@@ -115,11 +117,31 @@ return iface_probs
 
 ### Largest match distributions per interface
 
-In this step, we calculate the probability of having a packet match a forwarding entry of size *m*, at some interface *i*. We represent the match size per interface as a random variable *L<sub>i</sub>*, In our example, this step should output an array of size 3 for each of the interfaces, one value for each of the possible match lengths: 0 (i.e. no match, 1 and 2).
+**Objective:** calculate the probability of having *m* as the largest positive match size on interface *i*. We represent the match size per interface as a random variable *L<sub>i</sub>*, In our example, this step should output a 1 x 3 array per interface, each index for the probability of the respective match length  : 0 (i.e. no match), 1 and 2.
 
-Calculation of $P(L_{i} = m)$ is based on the basic formulas for [Bloom filter false positive rates](https://en.wikipedia.org/wiki/Bloom_filter), namely
+The calculation of *P(L<sub>i</sub>)* is as follows:
 
-![equation](http://www.sciweavers.org/tex2img.php?eq=1%2Bsin%28mc%5E2%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=)
+![](https://www.dropbox.com/s/5iw4k7kdptwlh2o/eq-calc-largest-probs.jpg?raw=1)
+
+The reasoning behind the branches of the above expression is (top to bottom):
+1. If interface *i* has a true positive (TP) entry larger than *m* (i.e. |*TP*| *> m*), then the largest match will always be *at least* |*TP*|. As such, the probability of having the largest match equal to *m* on interface *i* is 0.
+2. Even if interface *i* has a TP entry of size *m*, *m =* |*TP*| will only be the largest match size iif there is **not** a FP match larger than |*TP*|.
+3. For match sizes larger than the TP entry size *m >* |*TP*| size, we calculate the intersection of 2 events (we assume the independence of the events): having a FP match of size *m* **and** not having a FP match larger than *m*.
+
+| Symbol                              | Description                                |
+| ----------------------------------- |:------------------------------------------:|
+| \|*R*\| or \|*F*\|<sub>*max*</sub>  | Request size or max. forwarding entry size |
+| *T*                                 | Table size in nr. of entries               |
+| *T(i)*                              | Nr. of entries per interface               |
+| *P(*\|*F*\|,*i)*                    | Distribution of entry sizes per interface  |
+| *P(*\|*F*\\*R*\|,*i)*               | Distribution of request-entry differences per interface |
+
+The FP probabilities - e.g. *P(*|*FP*|* = m)* - are based on the basic expressions for [Bloom filter false positive rates](https://en.wikipedia.org/wiki/Bloom_filter), given below, and dependent on the parameters listed in the Table above.
+
+
+![](https://www.dropbox.com/s/1bd1evislmrnwwk/total-router-level.jpg?raw=1)
+
+![](https://www.dropbox.com/s/9ly2xjed4hhqftc/simple-fpr.jpg?raw=1)
 
 
 ### *P(L<sub>i,p</sub>, ..., L<sub>j,p</sub>)*: Probability of forwarding events
