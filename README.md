@@ -162,12 +162,15 @@ The reasoning behind the branches of the above expression is (top to bottom):
 **Contributions of FP prefix trees:** Say the packet arrives from router R0 into R1's interface 1, with 0.6 probability of being bound to a FP prefix tree of size 1. We know this can happen when a FP match of size 1 happens in parallel with the expected TP match of size 1 at R0's interface 1. We hereby refer to such tree as an *ingress prefix tree* of size 1, and represent its probability as *P(*|*ptree*|*<sub>ingress</sub> = 1) = 0.6*.
 Then, with 0.6 probability, that ingress tree must continue on one of R1's outgoing interfaces (i.e. 0, 2 **OR** 3). This implies that a match of size 1 is guaranteed at that interface. Note that we did not include interface 4 as a possible continuation for an ingress tree. This is because the link R1:R4 is not in the list of shortest paths announced into R0. As such, any FP match which results into a FP tree binding at R0's interface 1 must come from either R2 or R3. In any case, a new FP prefix tree can start at interface 4.
 
-**Probability calculation:** More generally, say we want to calculate the probability of event \[*m<sub>0</sub>*,*m<sub>1</sub>*,*m<sub>2</sub>*,*m<sub>3</sub>*\] at R1. We must account with the influence of ingress prefix trees. This event can happen if (1) the prefix tree continues on interface 0; (2) on interface 2; **OR** interface 3. We assume these events are independent, i.e. if the prefix tree continues over interface 0, then it won't continue over interface 2 or 3. As such, the probability of the forwarding event is:
+**General probability calculation:** More generally, say we want to calculate the probability of event \[*m<sub>0</sub>*,*m<sub>1</sub>*,*m<sub>2</sub>*,*m<sub>3</sub>*\] at R1. We must account with the influence of ingress prefix trees. This event can happen if (1) the prefix tree continues on interface 0; (2) on interface 2; **OR** interface 3. We assume these events are independent, i.e. if the prefix tree continues over interface 0, then it won't continue over interface 2 or 3. As such, the probability of the forwarding event is:
 
 ![](https://www.dropbox.com/s/z1wf0s9e22jhqtz/ptree_prob.jpg?raw=1)
 
-The probability of having interface *i* as the continuation of the ingress tree of size *p* - *P(*|*ptree*|*<sub>i</sub> = p)* - is based on the fraction of the announcements of size *p* between the egress interface of the previous router - R0's interface 0 in our example - and a possible egress interface *i*:
+**Probability of interfaces and prefix trees:** In general, the probability of having interface *i* as the continuation of the ingress tree of size *p* - *P(*|*ptree*|*<sub>i</sub> = p)* - is based on the fraction of the announcements of size *p* between the egress interface of the previous router - R0's interface 0 in our example - and a possible egress interface *i*:
 
 ![](https://www.dropbox.com/s/1u32vzh3b6p19lq/real_ptree_prob.jpg?raw=1)
 
-To determine the numerator and denominator of the above expression, we keep the information about reachable sources in `.scn` files (source bitmasks per interface).
+To determine the numerator and denominator of the above expression, we keep the information about reachable sources in `.scn` files (source bitmasks per interface). However, note that at the initial router - R0 - there is no 'previous router'. As such *P(*|*ptree*|*<sub>ingress</sub> = 0) = 1* and *P(*|*ptree*|*<sub>i</sub> = p) = (1 / (# of egress ifaces))*, i.e. the binding probabilities are equally distributed equally over the egress interfaces.
+
+### Probability of interface choices
+
