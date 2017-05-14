@@ -181,7 +181,38 @@ To determine the numerator and denominator of the above expression, we keep the 
 
 ### Objective and notation
 
-Calculate the probability of having packet forwarded over egress interface *i*, due to a match of size *m*. We use the notation *P(I = i, M = m)*. At router R0 in our example, interface choice events are represented as a 3 x 3 array, as shown below:
+Calculate the probability of having packet forwarded over egress interface *i*, due to a match of size *m*. We use the notation *P(I = i, M = m)*. At router R0 in our example, interface choice events are represented as a 3 x 3 array (3 interfaces, 3 possible match sizes), as shown below:
+
+<table>
+  <tr>
+    <td> </td>
+    <td colspan="3">Largest match size <i>m</i></td>
+  </tr>
+  <tr>
+    <td>Interface <i>i</i></td>
+    <td>0</td>
+    <td>1</td>
+    <td>2</td>
+  </tr>
+  <tr>
+    <td>0</td>
+    <td><i>P(I = 0, M = 0)</i></td>
+    <td><i>P(I = 0, M = 1)</i></td>
+    <td><i>P(I = 0, M = 2)</i></td>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td><i>P(I = 1, M = 0)</i></td>
+    <td><i>...</i></td>
+    <td><i>...</i></td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><i>P(I = 2, M = 0)</i></td>
+    <td><i>...</i></td>
+    <td><i>...</i></td>
+  </tr>
+</table>
 
 ### Probability calculation
 
