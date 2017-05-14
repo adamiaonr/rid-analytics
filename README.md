@@ -174,7 +174,7 @@ Then, with 0.6 probability, that ingress tree must continue on one of R1's outgo
 
 **General expression:** More generally, say we want to calculate the probability of event \[*m<sub>0</sub>*,*m<sub>1</sub>*,*m<sub>2</sub>*,*m<sub>3</sub>*\] at R1. We must account with the influence of ingress prefix trees. This event can happen if (1) the prefix tree continues on interface 0; (2) on interface 2; **OR** interface 3. We assume these events are independent, i.e. if the prefix tree continues over interface 0, then it won't continue over interface 2 or 3. As such, the probability of the forwarding event is:
 
-![](https://www.dropbox.com/s/z1wf0s9e22jhqtz/ptree_prob.jpg?raw=1)
+![](https://www.dropbox.com/s/i1f6ga5hj7m74tj/forwarding-event-prob.jpg?raw=1)
 
 **Probability of interfaces and prefix trees:** In general, the probability of having interface *i* as the continuation of the ingress tree of size *p* - *P(*|*ptree*|*<sub>i</sub> = p)* - is based on the fraction of the announcements of size *p* between the egress interface of the previous router - R0's interface 0 in our example - and a possible egress interface *i*:
 
@@ -243,3 +243,7 @@ An interface *i* can be the continuation of a prefix tree of size *m* iif:
 The cases above translate into the following expression:
 
 ![](https://www.dropbox.com/s/3qe2b1sdm9zp8z0/egress-ptree-probs.jpg?raw=1)
+
+As a final step, we normalize the egress prefix tree probabilities as follows:
+
+![](https://www.dropbox.com/s/34iq1nugq0ar61k/egress-ptree-probs-norm.jpg?raw=1)
