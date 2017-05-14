@@ -32,7 +32,7 @@ The main characteristics of this example are:
 <a name="subsubsec:analytical-model-forwarding-events"></a>
 ### Forwarding events
 
-**Overview and notation:** Say we want to calculate the probabilities of forwarding events at router R0. We represent such events as an 1 x 3 array - one index per interface - each value indicating the size of the *largest* match at the interface associated with that index. E.g. the array \[0,1,1\] represents the event of having no matches at interface 0, and a largest match of size 1 at interfaces 1 and 2. The probability of this forwarding event is *P(\[0,1,1\])*.
+**Overview and notation:** Say we want to calculate the probabilities of forwarding events at router R0. We represent such events as an 1 x 3 array - one index per interface - each value indicating the size of the *largest* match at the interface associated with that index. E.g. the array \[0,1,1\] represents the event of having no matches at interface 0, and a largest match of size 1 at interfaces 1 and 2. The probability of this forwarding event is *P(*\[0,1,1\]*)*.
 
 **Causes of forwarding events:** Forwarding events have 4 underlying causes, which decide the fate of packet flows in a topology:
 1. **True positive (TP) matches:** Since the shortest path from R0 to R2 goes through interface 1, the probability of having a match of size 1 over interface 1 is 1.0 (i.e. certain). In our model, this constraint is modeled by the presence of a TP entry of size 1 at interface 1.
@@ -60,26 +60,16 @@ iface_probs[len(router.get_ifaces())][max_fwd_entry_size]
 
 for iface in router.get_ifaces():
     
-    // if iface doesn't have any associated entries,
-    // add it to a 'no forwarding' list and skip any 
-    // iface processing
     if iface.get_number_of_entries() == 0:
         invalid_ifaces.add(iface)
         continue
 
-    // calculate the probabilities of having matches 
-    // of any size (0, 1 or 2) for iface. this fills 
-    // largest_match_prob[iface].
     calc_largest_match_probs(iface)
 
 // calculate the event probabilities for the case of having 
 // a packet bound to a prefix tree of size tree_size
 for tree_size in [0, ..., max_fwd_entry_size]:
 
-    // if the probability of having a packet enter the router 
-    // while bound to a tree of size tree_size is 0.0, then 
-    // the contribution of any related events to final event 
-    // probabilities is also 0.0. as such, skip any subsequent calculations. 
     if prob_ingress_tree[tree_size] == 0.0:
         continue
 
@@ -97,9 +87,6 @@ for tree_size in [0, ..., max_fwd_entry_size]:
         // joint_largest_match_prob
         add_joint_largest_match_probs(tree_size, iface)
 
-// finally, by scanning joint_largest_match_prob, calculate the 
-// cumulative probabilities which give the probability of having 
-// the router forward a packet over iface, with a match of size m
 calc_iface_probs()
 
 return iface_probs
@@ -145,7 +132,7 @@ return iface_probs
 ![](https://www.dropbox.com/s/5iw4k7kdptwlh2o/eq-calc-largest-probs.jpg?raw=1)
 
 The reasoning behind the branches of the above expression is (top to bottom):
-1. If interface *i* has a true positive (TP) entry larger than *m* (i.e. |*TP*| *> m*), then the largest match will always be *at least* |*TP*|. As such, the probability of having the largest match equal to *m* on interface *i* is 0.
+1. If interface *i* has a true positive (TP) entry larger than *m* (i.e. |*TP*| *> m*), then the largest match will always be *at least* |*TP*|. As such, the probability of having the largest match equal to *m* on interface *i* is 0. The same applies if *i* is the continuation of a prefix tree of size larger than *m*.
 2. Even if interface *i* has a TP entry of size *m*, *m =* |*TP*| will only be the largest match size iif there is **not** a FP match larger than |*TP*|.
 3. For match sizes larger than the TP entry size *m >* |*TP*| size, we calculate the intersection of 2 events (we assume the independence of the events): having a FP match of size *m* **and** not having a FP match larger than *m*.
 
@@ -168,18 +155,14 @@ The reasoning behind the branches of the above expression is (top to bottom):
 
 ### Joint probability of largest matches (forwarding events)
 
-**Objective:** calculate the probability of joint largest match events, i.e. the probability of having a largest match of size m at interface i, size n at interface j, and so on. We hereby refer to such an event as a *forwarding event*, e.g. \[0,1,1\] in our example. Assuming that the largest match events are independent per interface, the probability of a forwarding event - e.g. \[0,1,1\] - can be calculated as *P(\[0,1,1\]) = P(L<sub>0</sub> = 0) * P(L<sub>1</sub> = 1) * P(L<sub>2</sub> = 1)*.
- 
-Since **at the initial router the packet is still not bound to FP prefix trees** of any size (alternatively, we could say the packet is bound to a FP prefix tree of size 0), 
+**Objective and notation:** Calculate the probability of joint largest match events, i.e. the probability of having a largest match of size m at interface i, size n at interface j, and so on. This is essentially the probability of forwarding events such as \[0,1,1\] in R0 in our example. The calculation of *P(*\[*m<sub>0</sub>*,*m<sub>1</sub>*,...,*m<sub>i</sub>*\]*)* is a bit complex, involving 2 steps: (1) the intersection of largest match probabilities for each interface; and (2) the contribution of FP prefix trees.
 
-<a name="subsubsec:analytical-model-fp-trees"></a>
-### FP prefix tree bindings
+**Intersection of largest match probabilities:** Assuming that largest match events are independent in-between interfaces, the intersection of largest match probabilities - e.g. *P(*\[0,1,1\]*)* - can be calculated as *P(*\[0,1,1\]*) = P(L<sub>0,p</sub> = 0) * P(L<sub>1,p</sub> = 1) * P(L<sub>2,p</sub> = 1)*. The complex part is in handling the contribution of FP prefix trees.
 
-Say the packet arrives from router R0 into R1's interface 1, with 0.6 probability of being bound to a FP prefix tree of size 1. We know this can happen when a FP match of size 1 happens in parallel with the expected TP match of size 1 at R0's interface 1. We hereby refer to such tree as an *ingress prefix tree* of size 1, and represent its probability as *P(*|*ptree*|*<sub>ingress</sub> = 1) = 0.6*.
-
+**Contributions of FP prefix trees:** Say the packet arrives from router R0 into R1's interface 1, with 0.6 probability of being bound to a FP prefix tree of size 1. We know this can happen when a FP match of size 1 happens in parallel with the expected TP match of size 1 at R0's interface 1. We hereby refer to such tree as an *ingress prefix tree* of size 1, and represent its probability as *P(*|*ptree*|*<sub>ingress</sub> = 1) = 0.6*.
 Then, with 0.6 probability, that ingress tree must continue on one of R1's outgoing interfaces (i.e. 0, 2 **OR** 3). This implies that a match of size 1 is guaranteed at that interface. Note that we did not include interface 4 as a possible continuation for an ingress tree. This is because the link R1:R4 is not in the list of shortest paths announced into R0. As such, any FP match which results into a FP tree binding at R0's interface 1 must come from either R2 or R3. In any case, a new FP prefix tree can start at interface 4.
 
-**Use in probability calculation:** Say we want to calculate the probability of event \[*m<sub>0</sub>*,*m<sub>1</sub>*,*m<sub>2</sub>*,*m<sub>3</sub>*\] at R1. We must account with the influence of ingress prefix trees. This event can happen if (1) the prefix tree continues on interface 0; (2) on interface 2; **OR** interface 3. We assume these events are independent, i.e. if the prefix tree continues over interface 0, then it won't continue over interface 2 or 3. As such, the probability of the forwarding event is:
+**Probability calculation:** More generally, say we want to calculate the probability of event \[*m<sub>0</sub>*,*m<sub>1</sub>*,*m<sub>2</sub>*,*m<sub>3</sub>*\] at R1. We must account with the influence of ingress prefix trees. This event can happen if (1) the prefix tree continues on interface 0; (2) on interface 2; **OR** interface 3. We assume these events are independent, i.e. if the prefix tree continues over interface 0, then it won't continue over interface 2 or 3. As such, the probability of the forwarding event is:
 
 ![](https://www.dropbox.com/s/z1wf0s9e22jhqtz/ptree_prob.jpg?raw=1)
 
@@ -188,13 +171,3 @@ The probability of having interface *i* as the continuation of the ingress tree 
 ![](https://www.dropbox.com/s/1u32vzh3b6p19lq/real_ptree_prob.jpg?raw=1)
 
 To determine the numerator and denominator of the above expression, we keep the information about reachable sources in `.scn` files (source bitmasks per interface).
-
-### *P(L<sub>i,p</sub>, ..., L<sub>j,p</sub>)*: Probability of FP tree bindings
-
-<a name="subsec:analytical-model-step-2"></a>
-## Step 2 : Forwarding at router R1
-
-After router R0, the packet arrives at router R1 (it can also arrive at R4, but we skip that step in this description). There, we calculate the same probabilities listed above. Since R1 is not the initial router, there are some differences in the calculations, due to the effect FP tree bindings. We explain them below.
-
-### *P(L<sub>i,p</sub>, ..., L<sub>j,p</sub>)*: Probability of forwarding events w/ FP tree bindings
-
