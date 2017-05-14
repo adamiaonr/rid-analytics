@@ -89,6 +89,10 @@ Forwarding events have 4 underlying causes:
 3. **False positive (FP) matches:** A FP match of size *p* (with *p* equal to 1 or 2) happens at interface *i*. Note that this includes having more than 1 interface experiencing a match of size *p* simultaneously.
 4. **Matches due to FP prefix tree bindings:** At any point in its path, a packet may bind to a FP prefix tree of size *p*. The reasoning is: if a FP match of size 1 happens at R0, then the same FP match will happen at subsequent routers, since the forwarding entry which causes the match at R0 is announced on a tree sourced at a subsequent router. If a packet is bound to a prefix tree of size *p*, then a match of size *p* is guaranteed to happen. If the packet is not bound to a tree, the occurrence of a 'new' FP match at an interface determines the probability of having the packet `bind' to a new FP prefix tree of size *p*. E.g. if the event is \[0,1,1\] happens at R0, the packet will bind to a FP tree of size 1 starting at interface 2. Likewise, if a FP match of size 1 happened at interface 1 (together with the TP match), the packet will also bind to a FP tree of size 1 at interface 1.
 
+The diagram below shows the possible prefix trees which a packet starting at R0 can bind itself to.
+
+![](https://www.dropbox.com/s/jlh87l2iu4t64i6/model-example-ptrees-crop.png?raw=1)
+
 ## Largest match probabilities per interface
 
 ### Objective and notation
