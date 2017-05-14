@@ -176,7 +176,7 @@ Then, with 0.6 probability, that ingress tree must continue on one of R1's outgo
 
 ![](https://www.dropbox.com/s/i1f6ga5hj7m74tj/forwarding-event-prob.jpg?raw=1)
 
-The second term within the final is the calculation of the joint largest match probability in-between interfaces. We first consider the probability of a largest match of size *m<sub>i</sub>* on interface *i*, assuming *i* to be the continuation of the prefix tree of size *p*. Then, the largest match probabilities for the remaining interfaces assume those interfaces to not be associated with any prefix tree (hence *p = 0*). Finally, to assure that the sum of forwarding event probabilities is 1.0, we normalize the second term.
+The second term within the final sum of sums is the calculation of the joint largest match probability in-between interfaces. We first consider the probability of a largest match of size *m<sub>i</sub>* on interface *i*, assuming *i* to be the continuation of the prefix tree of size *p*. Then, the largest match probabilities for the remaining interfaces assume those interfaces to not be associated with any prefix tree (hence *p = 0*). Finally, to assure that the sum of forwarding event probabilities is 1.0, we normalize the second term.
 
 **Probability of interfaces and prefix trees:** In general, the probability of having interface *i* as the continuation of the ingress tree of size *p* - *P(*|*ptree*|*<sub>i</sub> = p)* - is based on the fraction of the announcements of size *p* between the egress interface of the previous router - R0's interface 0 in our example - and a possible egress interface *i*:
 
