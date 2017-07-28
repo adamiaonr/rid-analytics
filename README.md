@@ -157,7 +157,6 @@ The reasoning behind the branches of the above expression is (top to bottom):
 
 ![](https://www.dropbox.com/s/9ly2xjed4hhqftc/simple-fpr.jpg?raw=1)
 
-
 ## Joint probability of largest matches (forwarding events)
 
 ### Objective and notation
