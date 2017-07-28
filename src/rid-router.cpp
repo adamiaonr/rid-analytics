@@ -348,24 +348,6 @@ int RID_Router::calc_egress_ptree_probs(
     return 0;
 }
 
-int RID_Router::normalize_probs(__float080 ingress_prob) {
-
-    __float080 event_prob_sum = 0.0;
-    for (uint8_t e = EVENT_NLM; e < EVENT_NUM; e++) {
-
-        if (e != EVENT_LLM)
-            event_prob_sum += this->iface_events_pmf[e];
-    
-        this->iface_events_pmf[e] /= ingress_prob;
-    }
-
-    for (uint8_t i = IFACE_LOCAL; i < this->iface_num; i++)
-        for (uint8_t f = 0; f <= this->f_max; f++)
-            this->egress_iface_prob[i][f] /= event_prob_sum;
-
-    return 0;
-}
-
 int RID_Router::forward(
     uint8_t request_size,
     uint8_t ingress_iface,
@@ -543,9 +525,6 @@ int RID_Router::forward(
         if (calc_iface_events_distributions(ptree_size, &joint_lpm_matrix) < 0)
             return -1;
     }
-
-    // FIXME : this sounds very wrong...
-    // normalize_probs(ingress_prob);
 
     std::cout << "RID_Router::forward() :"
         << "\n\t P('NLM') = " << this->iface_events_pmf[EVENT_NLM]
