@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<test_run>
+    <topology file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/pop-level-maps/4755/edges.wt">4755</topology>
+    <test id="4755-192-05-01-10000000-0-0">
+        <table-size>10000000</table-size>
+        <modes>0-0</modes>
+        <bf-size>192</bf-size>
+        <add-suffixes>[]</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <tps>['1:1:4']</tps>
+        <fps>[]</fps>
+        <req-size>5</req-size>
+        <topology-nr>4755</topology-nr>
+        <paths>
+            <path avg_outdegree="3.75" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-192-05-01-10000000-0-0-007-004.scn" length="4">007,003,000,002,004</path>
+            <path avg_outdegree="3.50" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-192-05-01-10000000-0-0-006-004.scn" length="4">006,003,000,002,004</path>
+            <path avg_outdegree="3.75" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-192-05-01-10000000-0-0-008-004.scn" length="4">008,003,000,002,004</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/</results_dir>
+    </test>
+    <test id="4755-256-05-01-10000000-0-0">
+        <table-size>10000000</table-size>
+        <modes>0-0</modes>
+        <bf-size>256</bf-size>
+        <add-suffixes>[]</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <tps>['1:1:4']</tps>
+        <fps>[]</fps>
+        <req-size>5</req-size>
+        <topology-nr>4755</topology-nr>
+        <paths>
+            <path avg_outdegree="3.75" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-256-05-01-10000000-0-0-007-004.scn" length="4">007,003,000,002,004</path>
+            <path avg_outdegree="3.50" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-256-05-01-10000000-0-0-006-004.scn" length="4">006,003,000,002,004</path>
+            <path avg_outdegree="3.75" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-256-05-01-10000000-0-0-008-004.scn" length="4">008,003,000,002,004</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/</results_dir>
+    </test>
+    <test id="4755-192-10-01-10000000-0-0">
+        <table-size>10000000</table-size>
+        <modes>0-0</modes>
+        <bf-size>192</bf-size>
+        <add-suffixes>[]</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <tps>['1:1:4']</tps>
+        <fps>[]</fps>
+        <req-size>10</req-size>
+        <topology-nr>4755</topology-nr>
+        <paths>
+            <path avg_outdegree="3.75" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-192-10-01-10000000-0-0-007-004.scn" length="4">007,003,000,002,004</path>
+            <path avg_outdegree="3.50" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-192-10-01-10000000-0-0-006-004.scn" length="4">006,003,000,002,004</path>
+            <path avg_outdegree="3.75" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-192-10-01-10000000-0-0-008-004.scn" length="4">008,003,000,002,004</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/</results_dir>
+    </test>
+    <test id="4755-256-10-01-10000000-0-0">
+        <table-size>10000000</table-size>
+        <modes>0-0</modes>
+        <bf-size>256</bf-size>
+        <add-suffixes>[]</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <tps>['1:1:4']</tps>
+        <fps>[]</fps>
+        <req-size>10</req-size>
+        <topology-nr>4755</topology-nr>
+        <paths>
+            <path avg_outdegree="3.75" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-256-10-01-10000000-0-0-007-004.scn" length="4">007,003,000,002,004</path>
+            <path avg_outdegree="3.50" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-256-10-01-10000000-0-0-006-004.scn" length="4">006,003,000,002,004</path>
+            <path avg_outdegree="3.75" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-256-10-01-10000000-0-0-008-004.scn" length="4">008,003,000,002,004</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/</results_dir>
+    </test>
+</test_run>
