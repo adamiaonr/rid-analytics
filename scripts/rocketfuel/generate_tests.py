@@ -180,7 +180,8 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--topology-file", 
-         help = """filename of edge.wt topology file (or dir for 'print-stats' option)""")
+         help = """filename of edge.wt topology file (or dir for 
+            'print-stats' option)""")
 
     parser.add_argument(
         "--print-stats", 
@@ -210,19 +211,21 @@ if __name__ == "__main__":
          help = """e.g. '--table-sizes 10000000:100'""")
 
     parser.add_argument(
-        "--add-fps", 
-         help = """e.g. add 'fake' content around some node. syntax is <source id>:<annc. size>:<size %%>:<annc. radius>.
-         <source id> == 'S' means the source of request.
-         e.g. '--add-fp "S:2:10:1' """)
+        "--add-tps", 
+         help = """add tp sources. syntax is 
+            <num_tp_srcs>:<annc. size>:<annc. radius>. e.g. '--add-tps "1:2:2' """)
 
     parser.add_argument(
-        "--add-tps", 
-         help = """e.g. add additional tp sources. syntax is <num_tp_srcs>:<annc. size>:<annc. radius>.
-         e.g. '--add-tps "1:2:2' """)
+        "--add-fps", 
+         help = """add fp announcements around some node n. syntax 
+            is <n id>:<annc. size>:<size %%>:<annc. radius>. if <n id> == 'S' 
+            sets <n id> to the source of request. e.g. '--add-fp "S:2:10:1' """)
 
     parser.add_argument(
         "--modes", 
-         help = """MM_MODE (0 for 'flood', 1 for 'random', or 2 for 'fallback'), RES_MODE (0 for 'drop packets', 1 for 'resolve w/ fallback'), in that order, separated by ':' and '|' e.g. '--modes 0:0|0:1'""")
+         help = """MM_MODE (0 for 'flood', 1 for 'random', or 2 for 'fallback'), 
+            RES_MODE (0 for 'drop packets', 1 for 'resolve w/ fallback'), in that order, 
+            separated by ':' and '|' e.g. '--modes 0:0|0:1'""")
 
     # parser.add_argument(
     #     "--pick", 
@@ -230,7 +233,8 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--path-sizes", 
-         help = """pick (up to) n paths of a particular size s. e.g. '--path-sizes 5:4' for (up to) 10 paths of size 4.""")
+         help = """pick (up to) n paths of a particular size s. 
+            e.g. '--path-sizes 10:4' for (up to) 10 paths of size 4.""")
 
     parser.add_argument(
         "--selected-paths", 

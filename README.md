@@ -35,13 +35,13 @@ It requires multiple inputs, of which the most important is an `.scn` file. `.sc
 * Distribution of entry sizes per {router, link}
 * Shortest paths from router *i* every other router *j*
 
-Fortunately, `.scn` files can be generated autmatically, using the `generate_tests.py` tool in `scripts/rocketfuel`. Another important input is `--data-dir`, on which the `.tsv` files with the results of the experiments will be saved. Result files are explained in (...).
+Fortunately, `.scn` files can be generated automatically, using the `generate_tests.py` tool in `scripts/rocketfuel`. Another important input is `--data-dir`, on which the `.tsv` files with the results of the experiments will be saved. Result files are explained in (...).
 
 <a name="subsec:test-files"></a>
 ## Using `.test` files
 
 `rid-analytics` comes with a set of Python scripts which automatically create experiment scenarios, based on PoP-level topologies from [Rocketfuel](http://research.cs.washington.edu/networking/rocketfuel/). The flow is as follows:
-1. Use `scripts/rocketfuel/generate_tests.py` to generate a `.test` file and a batch of `.scn` files (refferred by the `.test` file)
+1. Use `scripts/rocketfuel/generate_tests.py` to generate a `.test` file and a batch of `.scn` files (referred by the `.test` file)
 2. Use `scripts/rocketfuel/run_evaluation.py` to run the batch of experiments described in the `.test` file
 
 <a name="subsubsec:generate-test-files"></a>
@@ -152,4 +152,4 @@ ROUTER	STATUS	LATENCY	PROB
 (...)
 ```
 
-Again, starting at router 6: as there's no way of terminating a path on router 6 (remembet that event SLM, i.e. of having the packet pass to the next router, has probability 1.0), there's no probability associated with any state at that point. At the next router - router 3 - there's some probability of having the path end in an *incorrect delivery*, with probability equal to ~0.02 (equal to the probability of event LLM, local link match). The latency at that point is 1 hop, corresponding to the hop in-between routers 6 and 3.
+Again, starting at router 6: as there's no way of terminating a path on router 6 (remember that event SLM, i.e. of having the packet pass to the next router, has probability 1.0), there's no probability associated with any state at that point. At the next router - router 3 - there's some probability of having the path end in an *incorrect delivery*, with probability equal to ~0.02 (equal to the probability of event LLM, local link match). The latency at that point is 1 hop, corresponding to the hop in-between routers 6 and 3.
