@@ -78,10 +78,12 @@ $ python run_test.py --test-file <work dir>/rid-analytics/experiments/examples/r
 ```
 This should fill the `<work dir>/rid-analytics/experiments/examples/rocketfuel/tests/` directory with a bunch of `.tsv` files, with the results from the experiments.
 
+<a name="subsec:result-files"></a>
 ## Interpreting result files
 
 Result files are saved in `.tsv` format. There are 2 types of files: **event** files and **path** files.
 
+<a name="subsubsec:event-files"></a>
 ### Event files
 
 Event files report the probability of witnessing specific **forwarding events** at some router, for all routers which can be visited by a request packet during an experiment. There are 5 types of forwarding events:
@@ -91,12 +93,12 @@ Event files report the probability of witnessing specific **forwarding events** 
 3. Single link match (SLM)
 4. TTL drop (TTL)
 
-**FIXME:** Understanding the probabilities of these events is a bit confusing, since these are not mutually exclusive.
+***FIXME:** Understanding the probabilities of these events is a bit confusing, since these are not mutually exclusive.*
 
 Following the running example, the first lines of the file `<work dir>/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-6-4.1501589180.tsv` read:
 
 ```
-AS	EVENT	PROB
+ROUTER  EVENT	PROB
 6	0	0
 6	1	0
 6	2	0
@@ -109,10 +111,6 @@ AS	EVENT	PROB
 0	1	0.0414116
 0	2	0.0310071
 0	3	0.958588
-1	0	0
-1	1	0.000453797
-1	2	0.0107375
-1	3	0
 
 (...)
 ```
@@ -122,3 +120,36 @@ Let's use a graph depiction of the topology to make this easier to follow...
 ![](https://www.dropbox.com/s/r452hf3ezxlk74b/4755.png?raw=1)
 
 Starting at router 6, there is a 100% likelihood of having a single link match, on the link to router 3. On router 3, there's a ~0.02 chance of having a cache hit (LLM event), and a ~0.92 chance of having a single link match towards router 0. There's a ~0.08 chance of having multiple link matches: in this case the joint event LLM AND a match on the link towards router 0.
+
+<a name="subsubsec:path-files"></a>
+### Path files
+
+Path files report the evolution of **path states** as a request transitions among routers during an experiment. Similarly to event files, path files report the probability of having some state **s** at each router in the path. There are 5 types of path states:
+0. Correct delivery
+1. Incorrect delivery
+2. Fallback delivery
+3. Fallback relay
+4. Packet drop
+5. TTL drop
+
+Following the running example, the first lines of the file `<work dir>/rid-analytics/experiments/examples/rocketfuel/tests/results/path.4755-192-05-01-10000000-0-0-6-4.1501589180.tsv` read:
+
+```
+ROUTER	STATUS	LATENCY	PROB
+6	4	0	0
+6	6	0	0
+6	1	0	0
+3	4	1	0
+3	6	1	0
+3	1	1	0.02097
+0	4	2	0
+0	6	2	0
+0	1	2	0.0310071
+1	4	3	0
+1	6	3	0
+1	1	3	0.0107375
+
+(...)
+```
+
+Again, starting at router 6: as there's no way of terminating a path on router 6 (remembet that event SLM, i.e. of having the packet pass to the next router, has probability 1.0), there's no probability associated with any state at that point. At the next router - router 3 - there's some probability of having the path end in an *incorrect delivery*, with probability equal to ~0.02 (equal to the probability of event LLM, local link match). The latency at that point is 1 hop, corresponding to the hop in-between routers 6 and 3.
