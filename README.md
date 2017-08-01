@@ -20,6 +20,7 @@ There are 2 ways to use `rid-analytics`:
 1. Direct use of `run-analysis` binary (not reccommended)
 2. Using `.test` files
 
+<a name="subsec:direct-run"></a>
 ## Direct use of `run-analysis` binary
 
 The compilation produces the basic binary of `rid-analytics`, which runs individual experiments: `run-analysis`. It can be used as follows:
@@ -36,13 +37,15 @@ It requires multiple inputs, of which the most important is an `.scn` file. `.sc
 
 Fortunately, `.scn` files can be generated autmatically, using the `generate_tests.py` tool in `scripts/rocketfuel`. Another important input is `--data-dir`, on which the `.tsv` files with the results of the experiments will be saved. Result files are explained in (...).
 
+<a name="subsec:test-files"></a>
 ## Using `.test` files
 
 `rid-analytics` comes with a set of Python scripts which automatically create experiment scenarios, based on PoP-level topologies from [Rocketfuel](http://research.cs.washington.edu/networking/rocketfuel/). The flow is as follows:
 1. Use `scripts/rocketfuel/generate_tests.py` to generate a `.test` file and a batch of `.scn` files (refferred by the `.test` file)
 2. Use `scripts/rocketfuel/run_evaluation.py` to run the batch of experiments described in the `.test` file
 
-## Generating `.test` and `.scn` files
+<a name="subsubsec:generate-test-files"></a>
+### Generating `.test` and `.scn` files
 
 As an example, we generate a batch of experiments with the following specs:
 * **Topology:** 4755 VSNL (India)
@@ -52,6 +55,7 @@ As an example, we generate a batch of experiments with the following specs:
 * **Fwd. table size:** 10M entries
 * **Multiple match resolution:** Random Matched Link (RML) forwarding
 * **Delivery error resolution:** Feedback
+* **# of source/destination pairs:** 3 pairs, 4 hops away from each other
 * **True positives:** 1 true positive, size 1, 4 hops away from requester
 
 To do that, run:
@@ -64,7 +68,8 @@ After this, the directory specified in the `--test-dir` option should contain 3 
 2. `results`: empty 
 3. `topologies`: filled w/ `.pdf` files depicting the chosen topologies, in graph form (example of [4755 VSNL (India) topology](https://www.dropbox.com/s/lg99ab6h4ogzl8u/infocom-2018.pdf?dl=0))
 
-## Running experiments
+<a name="subsubsec:running-experiments"></a>
+### Running experiments
 
 Run:
 ```bash
@@ -72,3 +77,48 @@ $ cd <work dir>/rid-analytics/scripts/rocketfuel
 $ python run_test.py --test-file <work dir>/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755.test
 ```
 This should fill the `<work dir>/rid-analytics/experiments/examples/rocketfuel/tests/` directory with a bunch of `.tsv` files, with the results from the experiments.
+
+## Interpreting result files
+
+Result files are saved in `.tsv` format. There are 2 types of files: **event** files and **path** files.
+
+### Event files
+
+Event files report the probability of witnessing specific **forwarding events** at some router, for all routers which can be visited by a request packet during an experiment. There are 5 types of forwarding events:
+0. No link matches (NLM)
+1. Multiple link matches (MLM)
+2. Local link matches (LLM)
+3. Single link match (SLM)
+4. TTL drop (TTL)
+
+**FIXME:** Understanding the probabilities of these events is a bit confusing, since these are not mutually exclusive.
+
+Following the running example, the first lines of the file `<work dir>/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-6-4.1501589180.tsv` read:
+
+```
+AS	EVENT	PROB
+6	0	0
+6	1	0
+6	2	0
+6	3	1
+3	0	0
+3	1	0.0818887
+3	2	0.02097
+3	3	0.918111
+0	0	0
+0	1	0.0414116
+0	2	0.0310071
+0	3	0.958588
+1	0	0
+1	1	0.000453797
+1	2	0.0107375
+1	3	0
+
+(...)
+```
+
+Let's use a graph depiction of the topology to make this easier to follow...
+
+![](https://www.dropbox.com/s/r452hf3ezxlk74b/4755.png?raw=1)
+
+Starting at router 6, there is a 100% likelihood of having a single link match, on the link to router 3. On router 3, there's a ~0.02 chance of having a cache hit (LLM event), and a ~0.92 chance of having a single link match towards router 0. There's a ~0.08 chance of having multiple link matches: in this case the joint event LLM AND a match on the link towards router 0.
