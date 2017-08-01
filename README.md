@@ -3,7 +3,7 @@
 
 Implementation of an analytical model of a forwarding method based on [Bloom filters](https://en.wikipedia.org/wiki/Bloom_filter). This forwarding method is designated as 'RID forwarding' in the [eXpressive Internet Architecture](http://www.cs.cmu.edu/~xia/resources/Documents/XIA-nsdi.pdf) (XIA) (check [this repo](https://github.com/adamiaonr/xia-core/tree/xia-v2-rids) for an implementation), and was adapted from an initial proposal published in [Papalini et al. 2014](http://nis-ita.org/ITA_static/attachments/2791/icn8945.pdf).
 
-`rid-analytics`' uderlying engine is based on a probabilistic graphical model which determines the probability of having an RID packet follow any given path in a network topology (e.g. PoP-level topologies made available by the [Rocketfuel ISP mapping engine](http://research.cs.washington.edu/networking/rocketfuel/)). Details about the math behind it are available in [this paper](https://www.dropbox.com/s/cjixlvjrbhtbjl2/infocom-2018-extended.pdf?dl=1).
+`rid-analytics`' uderlying engine is based on a probabilistic graphical model which determines the probability of having an RID packet follow any given path in a network topology (e.g. PoP-level topologies made available by the [Rocketfuel ISP mapping engine](http://research.cs.washington.edu/networking/rocketfuel/)). Details about the math behind it are available in [this paper](https://www.dropbox.com/s/cjixlvjrbhtbjl2/infocom-2018-extended.pdf?dl=0).
 
 <a name="sec:usage"></a>
 # Compilation
@@ -38,4 +38,37 @@ Fortunately, `.scn` files can be generated autmatically, using the `generate_tes
 
 ## Using `.test` files
 
-Instead of 
+`rid-analytics` comes with a set of Python scripts which automatically create experiment scenarios, based on PoP-level topologies from [Rocketfuel](http://research.cs.washington.edu/networking/rocketfuel/). The flow is as follows:
+1. Use `scripts/rocketfuel/generate_tests.py` to generate a `.test` file and a batch of `.scn` files (refferred by the `.test` file)
+2. Use `scripts/rocketfuel/run_evaluation.py` to run the batch of experiments described in the `.test` file
+
+## Generating `.test` and `.scn` files
+
+As an example, we generate a batch of experiments with the following specs:
+* **Topology:** 4755 VSNL (India)
+* **Request sizes:** 5, 10
+* **Bloom filter sizes:** 192, 256
+* **Entry sizes:** all entries should be size 1
+* **Fwd. table size:** 10M entries
+* **Multiple match resolution:** Random Matched Link (RML) forwarding
+* **Delivery error resolution:** Feedback
+* **True positives:** 1 true positive, size 1, 4 hops away from requester
+
+To do that, run:
+```bash
+$ cd <work dir>/rid-analytics/scripts/rocketfuel
+$ python generate_tests.py --test-dir <work dir>/rid-analytics/experiments/examples/rocketfuel/tests --topology-file <work dir>/rid-analytics/experiments/examples/rocketfuel/pop-level-maps/4755/edges.wt --req-sizes 5:10 --bf-sizes 192:256 --entry-sizes "1:100" --table-sizes 10000000 --modes 0:0 --path-sizes 3:4 --add-tps 1:1:4
+```
+After this, the directory specified in the `--test-dir` option should contain 3 folders: 
+1. `configs`: filled w/ `.test` and `.scn` files 
+2. `results`: empty 
+3. `topologies`: filled w/ `.pdf` files depicting the chosen topologies, in graph form (example of [4755 VSNL (India) topology](https://www.dropbox.com/s/lg99ab6h4ogzl8u/infocom-2018.pdf?dl=0))
+
+## Running experiments
+
+Run:
+```bash
+$ cd <work dir>/rid-analytics/scripts/rocketfuel
+$ python run_test.py --test-file <work dir>/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755.test
+```
+This should fill the `<work dir>/rid-analytics/experiments/examples/rocketfuel/tests/` directory with a bunch of `.tsv` files, with the results from the experiments.
