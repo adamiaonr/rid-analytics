@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"ifa",
+				"iface_num"
+			],
+			[
+				"fw",
+				"fwd_table_size"
+			],
+			[
+				"lmp",
+				"lmp_calculated"
+			],
+			[
 				"co",
 				"continue"
 			],
@@ -110,10 +122,6 @@
 			[
 				"log_",
 				"log_prob_fp_not_larger_than"
-			],
-			[
-				"ifa",
-				"iface_pivots"
 			],
 			[
 				"fix",
@@ -506,19 +514,19 @@
 			[
 				"EG",
 				"EGRESS_PTREE_PROB_MODE_GLOBAL"
-			],
-			[
-				"eg",
-				"egress_ptree_prob_sum"
-			],
-			[
-				"add_",
-				"add_suffixes"
 			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"file": "/home/adamiaonr/Downloads/ideas",
+			"settings":
+			{
+				"buffer_size": 2228,
+				"line_ending": "Unix"
+			}
+		},
 		{
 			"file": "src/rid-analytics.cpp",
 			"settings":
@@ -531,26 +539,23 @@
 			"file": "src/rid-router.cpp",
 			"settings":
 			{
-				"buffer_size": 80220,
+				"buffer_size": 77650,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "README.md",
+			"file": "include/rid-router.h",
 			"settings":
 			{
-				"buffer_size": 17226,
+				"buffer_size": 10122,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "incrementally deployable icn ('translational research')\napplied on Porto's testbed\n\nresearch questions:\n\n* architecture: is there any space for 'device-to-device' communications (e.g. mesh networking, DTN networking, etc.) in a 5G / cloudified world?\n\n	* why do we need mesh networking / DTN networking anyway? what challenges do these try to overcome? are these still there?\n	* what are the overheads of routing protocols for DTN and/or vehicular networking in terms of (1) battery lifetime (2) delay? is there any? if there is, how can we make it better?\n	* usually, the challenges come down to power and latency. what does latency and power depend on?\n\n* security: incrementally borrow ICN content-based security to IP networks\n\n	* security in IoT networks today : how do we do it? is it end-to-end? segment based?\n		* wifi authentication\n		* TLS? D-TLS?\n		* other sensor network security procedures (e.g. in ZigBee, Bluetooth, others?)\n		* further application-level security (?)\n\n	* why do we need wifi authentication?\n\n		* what is the main purpose of wifi authentication? mostly used for access control? \n		* there are a lot of APs and a lot of wifi-enabled devices out there : however\n		* is there any other way to achieve access control, e.g. an ICN way? what are the problems with a content-oriented solution? DoS attacks?\n		* what are the pros vs. cons of wifi authentication?\n		* can we quickly authenticate with more than 1 AP at the same time?\n\n	* content-oriented security vs. TLS : why not only the former?\n\n		* what does TLS give us?\n			* entity authentication : certificates for client AND server authentication\n			* data secrecy : symmetric ephemeral key\n			* data integrity & authentication : using the session key, generate MAC which shows that (1) data comes from other endpoint, (2) data wasn't changed in-flight\n\n		* what does content-oriented security gives us?\n			* data integrity & authentication\n			* data secrecy : but weaker, because producer encrypts content once, and keys for decryption must be shared among interested subscribers\n			* entity authentication (optional) via signatures\n\n		* ok, in practice, what are the differences? what is lost / gained by either way of achieving the same goals?\n",
-			"file": "/home/adamiaonr/Downloads/ideas",
-			"file_size": 2149,
-			"file_write_time": 1495634714000000,
+			"file": "experiments/examples/rocketfuel/tests/configs/1221.test",
 			"settings":
 			{
-				"buffer_size": 2228,
+				"buffer_size": 915,
 				"line_ending": "Unix"
 			}
 		},
@@ -563,18 +568,34 @@
 			}
 		},
 		{
-			"file": "include/rid-router.h",
-			"settings":
-			{
-				"buffer_size": 10037,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": "include/path-state.h",
 			"settings":
 			{
 				"buffer_size": 2670,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/run-analysis.cpp",
+			"settings":
+			{
+				"buffer_size": 7906,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Makefile",
+			"settings":
+			{
+				"buffer_size": 866,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "include/rid-analytics.h",
+			"settings":
+			{
+				"buffer_size": 3747,
 				"line_ending": "Unix"
 			}
 		}
@@ -619,10 +640,27 @@
 	},
 	"file_history":
 	[
+		"/home/adamiaonr/workbench/sandbox/rid-analytics/Makefile",
+		"/home/adamiaonr/workbench/rid-analytics/rid-analytics.sublime-project",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-192-05-01-10000000-0-0-006-004.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-6-4.1501589180.tsv",
+		"/home/adamiaonr/workbench/sandbox/rid-analytics/README.md",
+		"/home/adamiaonr/workbench/rid-analytics/src/run-analysis.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/path.4755-192-05-01-10000000-0-0-6-4.1501589180.tsv",
+		"/mnt/hgfs/adamiaonr/Dropbox/Workbench/PhD/papers/rids/github/example.tex",
+		"/home/adamiaonr/workbench/rid-analytics/README.md",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/generate_tests.py",
+		"/mnt/hgfs/adamiaonr/Dropbox/Workbench/PhD/papers/rids/infocom-2018/code/README.md",
+		"/home/adamiaonr/workbench/sandbox/rid-analytics/scripts/rocketfuel/topology.scn",
+		"/home/adamiaonr/workbench/sandbox/rid-analytics/scripts/rocketfuel/run_evalutation.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/1221.test",
+		"/home/adamiaonr/workbench/icn-2017/code/scripts/plot-fp-analysis.py",
+		"/home/adamiaonr/workbench/rid-testapp/scripts/plot-stats.py",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/run_evaluation.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-10-01-10000000-0-0-6-4.1501589181.tsv",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot_utils.py",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot_global.py",
 		"/home/adamiaonr/workbench/rid-analytics/include/rid-router.h",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/generate_tests.py",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/convert_rocketfuel.py",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot_cdn.py",
 		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks-no-tps/configs/3257-192-10-01-10000000-1-1-022-009.scn",
@@ -729,24 +767,7 @@
 		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/path.1221-192-10-01-10000000-2-0-14-2.1494111554.tsv",
 		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/events.1221-192-10-01-10000000-2-0-14-2.1494111554.tsv",
 		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/path.1221-192-10-01-10000000-1-1-14-2.1494111544.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/events.1221-192-10-01-10000000-2-0-31-14.1494111656.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/events.1221-192-10-01-10000000-1-1-14-2.1494111544.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/configs/4755-192-10-01-10000000-1-1-004-006.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.4755-256-10-05-10000000-0-0-4-6.1494106881.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.4755-256-10-01-10000000-0-0-4-6.1494106881.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.4755-512-10-05-10000000-0-0-4-6.1494106881.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.1221-192-10-01-10000000-0-0-10-0.1494106816.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.1221-512-10-01-10000000-0-0-10-0.1494001993.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.frank-underwood.1494072832.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/4755-192-10-01-10000000-0-0-004-006.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/4755.test",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.frank-underwood.1494101699.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.frank-underwood.1494101610.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.frank-underwood.1494102387.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.frank-underwood.1494094338.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.frank-underwood.1494090512.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.frank-underwood.1494087105.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/test/bad-results/events.frank-underwood.1494090138.tsv"
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/fallbacks/results/events.1221-192-10-01-10000000-2-0-31-14.1494111656.tsv"
 	],
 	"find":
 	{
@@ -766,6 +787,44 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"calc_log_joint_largest_match_prob",
+			"calc_joint_largest_match_distributions",
+			"router->get_",
+			"get_blocked_ifaces",
+			"router->get_",
+			"get_",
+			"egress_iface",
+			"_iface",
+			"iface_events_pmf",
+			"no_fo",
+			"prob_iface_in_ptree",
+			"egress_iface_prob",
+			"add_joint_lpm_prob",
+			"joint_lmp",
+			"joint_prob_matrix",
+			"calc_joint_largest_match_distributions",
+			"joint_lmp",
+			"init_lmp(",
+			"prob_true_negative",
+			"no_forwarding",
+			"joint_lpm_matrix",
+			"calc_largest_match_distributions",
+			" ,",
+			"subtil",
+			"tree_bitmask",
+			"get_lpm_prob",
+			"lmp_prob",
+			"lpm_pmf",
+			"joint_prob_matrix",
+			"calc_log_joint_largest_match_prob",
+			"run_rec",
+			"on_path_to_origin(",
+			"RELAY",
+			"calc_log_joint_largest_match_prob",
+			"6	0",
+			"tp iface=\"0",
+			"tp",
+			"<<<<",
 			"normaliz",
 			"calc_joint_largest_match_distributions",
 			"normalize_probs",
@@ -855,45 +914,7 @@
 			"CUMULATIVE_PROB",
 			"tp_sizes",
 			"027",
-			"adamiaonr",
-			"4	1",
-			"41	1",
-			"id=\"3\"	",
-			"egress_iface_prob",
-			"egress_iface",
-			"mm_mode",
-			"adamiaonr",
-			"id=\"0\"",
-			"tp iface=\"",
-			"print",
-			"fp",
-			"print(",
-			"tp_record",
-			"'tp' in ",
-			"<tp iface=",
-			"randin",
-			"0	0",
-			"outde",
-			"-",
-			"cluster_service",
-			"set_tt",
-			"topology",
-			"draw_",
-			"id=\"5\"",
-			"get_shortest_paths",
-			"get_pop_level_statistics",
-			"trim_topology",
-			"shortest_paths",
-			"convert_rocketfuel.",
-			"picks",
-			"topology",
-			"add_new_test",
-			"trim_topology",
-			"topology",
-			"shortest_paths",
-			"stats",
-			"add_example_path",
-			"content_source_id"
+			"adamiaonr"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -901,6 +922,12 @@
 		"regex": false,
 		"replace_history":
 		[
+			"iface",
+			"iface_events_prob",
+			"joint_lmp",
+			"calc_lmp",
+			"get_lmp",
+			"lmp",
 			"|*TP*|",
 			"annc_sizes.index(annc_size)",
 			"mode",
@@ -1022,13 +1049,7 @@
 			"cache_distance",
 			"cache_distances",
 			"cache_locations",
-			"entry_sizes",
-			"EVENT_MLM",
-			"EVENT_SLM",
-			"EVENT_NLM",
-			"EVENT_LLM",
-			"this->origin_server",
-			"eh_mode"
+			"entry_sizes"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1039,101 +1060,11 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 2,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "src/rid-analytics.cpp",
-					"settings":
-					{
-						"buffer_size": 41329,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								6840,
-								6840
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1587.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "src/rid-router.cpp",
-					"settings":
-					{
-						"buffer_size": 80220,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								53957,
-								53957
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-								80
-							],
-							"spell_check": true,
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 12852.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "README.md",
-					"settings":
-					{
-						"buffer_size": 17226,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								12516,
-								12516
-							]
-						],
-						"settings":
-						{
-							"spell_check": true,
-							"syntax": "Packages/Markdown/Markdown.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
 					"file": "/home/adamiaonr/Downloads/ideas",
 					"settings":
 					{
@@ -1160,7 +1091,124 @@
 					"type": "text"
 				},
 				{
+					"buffer": 1,
+					"file": "src/rid-analytics.cpp",
+					"settings":
+					{
+						"buffer_size": 41329,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								28608,
+								28608
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 9514.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/rid-router.cpp",
+					"settings":
+					{
+						"buffer_size": 77650,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								52735,
+								52735
+							]
+						],
+						"settings":
+						{
+							"rulers":
+							[
+								80
+							],
+							"spell_check": true,
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 16539.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "include/rid-router.h",
+					"settings":
+					{
+						"buffer_size": 10122,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5184,
+								5184
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1939.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
 					"buffer": 4,
+					"file": "experiments/examples/rocketfuel/tests/configs/1221.test",
+					"settings":
+					{
+						"buffer_size": 915,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								268,
+								268
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
 					"file": "scripts/graphs/plot_opportunistic.py",
 					"settings":
 					{
@@ -1188,11 +1236,93 @@
 					"type": "text"
 				},
 				{
-					"buffer": 5,
-					"file": "include/rid-router.h",
+					"buffer": 6,
+					"file": "include/path-state.h",
 					"settings":
 					{
-						"buffer_size": 10037,
+						"buffer_size": 2670,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								704,
+								704
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 585.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "src/run-analysis.cpp",
+					"settings":
+					{
+						"buffer_size": 7906,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6796,
+								6796
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 450.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "Makefile",
+					"settings":
+					{
+						"buffer_size": 866,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								385,
+								385
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Makefile/Makefile.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "include/rid-analytics.h",
+					"settings":
+					{
+						"buffer_size": 3747,
 						"regions":
 						{
 						},
@@ -1210,35 +1340,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 135.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "include/path-state.h",
-					"settings":
-					{
-						"buffer_size": 2670,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1794,
-								1794
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 675.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1438,6 +1540,6 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 285.0,
+	"side_bar_width": 164.0,
 	"status_bar_visible": true
 }

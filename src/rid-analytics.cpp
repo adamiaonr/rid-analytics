@@ -932,8 +932,7 @@ int RID_Analytics::view_results(
         ++dfs_itr;
     }
 
-    // gather outcome and latency stats (by only looking at leafs of path state 
-    // tree)
+    // gather outcome and latency stats (by only looking at leafs of path state tree)
     tree<Path_State *>::leaf_iterator leaf_itr      = this->path_state_tree.begin_leaf();
     tree<Path_State *>::leaf_iterator end_leaf_itr  = this->path_state_tree.end_leaf();
     while (leaf_itr != end_leaf_itr) {

@@ -12,83 +12,6 @@ const char * CUMULATIVE_PROB_MODE_STR[] = {
     "MODE_LI",
     "MODE_EI_INCLUSIVE"};
 
-RID_Router::RID_Router(
-    std::string router_id,
-    uint64_t fwd_table_size,
-    uint8_t iface_num,
-    uint8_t f_max,
-    uint16_t bf_size,
-    int mm_mode) {
-
-    // router id
-    this->id = router_id;
-    this->fwd_table_size = fwd_table_size;
-    this->iface_num = iface_num;
-    this->f_max = f_max;
-    this->bf_size = bf_size;
-
-    // initialize forwarding table
-    this->fwd_table = (RID_Router::fwd_table_row *) calloc(iface_num, sizeof(RID_Router::fwd_table_row)); 
-    // to indicate an empty entry in the table, set iface to -1
-    for (uint8_t i = IFACE_LOCAL; i < this->iface_num; i++)
-        this->fwd_table[i].iface = -1;
-
-    // lpm_pmf is a 2D array
-    this->lpm_pmf = (RID_Router::lpm_pmf_row **) calloc(this->iface_num, sizeof(RID_Router::lpm_pmf_row));
-
-    // initialize the iface_events_pmf[] array
-    this->iface_events_pmf = (__float080 *) calloc(EVENT_NUM, sizeof(__float080));
-
-    // initialize the ingress_ptree_prob[] array
-    this->ingress_ptree_prob = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
-
-    // initialize the egress_ptree_prob[iface][] array
-    this->egress_ptree_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
-    for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
-        this->egress_ptree_prob[_iface] = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
-
-    // initialize the egress_iface_prob[iface][] array
-    this->egress_iface_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
-    for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
-        this->egress_iface_prob[_iface] = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
-
-    this->initialized = true;
-    this->mm_mode = mm_mode;
-}
-
-RID_Router::~RID_Router() {
-
-    // free forwarding table
-    for (uint8_t _iface = 0; _iface < this->iface_num; _iface++) {
-
-        free(this->fwd_table[_iface].f_distribution);
-    }
-
-    free(this->fwd_table);
-
-    // free lpm_pmf
-    for (uint8_t _iface = 0; _iface < this->iface_num; _iface++) {
-
-        if (this->lpm_pmf[_iface] == NULL)
-            continue;
-
-        for (uint8_t _f = 0; _f < this->f_max; _f++) {
-
-            free(this->lpm_pmf[_iface][_f].lpm_pmf_prob);
-        }
-
-        free(this->lpm_pmf[_iface]);
-    }
-
-    free(this->iface_events_pmf);
-
-    for (uint8_t _iface = IFACE_LOCAL + 1; _iface < this->iface_num; _iface++)
-        free(this->egress_ptree_prob[_iface]);
-
-    for (uint8_t _iface = IFACE_LOCAL + 1; _iface < this->iface_num; _iface++)
-        free(this->egress_iface_prob[_iface]);
-}
-
 int RID_Router::init(
     std::string router_id,
     uint64_t fwd_table_size,
@@ -100,7 +23,6 @@ int RID_Router::init(
     if (this->initialized)
         return 0;
 
-    // router id
     this->id = router_id;
     this->fwd_table_size = fwd_table_size;
     this->iface_num = iface_num;
@@ -109,32 +31,82 @@ int RID_Router::init(
 
     // initialize forwarding table
     this->fwd_table = (RID_Router::fwd_table_row *) calloc(iface_num, sizeof(RID_Router::fwd_table_row)); 
-    // to indicate an empty entry in the table, set iface to -1
+    // set fwd_table[i].iface to -1, to mark iface i as not filled in the table
     for (uint8_t i = IFACE_LOCAL; i < this->iface_num; i++)
         this->fwd_table[i].iface = -1;
 
-    // lpm_pmf is a 2D array
-    this->lpm_pmf = (RID_Router::lpm_pmf_row **) calloc(this->iface_num, sizeof(RID_Router::lpm_pmf_row));
+    // largest match prob. (lmp) array
+    this->lmp = (RID_Router::lmp_row **) calloc(this->iface_num, sizeof(RID_Router::lmp_row));
+    // avoid repeated calculation of lmps: set lmp_calculated to true when the 
+    // lmp array is filled
+    this->lmp_calculated = false;
 
-    // initialize the iface_events_pmf[] array
-    this->iface_events_pmf = (__float080 *) calloc(EVENT_NUM, sizeof(__float080));
+    // iface event probabilities. events are: 
+    //  - EVENT_NLM: no link matches
+    //  - EVENT_MLM: multiple link matches
+    //  - EVENT_LLM: local link match
+    //  - EVENT_SLM: single link match (other than local)
+    this->iface_events_prob = (__float080 *) calloc(EVENT_NUM, sizeof(__float080));
 
-    // initialize the ingress_ptree_prob[] array
+    // initialize the ingress_ptree_prob[p] array. holds the prob of having 
+    // request entering a router on a prefix tree of size p.
     this->ingress_ptree_prob = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
-
-    // initialize the egress_ptree_prob[iface][] array
+    // initialize the egress_ptree_prob[i][p] array. holds the prob of having 
+    // request leaving a router on iface i, on a prefix tree of size p.
     this->egress_ptree_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
     for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
         this->egress_ptree_prob[_iface] = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
 
-    // initialize the egress_iface_prob[iface][] array
+    // initialize the egress_iface_prob[i][f] array. holds the probability 
+    // of having a request leaving a router over iface i, due to a match of 
+    // size f.
     this->egress_iface_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
     for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
         this->egress_iface_prob[_iface] = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
 
     this->initialized = true;
     this->mm_mode = mm_mode;
+
     return 0;
+}
+
+RID_Router::RID_Router(
+    std::string router_id,
+    uint64_t fwd_table_size,
+    uint8_t iface_num,
+    uint8_t f_max,
+    uint16_t bf_size,
+    int mm_mode) {
+
+    this->init(router_id, fwd_table_size, iface_num, f_max, bf_size, mm_mode);
+}
+
+RID_Router::~RID_Router() {
+
+    // free forwarding table
+    for (uint8_t iface = 0; iface < this->iface_num; iface++)
+        free(this->fwd_table[iface].f_distribution);
+    free(this->fwd_table);
+
+    // free lmp
+    for (uint8_t iface = 0; iface < this->iface_num; iface++) {
+
+        if (this->lmp[iface] == NULL)
+            continue;
+
+        for (uint8_t _f = 0; _f < this->f_max; _f++)
+            free(this->lmp[iface][_f].lmp);
+
+        free(this->lmp[iface]);
+    }
+
+    free(this->iface_events_prob);
+
+    for (uint8_t iface = IFACE_LOCAL + 1; iface < this->iface_num; iface++)
+        free(this->egress_ptree_prob[iface]);
+
+    for (uint8_t iface = IFACE_LOCAL + 1; iface < this->iface_num; iface++)
+        free(this->egress_iface_prob[iface]);
 }
 
 int RID_Router::add_fwd_table_entry(
@@ -271,7 +243,7 @@ int RID_Router::calc_egress_ptree_probs(
             // int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
             // for (uint8_t i = IFACE_LOCAL; i < this->iface_num; i++)
             //     iface_pivots[i] = this->tp_sizes[i];
-            // this->egress_ptree_prob[iface][0] += exp(this->calc_log_joint_largest_match_prob(this->tp_sizes[iface], iface, iface_pivots));
+            // this->egress_ptree_prob[iface][0] += exp(this->calc_log_forwarding_event_prob(this->tp_sizes[iface], iface, iface_pivots));
             this->egress_ptree_prob[iface][0] += this->prob_true_negative;
 
             std::cout << "RID_Router::calc_egress_ptree_probs() : [INFO] added ptree_size 0 prob" 
@@ -352,7 +324,7 @@ int RID_Router::forward(
     uint8_t request_size,
     uint8_t ingress_iface,
     int * tp_sizes,
-    uint8_t * tree_bitmask,
+    uint8_t * tree_bitmask,     // FIXME: shouldn't this be moved to RID_Router?
     __float080 ingress_prob,
     __float080 * ingress_ptree_prob,
     __float080 * f_r_distribution) {
@@ -363,7 +335,7 @@ int RID_Router::forward(
 
     this->tp_sizes = tp_sizes;
 
-    // check which ifaces are eligible to be on prefix trees
+    // check which ifaces are eligible to be on prefix trees (of any size)
     this->iface_on_ptree.clear();
     for (uint8_t i = IFACE_LOCAL; i < this->iface_num; i++)
         this->iface_on_ptree.push_back(is_iface_on_ptree(i, tree_bitmask));
@@ -391,126 +363,90 @@ int RID_Router::forward(
     std::cout << "}" << std::endl;
 
     // save the ingress probabilities for each diff. prefix tree size (i.e. 
-    // the probability that a packet is already bound to a tree of size |F|)
+    // the probability that a packet is already bound to a tree of size p)
 
     // ingress probabilities, what are these?
-    //  -# ingress_prob : probability of having the request forwarded 
-    //                    INTO this router (by the previous router), regardless 
-    //                    of the cause. the causes can be 3:
-    //                      -# true positive (in which case ingress_prob = 1.0)
-    //                      -# stuck in a 'false positive' prefix tree. the 
-    //                         prefixes announced in the tree can be of 
-    //                         size 1, 2, 3, ..., f_max. the probability for a 
-    //                         specific size is given by the ingress_ptree_prob 
-    //                         array (see below).
-    //                      -# fallback address
+    //  - ingress_prob : probability of having the request forwarded 
+    //                   INTO this router by the previous router, regardless 
+    //                   of the cause.
     //
-    //  -# ingress_ptree_prob : probability of having the request 'stuck' in
-    //                          a 'false positive' prefix tree of size ptree_size,
-    //                          with 1 <= ptree_size <= f_max.
+    //  - ingress_ptree_prob : probability of having the request coming in while 
+    //                         'stuck' in a 'false positive' prefix tree of 
+    //                         size p, with 1 <= p <= f_max.
     this->ingress_prob = ingress_prob;
     std::cout << "RID_Router::forward() : P(INGRESS) = " 
         << this->ingress_prob << std::endl;
 
     for (uint8_t ptree_size = 0; ptree_size <= this->f_max; ptree_size++) {
         this->ingress_ptree_prob[ptree_size] = ingress_ptree_prob[ptree_size];
-
         std::cout << "RID_Router::forward() : P(INGRESS_PTREE[" 
             << (int) ptree_size << "]) = " << this->ingress_ptree_prob[ptree_size] << std::endl;
     }
     
-    // 1) calculate distributions for the L_{i,ptree_size} random variables (RVs), 
-    // for each iface i and ptree_size:
-    //  -# L_{i,ptree_size} expresses the the prob of having a match of 
-    //     size L (0 <= L <= f_max), at iface i, considering that the incoming
-    //     request is bound to a 
-    //     prefix tree of size ptree_size (0 <= ptree_size <= f_max). 
-    //  -# ptree_size = 0 accounts for 'new' false positive matches, i.e. those 
-    //     which happen
-    //     at the current router for the 1st time in the request's lifetime.
-    //  -# ptree_size > 0 accounts for false positive matches happening due to 
-    //     the request being stuck to a prefix tree of size ptree_size.
-    if (calc_largest_match_distributions(
-        request_size, 
-        tp_sizes,
-        f_r_distribution) < 0) {
-
+    // 1) calculate distributions for the L_{i,p} random variables (RVs), 
+    // for each iface i and p
+    if (calc_lmp(request_size, tp_sizes, f_r_distribution) < 0)
         return -1;
-    }
 
-    // 1.1) print L_{i,ptree_size} for all (i,ptree_size) pairs
+    // 1.1) print L_{i,p} for all (i,p) pairs
     for (uint8_t iface = IFACE_LOCAL; iface < this->iface_num; iface++)
-        this->print_lpm_pmf(iface);
+        this->print_lmp(iface);
 
-    // 1.2) print the egress probabilities, egress_ptree_prob[i][f], i.e. the 
-    // probability of having the request bound to a fp prefix tree of size f, 
+    // 1.2) print egress_ptree_prob[i][p], i.e. the 
+    // probability of having the request bound to a fp prefix tree of size p, 
     // over iface i
-    std::cout << "RID_Router::forward() : egress ptree size probs:" << std::endl;
+    std::cout << "RID_Router::forward() : egress ptree probs:" << std::endl;
     for (uint8_t i = 0; i < this->iface_num; i++) {
-        for (uint8_t f = 0; f <= this->f_max; f++) {
-
-            std::cout << "\tP(EGRESS_PTREE[" << (int) i << "][" << (int) f << "]) = " 
-                << this->egress_ptree_prob[i][f] << std::endl;
+        for (uint8_t p = 0; p <= this->f_max; p++) {
+            std::cout << "\tP(EGRESS_PTREE[" << (int) i << "][" << (int) p << "]) = " 
+                << this->egress_ptree_prob[i][p] << std::endl;
         }
     }
 
-    // 2) calculate the joint probability distribution of the L RVs, i.e. 
-    // L_{0,ptree_size} x L_{1,ptree_size} x ... x L_{f_max,ptree_size} 
-    // this determines the likelihood of several L{i,ptree_size} combinations,
-    // which in allows us to answer several questions:
-    //
-    //  -# how likely is it to forward the request over iface i? e.g. the 
-    //     joint event {(L_{0} = 0), (L_{1} = 2), (L_{2} = 1), (L_{3} = 1)}
-    //     chooses iface 1 as the largest matching iface, and its probability 
-    //     adds to the probability of forwarding 
-    //  -# how likely is it to forward the request over multiple ifaces? e.g. 
-    //     the probability of having the event 
-    //     {0, 2, 2, 1} tells us the 
-    //     probability of having ifaces 1 and 2 as the largest matching 
-    //     ifaces, and thus being chosen to forward the request.
-    //  -# how likely is it to have no matches at all? that would be given 
-    //     by the event {0, 0, 0, 0}.
+    // 2) calculate the joint probability distribution of the interface largest 
+    // matches, i.e. the probability of a forwarding event. a forwarding event 
+    // is represented by a 1 x iface_num vector, e.g. [1, 2, 5], which means 
+    // 'largest match of size 1 at iface 0, lm of size 2 at iface 1 and 
+    // lm of 5 at iface 3'. this allows us to answer several questions about 
+    // forwarding events:
+    //  - how likely is it to forward the request over iface i?
+    //  - how likely is it to forward the request over multiple ifaces?
+    //  - how likely is it to have no matches at all, i.e. event {0, 0, 0, 0}?
 
     // 2.1) initializations
 
-    // 2.1.1) initialize a single array to compute the joint prob distribution 
-    // for all ptree_size
-    std::map<std::string, __float080> joint_lpm_matrix;
-    // __float080 * joint_lpm_matrix = NULL;
-    // init_joint_lpm_pmf(&(joint_lpm_matrix));
+    // 2.1.1) initialize matrix on which to save the joint largest match 
+    // probabilities
+    // FIXME: this is incredibly complex...
+    std::map<std::string, __float080> joint_lmp;
 
-    // 2.1.2) initialize iface_events_pmf
+    // 2.1.2) initialize iface_events_prob
     for (uint8_t i = 0; i < EVENT_NUM; i++)
-        this->iface_events_pmf[i] = 0.0;
+        this->iface_events_prob[i] = 0.0;
     // 2.1.3) initialize egress iface probs
     for (uint8_t i = 0; i < this->iface_num; i++)
         for (uint8_t f = 0; f < (this->f_max + 1); f++)
             this->egress_iface_prob[i][f] = 0.0;
 
-    // 2.2) compute the joint distr. considering the request is bound to 
-    // a prefix tree of size ptree_size. under such conditions, the events 
-    // are conditioned to the following:
-    //  A) prefix tree of size ptree_size continues on an 'old' iface i
-    //  B) new prefix tree, of size >= ptree_size, starts on a 'new' iface j
+    // 2.2) compute the fwd event probs given that the request is bound to 
+    // a fp tree of size s. under such conditions, the possible events are 
+    // restricted to:
+    //  - fp tree of size s continues from the previous router, OR (nor XOR)
+    //  - new fp tree, of size >= s, starts at this router
     for (uint8_t ptree_size = 0; ptree_size <= this->f_max; ptree_size++) {
 
-        // 2.2.1) if the probability of having a request bound to a ptree of 
-        // size ptree_size is 0.0, then - by definition - it is impossible for 
-        // any next iface to be 'bound' to such a tree. thus, we skip this 
-        // calculation (saves time).
+        // 2.2.1) if the probability of having a request bound to a fp tree of 
+        // size s is 0.0, then there's no binding. 
+        // thus, we skip this calculation (saves time).
         if (ingress_ptree_prob[ptree_size] == 0.0) {
-            std::cout << "RID_Router::forward() : skipping prefix tree of size : " 
-                << (int) ptree_size << std::endl;
+            std::cout << "RID_Router::forward() : skipping prefix tree of size : " << (int) ptree_size << std::endl;
             continue;
         }
 
-        // 2.2.2) re-use the joint probability matrix for the computation of 
-        // joint prob of each prefix tree size
-        joint_lpm_matrix.clear();
-        // clear_joint_lpm_pmf(&(joint_lpm_matrix));
+        // 2.2.2) re-use the fwd event prob matrix for each fp tree size
+        joint_lmp.clear();
 
-        // 2.2.3) assuming the prefix tree of size ptree_size continues on 
-        // iface ptree_iface...
+        // 2.2.3) fp tree of size s continues on iface i
         for (uint8_t ptree_iface = 0; ptree_iface < this->iface_num; ptree_iface++) {
 
             // skip ifaces on the 'no forwarding' list
@@ -518,30 +454,27 @@ int RID_Router::forward(
             if (it != this->no_forwarding.end())
                 continue;
 
-            calc_joint_largest_match_distributions(ptree_size, ptree_iface, &joint_lpm_matrix);
+            calc_forwarding_event_probs(ptree_size, ptree_iface, &joint_lmp);
         }
 
-        // 2.3) calc the prob distribution for ifaces, for each ptree_size
-        if (calc_iface_events_distributions(ptree_size, &joint_lpm_matrix) < 0)
+        // 2.3) calc egress iface (and events) probs (assuming fp tree size s)
+        if (calc_iface_probs(ptree_size, &joint_lmp) < 0)
             return -1;
     }
 
     std::cout << "RID_Router::forward() :"
-        << "\n\t P('NLM') = " << this->iface_events_pmf[EVENT_NLM]
-        << "\n\t P('LLM') = " << this->iface_events_pmf[EVENT_LLM]
-        << "\n\t P('SLM') = " << this->iface_events_pmf[EVENT_SLM]
-        << "\n\t P('MLM') = " << this->iface_events_pmf[EVENT_MLM]
+        << "\n\t P('NLM') = " << this->iface_events_prob[EVENT_NLM]
+        << "\n\t P('LLM') = " << this->iface_events_prob[EVENT_LLM]
+        << "\n\t P('SLM') = " << this->iface_events_prob[EVENT_SLM]
+        << "\n\t P('MLM') = " << this->iface_events_prob[EVENT_MLM]
         << std::endl;
 
     for (uint8_t i = 0; i < this->iface_num; i++)
         calc_egress_ptree_probs(EGRESS_PTREE_PROB_MODE_GLOBAL, i, NULL, NULL);
 
-    this->print_iface_events_pmf();
+    this->print_iface_events_prob();
     this->print_egress_iface_prob();
 
-    // // clean up after yourself...
-    // free(joint_lpm_matrix);
-    // ... aaaaand we're out of here!
     return 0;
 }
 
@@ -626,41 +559,41 @@ int RID_Router::calc_log_prob_not_fp(
     return 0;
 }
 
-void RID_Router::init_lpm_pmf(uint8_t iface) {
+void RID_Router::init_lmp(uint8_t iface) {
 
-    // // lpm_pmf is a 2D array : it may not be initialized when 
-    // // init_lpm_pmf() is first called
-    // if (this->lpm_pmf == NULL) {
-    //     this->lpm_pmf = 
-    //         (RID_Router::lpm_pmf_row **) calloc(this->iface_num, sizeof(RID_Router::lpm_pmf_row));
+    // // lmp is a 2D array : it may not be initialized when 
+    // // init_lmp() is first called
+    // if (this->lmp == NULL) {
+    //     this->lmp = 
+    //         (RID_Router::lmp_row **) calloc(this->iface_num, sizeof(RID_Router::lmp_row));
     // }
 
     // there are |R|_{max} + 1 prefix trees, starting from ptree_size = 0, 
     // meaning 'not in any prefix tree'
-    this->lpm_pmf[iface] = (RID_Router::lpm_pmf_row *) calloc(this->f_max + 1, sizeof(RID_Router::lpm_pmf_row));
+    this->lmp[iface] = (RID_Router::lmp_row *) calloc(this->f_max + 1, sizeof(RID_Router::lmp_row));
 
     for (int _p = 0; _p < this->f_max + 1; _p++) {
 
-        // this->lpm_pmf[iface][_p] = iface;
-        // this->lpm_pmf[iface][_p] = ptree_size = ptree_size;
-        this->lpm_pmf[iface][_p].lpm_pmf_prob = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
-        // this->lpm_pmf[iface][_p].lpm_not_in_ptree_pmf = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
+        // this->lmp[iface][_p] = iface;
+        // this->lmp[iface][_p] = ptree_size = ptree_size;
+        this->lmp[iface][_p].lmp = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
+        // this->lmp[iface][_p].lpm_not_in_ptree_pmf = (__float080 *) calloc(this->f_max + 1, sizeof(__float080));
     }
 }
 
-__float080 * RID_Router::get_lpm_prob(
+__float080 * RID_Router::get_lmp(
     uint8_t iface, 
     uint8_t ptree_size) { 
 
-    return this->lpm_pmf[iface][ptree_size].lpm_pmf_prob;
+    return this->lmp[iface][ptree_size].lmp;
 }
 
-__float080 RID_Router::get_lpm_prob(
+__float080 RID_Router::get_lmp(
     uint8_t iface, 
     uint8_t ptree_size,
     uint8_t f) { 
 
-    return this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f];
+    return this->lmp[iface][ptree_size].lmp[f];
 }
 
 /*
@@ -680,7 +613,7 @@ __float080 RID_Router::get_lpm_prob(
  * \param   iface   iface for which the L_{i,p} table will be printed
  *
  */
-void RID_Router::print_lpm_pmf(uint8_t iface) {
+void RID_Router::print_lmp(uint8_t iface) {
 
     printf("\n---------------------");
     for (uint8_t i = 0; i < (this->f_max + 2); i++)
@@ -706,7 +639,7 @@ void RID_Router::print_lpm_pmf(uint8_t iface) {
 
         for (uint8_t f = 0; f < (this->f_max + 1); f++) {
 
-            _prob = this->get_lpm_prob(iface, ptree_size, f);
+            _prob = this->get_lmp(iface, ptree_size, f);
             printf(" %-.5LE|", _prob);
 
             _cumulative_prob += _prob;
@@ -723,35 +656,10 @@ void RID_Router::print_lpm_pmf(uint8_t iface) {
     printf("\n");
 }
 
-// /*
-//  * \brief   allocates memory for an array capable of holding a joint distribution 
-//  *          matrix for all L_{iface, ptree_size} RVs (i.e. for all ifaces in 
-//  *          the router)
-//  * 
-//  * \param   joint_prob_matrix   the array to initialize
-//  */
-// void RID_Router::init_joint_lpm_pmf(
-//     __float080 ** joint_prob_matrix) {
-
-//     *joint_prob_matrix = (__float080 *) calloc(pow((this->f_max + 1), this->iface_num), sizeof(__float080));
-// }
-
-// /*
-//  * \brief   sets the joint prob distribution array to 0.0s. this is just a 
-//  *          wrapper for memset().
-//  * 
-//  * \param   joint_prob_matrix   the array to clear
-//  */
-// void RID_Router::clear_joint_lpm_pmf(__float080 ** joint_prob_matrix) {
-
-
-//     memset(*joint_prob_matrix, 0, pow((this->f_max + 1), this->iface_num) * sizeof(__float080));
-// }
-
 /*
- * \brief   adds (as in 'sum', '+') a prob. value to the joint_prob_matrix 
- *          position indexed by iface_pivots. in other words this function does 
- *          joint_prob_matrix[iface_pivots] += value
+ * \brief   adds (as in 'sum', '+') a prob. value to the joint_lmp 
+ *          position indexed by iface_pivots. in other words, this function does 
+ *          joint_lmp[iface_pivots] += value
  *
  * multi-dimensional arrays in C/C++ are stored in row major order. what does 
  * it mean? e.g. say we have a 3D matrix, 'the_matrix' of dimension D x D x D. 
@@ -759,16 +667,16 @@ void RID_Router::print_lpm_pmf(uint8_t iface) {
  * *(the_matrix + (1 * ((D)^2)) + (3 * ((D)^1)) + (5 * ((D)^0)))
  *
  * this is why we need a function to do something as simple as 
- * joint_prob_matrix[iface_pivots] += value
+ * joint_lmp[iface_pivots] += value
  * 
- * \param   joint_prob_matrix       the function adds (as in 'sum', '+') value 
+ * \param   joint_lmp               the function adds (as in 'sum', '+') value 
  *                                  to the iface_pivots position in this array.
- * \param   iface_pivots            index in joint_prob_matrix to which the 
+ * \param   iface_pivots            index in joint_lmp to which the 
  *                                  prob. value should be added.
  * \param   value                   the prob. value to be added to the array.
  */
-void RID_Router::add_joint_lpm_prob(
-    std::map<std::string, __float080> * joint_prob_matrix,
+void RID_Router::add_joint_lmp_prob(
+    std::map<std::string, __float080> * joint_lmp,
     int * iface_pivots,
     __float080 value) {
 
@@ -782,18 +690,18 @@ void RID_Router::add_joint_lpm_prob(
         iface_pivots_str << iface_pivots[i];
     }
 
-    // std::cout << "RID_Router::add_joint_lpm_prob() : [INFO] key for ";
+    // std::cout << "RID_Router::add_joint_lmp_prob() : [INFO] key for ";
     // for (int k = 0; k < this->iface_num; k++)
     //     std::cout << "[" << iface_pivots[k] << "]";
     // std::cout << " = " << iface_pivots_str.str() << std::endl;
 
-    (*joint_prob_matrix)[iface_pivots_str.str()] += value;
+    (*joint_lmp)[iface_pivots_str.str()] += value;
 }
 
 /*
- * \brief   gets a prob. value to the joint_prob_matrix 
+ * \brief   gets a prob. value to the joint_lmp 
  *          position indexed by iface_pivots. in other words this function 
- *          returns joint_prob_matrix[iface_pivots]
+ *          returns joint_lmp[iface_pivots]
  *
  * multi-dimensional arrays in C/C++ are stored in row major order. what does 
  * it mean? e.g. say we have a 3D matrix, 'the_matrix' of dimension D x D x D. 
@@ -801,16 +709,16 @@ void RID_Router::add_joint_lpm_prob(
  * *(the_matrix + (1 * ((D)^2)) + (3 * ((D)^1)) + (5 * ((D)^0)))
  *
  * this is why we need a function to do something as simple as 
- * returning joint_prob_matrix[iface_pivots]
+ * returning joint_lmp[iface_pivots]
  * 
- * \param   joint_prob_matrix       the function adds (as in 'sum', '+') value 
+ * \param   joint_lmp       the function adds (as in 'sum', '+') value 
  *                                  to the iface_pivots position in this array.
- * \param   iface_pivots            index in joint_prob_matrix to which the 
+ * \param   iface_pivots            index in joint_lmp to which the 
  *                                  prob. value should be added.
  * \param   value                   the prob. value to be added to the array.
  */
-__float080 RID_Router::get_joint_lpm_prob(    
-    std::map<std::string, __float080> * joint_prob_matrix,
+__float080 RID_Router::get_joint_lmp_prob(    
+    std::map<std::string, __float080> * joint_lmp,
     int * iface_pivots) {
 
     std::ostringstream iface_pivots_str("");
@@ -821,14 +729,14 @@ __float080 RID_Router::get_joint_lpm_prob(
         iface_pivots_str << iface_pivots[i];
     }
 
-    return (*joint_prob_matrix)[iface_pivots_str.str()];
+    return (*joint_lmp)[iface_pivots_str.str()];
 }
 
 /*
- * \brief   compute the distribution of L_{i,p} random variables
+ * \brief compute the largest match probabilities, for each iface of the 
+ * router, i.e. L_{i,p} random variables.
  *
- * calculate distributions for the L_{i,p} random variables (RVs). L_{i,p} 
- * expresses the the prob of having a request match a forwarding entry of size 
+ * L_{i,p} expresses the the prob of having a request match a forwarding entry of size 
  * L (0 <= L <= f_max), at iface i, considering that the incoming request is 
  * bound to a FP prefix tree of size p (0 <= p <= f_max). 
  *
@@ -854,59 +762,72 @@ __float080 RID_Router::get_joint_lpm_prob(
  * |          5 |         "         | " | " | " | " | " |
  *
  */
-int RID_Router::calc_largest_match_distributions(
+int RID_Router::calc_lmp(
     uint8_t request_size, 
     int * tp_sizes, 
     __float080 * f_r_distribution) {
 
+    // if this router already has an lmp table, don't re-calculate
+    if (this->lmp_calculated) { 
+        std::cout << "RID_Router::calc_lmp() : [INFO] pre-calculated lmp table available. skipping." << std::endl;
+        std::cout << "RID_Router::calc_lmp() : [INFO] sizes of lmp table: "
+            << "\n\t [per iface] : " << ((this->f_max + 1) * (this->f_max + 1) * sizeof(__float080)) << " byte"
+            << "\n\t [TOTAL (x" << (int) this->iface_num << " ifaces)] : " 
+                << (this->iface_num * (this->f_max + 1) * (this->f_max + 1) * sizeof(__float080)) << " byte" << std::endl;
+        return 0;
+    }
+
+    // aux. arrays used in fp rate calculation
     __float080 * log_prob_fp_not_larger_than = (__float080 *) calloc(request_size + 1, sizeof(__float080));
     __float080 * log_prob_not_fp = (__float080 *) calloc(this->f_max, sizeof(__float080));
-    // the k used in the FP rate formulas (see paper)
+    // the k used in the fp rate formulas (see paper)
     __float080 k = (log(2) * ((__float080) this->bf_size)) / ((__float080) request_size);
-
+    // variable which saves probability of not having a match of any size. 
+    // used in calc_egress_ptree_probs().
+    // FIXME: is this necessary? isn't the probability of a true negative 
+    // accessible via other means?
     this->prob_true_negative = 1.0;
 
-    // calculation of L_{i,ptree_size} for iface i starts here...
     for (uint8_t iface = IFACE_LOCAL; iface < this->iface_num; iface++) {
 
         // if iface isn't initialized, abort
         if (this->fwd_table[iface].iface == -1) {
-
-            fprintf(stderr, "RID_Router::calc_largest_match_distributions() : iface %d uninitialized. aborting.\n", iface);
+            fprintf(stderr, "RID_Router::calc_lmp() : iface %d uninitialized. aborting.\n", iface);
             return -1;
         }
 
         // allocate memory for L_{iface,ptree_size} matrix (only for iface).
-        // for coding purposes, we abbreviate L_{iface,ptree_size} as lpm_pmf.
-        this->init_lpm_pmf(iface);
+        // for coding purposes, we abbreviate L_{iface,ptree_size} as lmp.
+        this->init_lmp(iface);
 
-        // we don't forward packets over forbidden ifaces, as such the 
-        // P(L_{forbidden iface,<for all ptree_size>} = 0) = 1.0
-        for (int ptree_size = this->f_max; ptree_size >= 0; ptree_size--) {
+        // // we don't forward packets over forbidden ifaces, as such the 
+        // // P(L_{forbidden iface,<for all ptree_size>} = 0) = 1.0
+        // for (int ptree_size = this->f_max; ptree_size >= 0; ptree_size--) {
             
-            std::set<uint8_t>::iterator it = this->no_forwarding.find((uint8_t) iface);
-            if (it != this->no_forwarding.end())
-                this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[0] = 1.0;
-        }
+        //     std::set<uint8_t>::iterator it = this->no_forwarding.find((uint8_t) iface);
+        //     if (it != this->no_forwarding.end())
+        //         this->lmp[iface][ptree_size].lmp[0] = 1.0;
+        // }
 
-        // skip iface if it's in the 'no forwarding' list
-        std::set<uint8_t>::iterator it = this->no_forwarding.find((uint8_t) iface);
-        if (it != this->no_forwarding.end())
-            continue;
+        // // skip iface if it's in the 'no forwarding' list
+        // std::set<uint8_t>::iterator it = this->no_forwarding.find((uint8_t) iface);
+        // if (it != this->no_forwarding.end())
+        //     continue;
 
-        // FIXME : if there are no entries for this iface, a match is impossible 
-        // for this [iface][ptree_size][f] combination. also, set 
-        // [iface][ptree_size][0] = 1.0 (a 'no match' event is guaranteed)
+        // if there are no entries for this iface, a match is impossible for 
+        // this [iface][ptree_size][f] combination. 
+        // set [iface][ptree_size][0] = 1.0 (a 'no match' event is guaranteed) 
+        // and continue to the next iface.
         if (this->fwd_table[iface].num_entries < 1) {
 
             for (int ptree_size = this->f_max; ptree_size >= 0; ptree_size--)
-                this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[0] = 1.0;
+                this->lmp[iface][ptree_size].lmp[0] = 1.0;
 
             continue;
         }
 
-        // pre-calculate prob of *NOT* having *ANY* FP of sizes 0 to f 
-        // in iface
+        // pre-calculate prob of *NOT* having *ANY* FP of sizes 0 to f in iface.
+        // output (log_prob_not_fp) is logarithmic.
         if (calc_log_prob_not_fp(
             (__float080) (this->bf_size), (__float080) request_size, k,
             (__float080) this->fwd_table[iface].num_entries,
@@ -915,7 +836,7 @@ int RID_Router::calc_largest_match_distributions(
             log_prob_not_fp) < 0) {
 
             free(log_prob_not_fp);
-            fprintf(stderr, "RID_Router::calc_largest_match_distributions() : couldn't retrieve log FP rates\n");
+            fprintf(stderr, "RID_Router::calc_lmp() : couldn't retrieve log FP rates\n");
 
             return -1;
         }
@@ -927,7 +848,8 @@ int RID_Router::calc_largest_match_distributions(
         for (int f = (this->f_max - 1); f >= 0; f--)
             log_prob_fp_not_larger_than[f] = log_prob_fp_not_larger_than[f + 1] + log_prob_not_fp[f];
 
-        // calculate the *LOCAL* component of the egress prefix tree probabilities
+        // calculate the *LOCAL* component of the egress prefix tree 
+        // probabilities
         calc_egress_ptree_probs(
             EGRESS_PTREE_PROB_MODE_LOCAL,
             iface,
@@ -950,7 +872,7 @@ int RID_Router::calc_largest_match_distributions(
                     // // match of *AT LEAST* ptree_size
                     // // FIXME 1: this doesn't make sense...
                     // if (f < ptree_size)
-                    this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 0.0;
+                    this->lmp[iface][ptree_size].lmp[f] = 0.0;
 
                     // FIXME 2: you may need to do something about the egress 
                     // probabilities here...
@@ -973,14 +895,14 @@ int RID_Router::calc_largest_match_distributions(
                             // iface is associated with any entries. why set 
                             // it to 1.0 if the iface has no entries? is this  
                             // even possible to reach?
-                            this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 
+                            this->lmp[iface][ptree_size].lmp[f] = 
                                 (__float080) ((this->fwd_table[iface].num_entries > 0) ? 0.0 : 1.0);
 
                         } else {
 
                             // if f >= ptree_size, the largest match will *AT 
                             // LEAST* be f.
-                            this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 
+                            this->lmp[iface][ptree_size].lmp[f] = 
                                 exp(log_prob_fp_not_larger_than[f]);
                         }
 
@@ -993,7 +915,7 @@ int RID_Router::calc_largest_match_distributions(
                             // // any match will be larger than f
                             // if (f < ptree_size) {
 
-                            //     this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 0.0;
+                            //     this->lmp[iface][ptree_size].lmp[f] = 0.0;
 
                             // } else if (f == ptree_size) {
                             if (f == ptree_size) {
@@ -1001,7 +923,7 @@ int RID_Router::calc_largest_match_distributions(
                                 // the prob of this event can be calculated as:
                                 //  * not having fp matches larger than f : log_prob_fp_not_larger_than[f]
                                 //  * AND having a fp match of size f : 1.0 - exp(log_prob_not_fp[f - 1])
-                                this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 
+                                this->lmp[iface][ptree_size].lmp[f] = 
                                     exp(log_prob_fp_not_larger_than[f]) 
                                     * (1.0 - exp(log_prob_not_fp[f - 1])) 
                                     * ((this->fwd_table[iface].num_entries > 0) ? 1.0 : 0.0);
@@ -1015,14 +937,14 @@ int RID_Router::calc_largest_match_distributions(
                                 // larger than f are possible.
                                 if (this->iface_on_ptree[iface] && ptree_size > 0) {
 
-                                    this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 0.0;
+                                    this->lmp[iface][ptree_size].lmp[f] = 0.0;
                                 
                                 } else {
 
                                     // the prob of this event can be calculated as:
                                     //  * not having fps larger than f : log_prob_fp_not_larger_than[f]
                                     //  * AND having a fp of size f : 1.0 - exp(log_prob_not_fp[f - 1])
-                                    this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 
+                                    this->lmp[iface][ptree_size].lmp[f] = 
                                         exp(log_prob_fp_not_larger_than[f]) 
                                         * (1.0 - exp(log_prob_not_fp[f - 1])) 
                                         * ((this->fwd_table[iface].num_entries > 0) ? 1.0 : 0.0);
@@ -1035,12 +957,12 @@ int RID_Router::calc_largest_match_distributions(
                             // cut
                             if (f < ptree_size) {
 
-                                this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 
+                                this->lmp[iface][ptree_size].lmp[f] = 
                                     (__float080) ((this->fwd_table[iface].num_entries > 0) ? 0.0 : 1.0);
 
                             } else {
 
-                                this->lpm_pmf[iface][ptree_size].lpm_pmf_prob[f] = 
+                                this->lmp[iface][ptree_size].lmp[f] = 
                                     exp(log_prob_fp_not_larger_than[f]);
                             }
                         }
@@ -1053,21 +975,27 @@ int RID_Router::calc_largest_match_distributions(
     free(log_prob_fp_not_larger_than);
     free(log_prob_not_fp);
 
+    // mark the lmps as calculated
+    this->lmp_calculated = true;
+
     return 0;
 }
 
-__float080 RID_Router::calc_log_joint_largest_match_prob(
+__float080 RID_Router::calc_log_forwarding_event_prob(
     uint8_t ptree_size,
     uint8_t ptree_iface, 
-    int * iface_pivots) {
+    int * iface_pivots,
+    int & iterations) {
 
     __float080 log_joint_largest_match_prob = 0.0;
     for (uint8_t iface = IFACE_LOCAL; iface < this->iface_num; iface++) {
 
         if ((iface == ptree_iface))
-            log_joint_largest_match_prob += log(this->get_lpm_prob(iface, ptree_size, iface_pivots[iface]));
+            log_joint_largest_match_prob += log(this->get_lmp(iface, ptree_size, iface_pivots[iface]));
         else
-            log_joint_largest_match_prob += log(this->get_lpm_prob(iface, 0, iface_pivots[iface]));
+            log_joint_largest_match_prob += log(this->get_lmp(iface, 0, iface_pivots[iface]));
+
+        iterations++;
     }
 
     return log_joint_largest_match_prob;
@@ -1088,7 +1016,7 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
     // of size 1. 
     // the idea is to cycle through all 
     // combinations, and calculate the probability of that event by multiplying 
-    // the individual L_{i,ptree_size} and saving it in joint_prob_matrix.
+    // the individual L_{i,ptree_size} and saving it in joint_lmp.
     int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
     // max. possible fwd entry sizes for each iface
     int * iface_pivots_max = (int *) calloc(this->iface_num, sizeof(int));
@@ -1122,6 +1050,7 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
 
     int curr_i = (this->iface_num - 1);
     int curr_f = 0;
+    int iterations = 0;
     // placeholder for the individual probabilities of joint events
     __float080 joint_prob_sum = 0.0;
 
@@ -1137,7 +1066,8 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
                 // update the f size pivot for iface curr_i
                 iface_pivots[curr_i] = f;
 
-                joint_prob_sum += exp(this->calc_log_joint_largest_match_prob(ptree_size, ptree_iface, iface_pivots));
+                joint_prob_sum += exp(this->calc_log_forwarding_event_prob(
+                    ptree_size, ptree_iface, iface_pivots, iterations));
 
                 std::set<uint8_t>::iterator it = this->no_forwarding.find((uint8_t) curr_i);
                 if (it != this->no_forwarding.end()) {
@@ -1169,7 +1099,7 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
                 iface_bitmasks[curr_i] = iface_bitmasks[curr_i] & (iface_bitmasks[curr_i] - 1);
             }
 
-            // std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] (-*) [" << curr_i << "],[" << curr_f << "]" << std::endl;
+            // std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (-*) [" << curr_i << "],[" << curr_f << "]" << std::endl;
 
             // after updating iface_pivots[curr_i], go back down 
             // to the level below.
@@ -1185,7 +1115,7 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
             iface_bitmasks[curr_i] = this->fwd_table[curr_i].f_bitmask;
             //  * go up one level (i.e. to curr_i - 1) to increment 
             //      iface_pivots[curr_i - 1]
-            // std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] (*-) [" << curr_i << "],[" << curr_f << "]" << std::endl;
+            // std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (*-) [" << curr_i << "],[" << curr_f << "]" << std::endl;
             curr_i--;
         }
     }
@@ -1202,22 +1132,22 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
 }
 
 /*
- * \brief   compute the joint probability distribution of L_{i,p} x 
- *          L_{j,p} x ... x L_{n,p} RVs, between all ifaces in the router and 
- *          for a 'prefix tree' size p.
+ * \brief   compute the probability of all possible forwarding events,
+ *          given the request is bound to a fp tree of size s, which continues 
+ *          over iface i
  * 
  * \param   ptree_size              the joint distribution should consider this 
- *                                  'prefix tree' size *ONLY*.
+ *                                  'fp tree' size *ONLY*.
  * \param   ptree_iface             use the L_{i,ptree_size} values for ptree_iface, 
  *                                  L_{i,0} values for all other ifaces.
- * \param   joint_prob_matrix       save the joint distribution computations in 
+ * \param   joint_lmp               save the joint distribution computations in 
  *                                  this array.
  *
  */
-int RID_Router::calc_joint_largest_match_distributions(
+int RID_Router::calc_forwarding_event_probs(
     uint8_t ptree_size,
     uint8_t ptree_iface,
-    std::map<std::string, __float080> * joint_prob_matrix) {
+    std::map<std::string, __float080> * joint_lmp) {
 
     // we represent joint events as a pivot array of size iface_num. e.g.
     //
@@ -1227,10 +1157,9 @@ int RID_Router::calc_joint_largest_match_distributions(
     //
     // represents the joint event in which iface 0 has no match (size 0), iface 
     // 1 has a match of size 1, iface 2 a match of size 2 and iface 3 a match 
-    // of size 1. 
-    // the idea is to cycle through all 
+    // of size 1. the idea is to cycle through all 
     // combinations, and calculate the probability of that event by multiplying 
-    // the individual L_{i,ptree_size} and saving it in joint_prob_matrix.
+    // the individual L_{i,ptree_size} and saving it in joint_lmp.
     int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
     // max. possible fwd entry sizes for each iface
     int * iface_pivots_max = (int *) calloc(this->iface_num, sizeof(int));
@@ -1253,10 +1182,14 @@ int RID_Router::calc_joint_largest_match_distributions(
 
         } else {
 
+            // ffs() gives the position of the **least** significant bit which 
+            // is set. to find highest bit set, keep using ffs() and flipping 
+            // the lsb set until the bitmask is 0.
             do {
                 max_pivot = ffs(f_bitmask);
                 f_bitmask = f_bitmask & (f_bitmask - 1);
-            } while(ffs(f_bitmask) != 0);
+            // } while(ffs(f_bitmask) != 0);
+            } while(f_bitmask != 0);
 
             iface_pivots_max[i] = max_pivot;
         }
@@ -1264,15 +1197,14 @@ int RID_Router::calc_joint_largest_match_distributions(
 
     int curr_i = (this->iface_num - 1);
     int curr_f = 0;
+    int iterations[2] = {0, 0};
 
     __float080 prob_iface_in_ptree = 0.0;
     if (ptree_size > 0) {
 
-        // if the ptree_iface is def. not on ptree, then it's impossible for it to be the 
-        // continuation of a prefix tree.
         if (this->iface_on_ptree[ptree_iface]) {
 
-            std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] ("
+            std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] ("
                 << (int) ptree_iface << " ," << (int) ptree_size << ") continues...";
 
             // accounts for sub-event B
@@ -1287,6 +1219,8 @@ int RID_Router::calc_joint_largest_match_distributions(
 
     } else {
 
+        // if the ptree_iface is def. not on ptree, then it's impossible for it 
+        // to be the continuation of a prefix tree
         __float080 nr_valid_egress_ifaces = (__float080) (this->iface_num - this->no_forwarding.size());
         if (nr_valid_egress_ifaces < 1.0) nr_valid_egress_ifaces = 1.0;
 
@@ -1303,10 +1237,10 @@ int RID_Router::calc_joint_largest_match_distributions(
     // get the sum of probs of the joint events involved in this 
     // <ptree_size, ptree_iface> pair. 
     // FIXME : get_joint_prob_sum() has the same basic structure as 
-    // calc_joint_largest_match_distributions(), and its invocation here 
+    // calc_forwarding_event_probs(), and its invocation here 
     // seems overkill. unfortunately, i haven't found another way to deal 
     // with this issue.
-    __float080 joint_prob_sum = calc_joint_largest_match_prob_sum(ptree_size, ptree_iface);
+    __float080 joint_prob_sum = calc_joint_largest_match_prob_sum(ptree_size    , ptree_iface);
 
     while (curr_i > -1) {
 
@@ -1325,7 +1259,9 @@ int RID_Router::calc_joint_largest_match_distributions(
                 //  A) match lengths as encoded on iface_pivots
                 //  B) request bound to a prefix tree of size ptree_size
                 //  C) prefix tree of size ptree_size continues on ptree_iface
-                log_prob = this->calc_log_joint_largest_match_prob(ptree_size, ptree_iface, iface_pivots);
+                log_prob = this->calc_log_forwarding_event_prob(
+                    ptree_size, ptree_iface, iface_pivots, iterations[1]);
+                iterations[0]++;
 
                 // scale the event probability by the following factors:
                 //  1) probability of having a request coming into the router (ingress_prob)
@@ -1341,20 +1277,20 @@ int RID_Router::calc_joint_largest_match_distributions(
                 // add the calculated probability to the matrix of joint 
                 // probabilities
                 __float080 prob = exp(log_prob);
-                this->add_joint_lpm_prob(joint_prob_matrix, iface_pivots, prob);
+                this->add_joint_lmp_prob(joint_lmp, iface_pivots, prob);
 
                 // if (prob > 0.0) {
 
-                //     std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] JOINT_PROB" 
+                //     std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] JOINT_PROB" 
                 //         << "(" << (int) ptree_iface << ", " << (int) ptree_size << ")";
                 //     for (int k = 0; k < this->iface_num; k++)
                 //         std::cout << "[" << iface_pivots[k] << "]";
                 //     std::cout << " = " << prob << std::endl;
 
-                //     std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] (SUM) JOINT_PROB";
+                //     std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (SUM) JOINT_PROB";
                 //     for (int k = 0; k < this->iface_num; k++)
                 //         std::cout << "[" << iface_pivots[k] << "]";
-                //     std::cout << " = " << this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots) << std::endl;
+                //     std::cout << " = " << this->get_joint_lmp_prob(joint_lmp, iface_pivots) << std::endl;
                 // }
 
                 std::set<uint8_t>::iterator it = this->no_forwarding.find((uint8_t) curr_i);
@@ -1387,7 +1323,7 @@ int RID_Router::calc_joint_largest_match_distributions(
                 iface_bitmasks[curr_i] = iface_bitmasks[curr_i] & (iface_bitmasks[curr_i] - 1);
             }
 
-            // std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] (-*) [" << curr_i << "],[" << curr_f << "]" << std::endl;
+            // std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (-*) [" << curr_i << "],[" << curr_f << "]" << std::endl;
 
             // after updating iface_pivots[curr_i], go back down 
             // to the level below.
@@ -1403,10 +1339,16 @@ int RID_Router::calc_joint_largest_match_distributions(
             iface_bitmasks[curr_i] = this->fwd_table[curr_i].f_bitmask;
             //  * go up one level (i.e. to curr_i - 1) to increment 
             //      iface_pivots[curr_i - 1]
-            // std::cout << "RID_Router::calc_joint_largest_match_distributions() : [INFO] (*-) [" << curr_i << "],[" << curr_f << "]" << std::endl;
+            // std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (*-) [" << curr_i << "],[" << curr_f << "]" << std::endl;
             curr_i--;
         }
     }
+
+    std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] # of iterations : " 
+        << "\n\t [INNER] : " << iterations[1]
+        << "\n\t [OUTER] : " << iterations[0]
+        << "\n\t [RATIO] : " << (float) iterations[1] / (float) iterations[0]
+        << std::endl;
 
     // delete the memory allocated by the function
     free(iface_pivots);
@@ -1416,13 +1358,36 @@ int RID_Router::calc_joint_largest_match_distributions(
     return 0;
 }
 
-__float080 RID_Router::calc_cumulative_prob(
+/*
+ * \brief   calculates marginal probability of a forwarding event of the form
+ *          [*, *, f, ..., *], i.e. assuming iface i has a match of size f. this
+ *          produces the probability of choosing iface i to forward a packet, 
+ *          when the longest match is of size f.
+ *
+ *          the result also depends on a 'mode':
+ *              - STRICT     : in strict longest prefix match mode,  
+ *                             it computes the marginal probabilities 
+ *                             over match sizes strictly less than f, for all 
+ *                             ifaces other than i.
+ *              - NON_STRICT : in non-strict LPM mode, it computes the 
+ *                             marginal probability over match sizes less than 
+ *                             or equal to f, for all ifaces. 
+ *
+ * 
+ * \param   mode        strict or non-strict longest prefix match mode
+ * \param   iface       iface which is fixed during computation of marginal prob
+ * \param   iface_size  size of match on the fixed iface
+ * \param   joint_lmp   hash table w/ probability of possible (i.e. w/ non-zero prob) 
+ *                      forwarding event
+ *
+ */
+__float080 RID_Router::calc_marginal_prob(
     uint8_t mode,
     uint8_t fixed_iface, 
     uint8_t fixed_iface_size,
-    std::map<std::string, __float080> * joint_prob_matrix) {
+    std::map<std::string, __float080> * joint_lmp) {
 
-    printf("RID_Router::calc_cumulative_prob() : [fixed_iface : %d][fixed_iface_size : %d][MODE : %s]\n", 
+    printf("RID_Router::calc_marginal_prob() : [fixed_iface : %d][fixed_iface_size : %d][MODE : %s]\n", 
         fixed_iface, fixed_iface_size, CUMULATIVE_PROB_MODE_STR[mode]);
     __float080 prob = 0.0;
     __float080 cumulative_prob = 0.0;
@@ -1573,9 +1538,9 @@ __float080 RID_Router::calc_cumulative_prob(
 
                     // extract the probability of the joint event encoded in 
                     // iface pivots
-                    prob = this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
+                    prob = this->get_joint_lmp_prob(joint_lmp, iface_pivots);
 
-                    // std::cout << "RID_Router::calc_cumulative_prob() : [INFO] CUMULATIVE_PROB" 
+                    // std::cout << "RID_Router::calc_marginal_prob() : [INFO] CUMULATIVE_PROB" 
                     //     << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
                     // for (int k = 0; k < this->iface_num; k++)
                     //     std::cout << "[" << iface_pivots[k] << "]";
@@ -1716,29 +1681,29 @@ __float080 RID_Router::calc_cumulative_prob(
     return cumulative_prob;
 }
 
-int RID_Router::calc_iface_events_distributions(
+int RID_Router::calc_iface_probs(
     int ptree_size,
-    std::map<std::string, __float080> * joint_prob_matrix) {
+    std::map<std::string, __float080> * joint_lmp) {
 
     // // LOCAL MATCH (LLM event)
     // int local_iface_bitmask = this->fwd_table[IFACE_LOCAL].f_bitmask;
     // for (uint8_t fixed_iface_size = ffs(local_iface_bitmask); fixed_iface_size != 0; fixed_iface_size = ffs(local_iface_bitmask)) {
 
     //     local_iface_bitmask = local_iface_bitmask & (local_iface_bitmask - 1);
-    //     this->iface_events_pmf[EVENT_LLM] += this->calc_cumulative_prob(
+    //     this->iface_events_prob[EVENT_LLM] += this->calc_marginal_prob(
     //                                                     MODE_EI_INCLUSIVE,
     //                                                     IFACE_LOCAL,
     //                                                     fixed_iface_size,
-    //                                                     joint_prob_matrix);
+    //                                                     joint_lmp);
     // }
 
-    // std::cout << "RID_Router::calc_iface_events_distributions() : [INFO]"
-    //     << "\n\t P('EVENT_LLM' [ptree_size = " << (int) ptree_size << "]') = " << this->iface_events_pmf[EVENT_LLM]
+    // std::cout << "RID_Router::calc_iface_probs() : [INFO]"
+    //     << "\n\t P('EVENT_LLM' [ptree_size = " << (int) ptree_size << "]') = " << this->iface_events_prob[EVENT_LLM]
     //     << std::endl;
 
-    // NO MATCHES : just call get_joint_lpm_prob() with iface_pivots = {0, 0, ..., 0}
+    // NO MATCHES : just call get_joint_lmp_prob() with iface_pivots = {0, 0, ..., 0}
     int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
-    this->iface_events_pmf[EVENT_NLM] += this->get_joint_lpm_prob(joint_prob_matrix, iface_pivots);
+    this->iface_events_prob[EVENT_NLM] += this->get_joint_lmp_prob(joint_lmp, iface_pivots);
     // clean up allocated memory
     free(iface_pivots);
 
@@ -1756,56 +1721,56 @@ int RID_Router::calc_iface_events_distributions(
             // probability of having the largest match on iface, assuming 
             // other ifaces have matches *smaller* than iface. we call this 
             // MODE_EI_EXCLUSIVE
-            prob_single = this->calc_cumulative_prob(
+            prob_single = this->calc_marginal_prob(
                                     MODE_EI_EXCLUSIVE,
                                     fixed_iface,
                                     fixed_iface_size,
-                                    joint_prob_matrix);
+                                    joint_lmp);
 
             // in some cases, we may want the probability of having the largest 
             // match on iface, even if together with any other iface (e.g. if 
             // a flooding multiple match resolution strategy is in place). we 
             // call this MODE_EI_INCLUSIVE.
-            prob_multiple = this->calc_cumulative_prob(
+            prob_multiple = this->calc_marginal_prob(
                                     MODE_EI_INCLUSIVE,
                                     fixed_iface,
                                     fixed_iface_size,
-                                    joint_prob_matrix);
+                                    joint_lmp);
 
             // keep track of the total EI probability as well (sanity check)
             if (prob_single > 0.0) {
 
-                std::cout << "RID_Router::calc_iface_events_distributions() : [INFO]"
+                std::cout << "RID_Router::calc_iface_probs() : [INFO]"
                     << "\n\t P('EGRESS_IFACE_EXCLUSIVE' [" << (int) fixed_iface << "][" << (int) fixed_iface_size << "]') = " << prob_single
                     << std::endl;
             }
 
             if (prob_multiple > 0.0) {
 
-                std::cout << "RID_Router::calc_iface_events_distributions() : [INFO]"
+                std::cout << "RID_Router::calc_iface_probs() : [INFO]"
                     << "\n\t P('EGRESS_IFACE_INCLUSIVE' [" << (int) fixed_iface << "][" << (int) fixed_iface_size << "]') = " << prob_multiple
                     << std::endl;
             }
 
             // save the probability of a 'clean' single link match (SLM) event
             if (fixed_iface > 0)
-                this->iface_events_pmf[EVENT_SLM] += prob_single;
+                this->iface_events_prob[EVENT_SLM] += prob_single;
             else
-                this->iface_events_pmf[EVENT_LLM] += prob_multiple;
+                this->iface_events_prob[EVENT_LLM] += prob_multiple;
 
             // save the probability of multiple link match (MLM) events
-            this->iface_events_pmf[EVENT_MLM] += (prob_multiple - prob_single);
-            std::cout << "RID_Router::calc_iface_events_distributions() : [INFO] P('EVENT_MLM' [ptree_size = " << ptree_size << "]) = " 
-                << this->iface_events_pmf[EVENT_MLM] << std::endl;
-            std::cout << "RID_Router::calc_iface_events_distributions() : [INFO] P('EVENT_SLM' [ptree_size = " << ptree_size << "]) = " 
-                << this->iface_events_pmf[EVENT_SLM] << std::endl;
-            std::cout << "RID_Router::calc_iface_events_distributions() : [INFO] P('EVENT_LLM' [ptree_size = " << ptree_size << "]) = " 
-                << this->iface_events_pmf[EVENT_LLM] << std::endl;
+            this->iface_events_prob[EVENT_MLM] += (prob_multiple - prob_single);
+            std::cout << "RID_Router::calc_iface_probs() : [INFO] P('EVENT_MLM' [ptree_size = " << ptree_size << "]) = " 
+                << this->iface_events_prob[EVENT_MLM] << std::endl;
+            std::cout << "RID_Router::calc_iface_probs() : [INFO] P('EVENT_SLM' [ptree_size = " << ptree_size << "]) = " 
+                << this->iface_events_prob[EVENT_SLM] << std::endl;
+            std::cout << "RID_Router::calc_iface_probs() : [INFO] P('EVENT_LLM' [ptree_size = " << ptree_size << "]) = " 
+                << this->iface_events_prob[EVENT_LLM] << std::endl;
 
             // // keep track of the total EI probability as well (sanity check)
             // if (prob_single > 0.0 || prob_multiple > 0.0) {
 
-            //     std::cout << "RID_Router::calc_iface_events_distributions() : [INFO] "
+            //     std::cout << "RID_Router::calc_iface_probs() : [INFO] "
             //         << "\n\t P('EGRESS_IFACE[" << (int) iface << "][" << (int) f << "]') = " << this->egress_iface_prob[iface][f]
             //         << std::endl;
             // }
@@ -1829,7 +1794,7 @@ __float080 RID_Router::get_iface_events_prob(uint8_t event) {
         return 0.0;
     }
 
-    return this->iface_events_pmf[event];
+    return this->iface_events_prob[event];
 }
 
 __float080 RID_Router::get_egress_iface_prob(uint8_t iface) {
@@ -1859,7 +1824,7 @@ __float080 * RID_Router::get_egress_iface_probs(uint8_t iface) {
  * ---------------------------------------------------------
  *
  */
-void RID_Router::print_iface_events_pmf() {
+void RID_Router::print_iface_events_prob() {
 
     printf("\n-----------------");
     for (uint8_t event = 0; event < EVENT_NUM + 1; event++)
@@ -1883,7 +1848,7 @@ void RID_Router::print_iface_events_pmf() {
 
     for (uint8_t event = 0; event < EVENT_NUM; event++) {
 
-        prob = this->iface_events_pmf[event];
+        prob = this->iface_events_prob[event];
         prob_total += prob;
 
         printf(" %-.5LE|", prob);
