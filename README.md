@@ -31,11 +31,11 @@ $ ./run-analysis --scn-file <path to .scn file> --data-dir <path to results dire
 
 It requires multiple inputs, of which the most important is an `.scn` file. `.scn` files describe a experiment to run, including: 
 * Router adjacencies in the topology under evaluation
-* Distribution of # of entries per {router, link}
-* Distribution of entry sizes per {router, link}
+* Distribution of # of entries per {router, link} pair
+* Distribution of entry sizes per {router, link} pair
 * Shortest paths from router *i* every other router *j*
 
-Fortunately, `.scn` files can be generated automatically, using the `generate_tests.py` tool in `scripts/rocketfuel`. Another important input is `--data-dir`, on which the `.tsv` files with the results of the experiments will be saved. Result files are explained in (...).
+Fortunately, `.scn` files can be generated automatically, using the `generate_tests.py` script in `scripts/rocketfuel/`. Another important input is `--data-dir`, on which the `.tsv` files with the results of the experiments will be saved. Result files are explained in (...).
 
 <a name="subsec:test-files"></a>
 ## Using `.test` files
@@ -79,7 +79,7 @@ $ python run_test.py --test-file <work dir>/rid-analytics/experiments/examples/r
 This should fill the `<work dir>/rid-analytics/experiments/examples/rocketfuel/tests/` directory with a bunch of `.tsv` files, with the results from the experiments.
 
 <a name="subsec:result-files"></a>
-## Interpreting result files
+## Result files
 
 Result files are saved in `.tsv` format. There are 2 types of files: **event** files and **path** files.
 
