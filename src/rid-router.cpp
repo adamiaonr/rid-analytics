@@ -243,7 +243,7 @@ int RID_Router::calc_egress_ptree_probs(
             // int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
             // for (uint8_t i = IFACE_LOCAL; i < this->iface_num; i++)
             //     iface_pivots[i] = this->tp_sizes[i];
-            // this->egress_ptree_prob[iface][0] += exp(this->calc_log_forwarding_event_prob(this->tp_sizes[iface], iface, iface_pivots));
+            // this->egress_ptree_prob[iface][0] += exp(this->calc_log_fwd_event_prob(this->tp_sizes[iface], iface, iface_pivots));
             this->egress_ptree_prob[iface][0] += this->prob_true_negative;
 
             std::cout << "RID_Router::calc_egress_ptree_probs() : [INFO] added ptree_size 0 prob" 
@@ -454,7 +454,7 @@ int RID_Router::forward(
             if (it != this->no_forwarding.end())
                 continue;
 
-            calc_forwarding_event_probs(ptree_size, ptree_iface, &joint_lmp);
+            calc_fwd_event_probs(ptree_size, ptree_iface, &joint_lmp);
         }
 
         // 2.3) calc egress iface (and events) probs (assuming fp tree size s)
@@ -677,7 +677,7 @@ void RID_Router::print_lmp(uint8_t iface) {
  */
 void RID_Router::add_joint_lmp_prob(
     std::map<std::string, __float080> * joint_lmp,
-    int * iface_pivots,
+    std::vector<int> * iface_pivots,
     __float080 value) {
 
     // pad 1 digit numbers w/ zeros to form unique keys. e.g. [1][1][0][0][0][10]
@@ -685,9 +685,9 @@ void RID_Router::add_joint_lmp_prob(
     std::ostringstream iface_pivots_str("");
     for (int i = 0; i < this->iface_num; i++) {
 
-        if (iface_pivots[i] < 10)
+        if ((*iface_pivots)[i] < 10)
             iface_pivots_str << 0;
-        iface_pivots_str << iface_pivots[i];
+        iface_pivots_str << (*iface_pivots)[i];
     }
 
     // std::cout << "RID_Router::add_joint_lmp_prob() : [INFO] key for ";
@@ -719,22 +719,22 @@ void RID_Router::add_joint_lmp_prob(
  */
 __float080 RID_Router::get_joint_lmp_prob(    
     std::map<std::string, __float080> * joint_lmp,
-    int * iface_pivots) {
+    std::vector<int> * iface_pivots) {
 
     std::ostringstream iface_pivots_str("");
     for (int i = 0; i < this->iface_num; i++) {
 
-        if (iface_pivots[i] < 10)
+        if ((*iface_pivots)[i] < 10)
             iface_pivots_str << 0;
-        iface_pivots_str << iface_pivots[i];
+        iface_pivots_str << (*iface_pivots)[i];
     }
 
     return (*joint_lmp)[iface_pivots_str.str()];
 }
 
 /*
- * \brief compute the largest match probabilities, for each iface of the 
- * router, i.e. L_{i,p} random variables.
+ * \brief   compute the largest match probabilities, for each iface of the 
+ *          router
  *
  * L_{i,p} expresses the the prob of having a request match a forwarding entry of size 
  * L (0 <= L <= f_max), at iface i, considering that the incoming request is 
@@ -981,26 +981,6 @@ int RID_Router::calc_lmp(
     return 0;
 }
 
-__float080 RID_Router::calc_log_forwarding_event_prob(
-    uint8_t ptree_size,
-    uint8_t ptree_iface, 
-    int * iface_pivots,
-    int & iterations) {
-
-    __float080 log_joint_largest_match_prob = 0.0;
-    for (uint8_t iface = IFACE_LOCAL; iface < this->iface_num; iface++) {
-
-        if ((iface == ptree_iface))
-            log_joint_largest_match_prob += log(this->get_lmp(iface, ptree_size, iface_pivots[iface]));
-        else
-            log_joint_largest_match_prob += log(this->get_lmp(iface, 0, iface_pivots[iface]));
-
-        iterations++;
-    }
-
-    return log_joint_largest_match_prob;
-}
-
 __float080 RID_Router::calc_joint_largest_match_prob_sum(
     uint8_t ptree_size,
     uint8_t ptree_iface) {
@@ -1017,7 +997,8 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
     // the idea is to cycle through all 
     // combinations, and calculate the probability of that event by multiplying 
     // the individual L_{i,ptree_size} and saving it in joint_lmp.
-    int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
+    // int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
+    std::vector<int> iface_pivots(this->iface_num, 0);
     // max. possible fwd entry sizes for each iface
     int * iface_pivots_max = (int *) calloc(this->iface_num, sizeof(int));
     // bitmasks saving unvisited fwd entry sizes for each iface
@@ -1066,8 +1047,8 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
                 // update the f size pivot for iface curr_i
                 iface_pivots[curr_i] = f;
 
-                joint_prob_sum += exp(this->calc_log_forwarding_event_prob(
-                    ptree_size, ptree_iface, iface_pivots, iterations));
+                joint_prob_sum += exp(this->calc_log_fwd_event_prob(
+                    ptree_size, ptree_iface, &iface_pivots, iterations));
 
                 std::set<uint8_t>::iterator it = this->no_forwarding.find((uint8_t) curr_i);
                 if (it != this->no_forwarding.end()) {
@@ -1099,7 +1080,7 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
                 iface_bitmasks[curr_i] = iface_bitmasks[curr_i] & (iface_bitmasks[curr_i] - 1);
             }
 
-            // std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (-*) [" << curr_i << "],[" << curr_f << "]" << std::endl;
+            // std::cout << "RID_Router::calc_fwd_event_probs() : [INFO] (-*) [" << curr_i << "],[" << curr_f << "]" << std::endl;
 
             // after updating iface_pivots[curr_i], go back down 
             // to the level below.
@@ -1115,13 +1096,13 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
             iface_bitmasks[curr_i] = this->fwd_table[curr_i].f_bitmask;
             //  * go up one level (i.e. to curr_i - 1) to increment 
             //      iface_pivots[curr_i - 1]
-            // std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (*-) [" << curr_i << "],[" << curr_f << "]" << std::endl;
+            // std::cout << "RID_Router::calc_fwd_event_probs() : [INFO] (*-) [" << curr_i << "],[" << curr_f << "]" << std::endl;
             curr_i--;
         }
     }
 
     // delete the memory allocated by the function
-    free(iface_pivots);
+    // free(iface_pivots);
     free(iface_pivots_max);
     free(iface_bitmasks);
 
@@ -1131,36 +1112,63 @@ __float080 RID_Router::calc_joint_largest_match_prob_sum(
     return joint_prob_sum;
 }
 
+__float080 RID_Router::calc_log_fwd_event_prob(
+    uint8_t ptree_size,
+    uint8_t ptree_iface, 
+    std::vector<int> * iface_pivots,
+    int & iterations) {
+
+    __float080 log_joint_largest_match_prob = 0.0;
+    for (uint8_t iface = IFACE_LOCAL; iface < this->iface_num; iface++) {
+
+        if ((iface == ptree_iface))
+            log_joint_largest_match_prob += log(this->get_lmp(iface, ptree_size, (*iface_pivots)[iface]));
+        else
+            log_joint_largest_match_prob += log(this->get_lmp(iface, 0, (*iface_pivots)[iface]));
+
+        iterations++;
+    }
+
+    return log_joint_largest_match_prob;
+}
+
 /*
- * \brief   compute the probability of all possible forwarding events,
- *          given the request is bound to a fp tree of size s, which continues 
- *          over iface i
+ * \brief   compute the probability of all *possible* forwarding events,
+ *          given the request is bound to a fp tree of size fptree_size, which 
+ *          'goes out' over iface fptree_iface
+ *
+ * what do we mean by 'bound' and 'going out over iface i'? 
+ *  - the current rid request is matched by a fp entry of size s
+ *  - the fp entry of size s is announced over a tree rooted at an upstream router. 
+ *    therefore, we say the request is 'bound' to that false positive (fp) tree.
+ *  - the upstream router is accessible by the current router via iface i
  * 
- * \param   ptree_size              the joint distribution should consider this 
- *                                  'fp tree' size *ONLY*.
- * \param   ptree_iface             use the L_{i,ptree_size} values for ptree_iface, 
- *                                  L_{i,0} values for all other ifaces.
- * \param   joint_lmp               save the joint distribution computations in 
- *                                  this array.
+ * \param   fptree_size     the joint distribution should consider this 
+ *                          'fp tree' size *ONLY*.
+ * \param   fptree_iface    use the L_{i,p} values for ptree_iface, 
+ *                          L_{i,0} values for all other ifaces.
+ * \param   joint_lmp       save the joint distribution computations in 
+ *                          this array.
  *
  */
-int RID_Router::calc_forwarding_event_probs(
+int RID_Router::calc_fwd_event_probs(
     uint8_t ptree_size,
     uint8_t ptree_iface,
     std::map<std::string, __float080> * joint_lmp) {
 
-    // we represent joint events as a pivot array of size iface_num. e.g.
+    // we represent fwd events as a vector of size iface_num. e.g.
     //
     //        iface index : 0  1  2  3
     //                      v  v  v  v 
     //      iface_pivots = {0, 1, 2, 1} 
     //
-    // represents the joint event in which iface 0 has no match (size 0), iface 
+    // represents the fwd event in which iface 0 has no match (size 0), iface 
     // 1 has a match of size 1, iface 2 a match of size 2 and iface 3 a match 
     // of size 1. the idea is to cycle through all 
     // combinations, and calculate the probability of that event by multiplying 
     // the individual L_{i,ptree_size} and saving it in joint_lmp.
-    int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
+    // int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
+    std::vector<int> iface_pivots(this->iface_num, 0);
     // max. possible fwd entry sizes for each iface
     int * iface_pivots_max = (int *) calloc(this->iface_num, sizeof(int));
     // bitmasks saving unvisited fwd entry sizes for each iface
@@ -1204,7 +1212,7 @@ int RID_Router::calc_forwarding_event_probs(
 
         if (this->iface_on_ptree[ptree_iface]) {
 
-            std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] ("
+            std::cout << "RID_Router::calc_fwd_event_probs() : [INFO] ("
                 << (int) ptree_iface << " ," << (int) ptree_size << ") continues...";
 
             // accounts for sub-event B
@@ -1237,10 +1245,10 @@ int RID_Router::calc_forwarding_event_probs(
     // get the sum of probs of the joint events involved in this 
     // <ptree_size, ptree_iface> pair. 
     // FIXME : get_joint_prob_sum() has the same basic structure as 
-    // calc_forwarding_event_probs(), and its invocation here 
+    // calc_fwd_event_probs(), and its invocation here 
     // seems overkill. unfortunately, i haven't found another way to deal 
     // with this issue.
-    __float080 joint_prob_sum = calc_joint_largest_match_prob_sum(ptree_size    , ptree_iface);
+    __float080 joint_prob_sum = calc_joint_largest_match_prob_sum(ptree_size, ptree_iface);
 
     while (curr_i > -1) {
 
@@ -1259,8 +1267,8 @@ int RID_Router::calc_forwarding_event_probs(
                 //  A) match lengths as encoded on iface_pivots
                 //  B) request bound to a prefix tree of size ptree_size
                 //  C) prefix tree of size ptree_size continues on ptree_iface
-                log_prob = this->calc_log_forwarding_event_prob(
-                    ptree_size, ptree_iface, iface_pivots, iterations[1]);
+                log_prob = this->calc_log_fwd_event_prob(
+                    ptree_size, ptree_iface, &iface_pivots, iterations[1]);
                 iterations[0]++;
 
                 // scale the event probability by the following factors:
@@ -1277,17 +1285,17 @@ int RID_Router::calc_forwarding_event_probs(
                 // add the calculated probability to the matrix of joint 
                 // probabilities
                 __float080 prob = exp(log_prob);
-                this->add_joint_lmp_prob(joint_lmp, iface_pivots, prob);
+                this->add_joint_lmp_prob(joint_lmp, &iface_pivots, prob);
 
                 // if (prob > 0.0) {
 
-                //     std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] JOINT_PROB" 
+                //     std::cout << "RID_Router::calc_fwd_event_probs() : [INFO] JOINT_PROB" 
                 //         << "(" << (int) ptree_iface << ", " << (int) ptree_size << ")";
                 //     for (int k = 0; k < this->iface_num; k++)
                 //         std::cout << "[" << iface_pivots[k] << "]";
                 //     std::cout << " = " << prob << std::endl;
 
-                //     std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (SUM) JOINT_PROB";
+                //     std::cout << "RID_Router::calc_fwd_event_probs() : [INFO] (SUM) JOINT_PROB";
                 //     for (int k = 0; k < this->iface_num; k++)
                 //         std::cout << "[" << iface_pivots[k] << "]";
                 //     std::cout << " = " << this->get_joint_lmp_prob(joint_lmp, iface_pivots) << std::endl;
@@ -1323,7 +1331,7 @@ int RID_Router::calc_forwarding_event_probs(
                 iface_bitmasks[curr_i] = iface_bitmasks[curr_i] & (iface_bitmasks[curr_i] - 1);
             }
 
-            // std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (-*) [" << curr_i << "],[" << curr_f << "]" << std::endl;
+            // std::cout << "RID_Router::calc_fwd_event_probs() : [INFO] (-*) [" << curr_i << "],[" << curr_f << "]" << std::endl;
 
             // after updating iface_pivots[curr_i], go back down 
             // to the level below.
@@ -1339,19 +1347,19 @@ int RID_Router::calc_forwarding_event_probs(
             iface_bitmasks[curr_i] = this->fwd_table[curr_i].f_bitmask;
             //  * go up one level (i.e. to curr_i - 1) to increment 
             //      iface_pivots[curr_i - 1]
-            // std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] (*-) [" << curr_i << "],[" << curr_f << "]" << std::endl;
+            // std::cout << "RID_Router::calc_fwd_event_probs() : [INFO] (*-) [" << curr_i << "],[" << curr_f << "]" << std::endl;
             curr_i--;
         }
     }
 
-    std::cout << "RID_Router::calc_forwarding_event_probs() : [INFO] # of iterations : " 
+    std::cout << "RID_Router::calc_fwd_event_probs() : [INFO] # of iterations : " 
         << "\n\t [INNER] : " << iterations[1]
         << "\n\t [OUTER] : " << iterations[0]
         << "\n\t [RATIO] : " << (float) iterations[1] / (float) iterations[0]
         << std::endl;
 
     // delete the memory allocated by the function
-    free(iface_pivots);
+    // free(iface_pivots);
     free(iface_pivots_max);
     free(iface_bitmasks);
 
@@ -1421,7 +1429,8 @@ __float080 RID_Router::calc_marginal_prob(
     // represents the joint event in which iface 0 has no match (size 0), iface 
     // 1 has a match of size 1, iface 2 a match of size 2 and iface 3 a match 
     // of size 1. 
-    int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
+    // int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
+    std::vector<int> iface_pivots(this->iface_num, 0);
     // bitmasks saving unvisited fwd entry sizes for each iface
     int * iface_bitmasks = (int *) calloc(this->iface_num, sizeof(int));
     // max. possible fwd entry sizes for each iface
@@ -1538,7 +1547,7 @@ __float080 RID_Router::calc_marginal_prob(
 
                     // extract the probability of the joint event encoded in 
                     // iface pivots
-                    prob = this->get_joint_lmp_prob(joint_lmp, iface_pivots);
+                    prob = this->get_joint_lmp_prob(joint_lmp, &iface_pivots);
 
                     // std::cout << "RID_Router::calc_marginal_prob() : [INFO] CUMULATIVE_PROB" 
                     //     << "(" << (int) fixed_iface << ", " << (int) fixed_iface_size << ") : ";
@@ -1674,7 +1683,7 @@ __float080 RID_Router::calc_marginal_prob(
         }
     }
 
-    free(iface_pivots);
+    // free(iface_pivots);
     free(iface_bitmasks);
     free(iface_pivots_max);
 
@@ -1702,10 +1711,11 @@ int RID_Router::calc_iface_probs(
     //     << std::endl;
 
     // NO MATCHES : just call get_joint_lmp_prob() with iface_pivots = {0, 0, ..., 0}
-    int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
-    this->iface_events_prob[EVENT_NLM] += this->get_joint_lmp_prob(joint_lmp, iface_pivots);
+     // int * iface_pivots = (int *) calloc(this->iface_num, sizeof(int));
+    std::vector<int> iface_pivots(this->iface_num, 0);
+    this->iface_events_prob[EVENT_NLM] += this->get_joint_lmp_prob(joint_lmp, &iface_pivots);
     // clean up allocated memory
-    free(iface_pivots);
+    // free(iface_pivots);
 
     // MULTIPLE & SINGLE IFACE MATCHES 
     __float080 prob_single = 0.0;

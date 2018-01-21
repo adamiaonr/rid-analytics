@@ -173,18 +173,18 @@ class RID_Router {
             int * tp_sizes, 
             __float080 * f_r_distribution);
 
-        void add_joint_lmp_prob(std::map<std::string, __float080> * joint_lmp, int * iface_pivots, __float080 value);
-        __float080 get_joint_lmp_prob(std::map<std::string, __float080> * joint_lmp, int * iface_pivots);
+        void add_joint_lmp_prob(std::map<std::string, __float080> * joint_lmp, std::vector<int> * iface_pivots, __float080 value);
+        __float080 get_joint_lmp_prob(std::map<std::string, __float080> * joint_lmp, std::vector<int> * iface_pivots);
 
-        int calc_forwarding_event_probs(
+        int calc_fwd_event_probs(
             uint8_t ptree_size, 
             uint8_t ptree_iface,
             std::map<std::string, __float080> * joint_lmp);
 
-        __float080 calc_log_forwarding_event_prob(
+        __float080 calc_log_fwd_event_prob(
             uint8_t ptree_size,
             uint8_t ptree_iface, 
-            int * iface_pivots,
+            std::vector<int> * iface_pivots,
             int & iterations);
 
         // computation of iface event & egress size probabilities
