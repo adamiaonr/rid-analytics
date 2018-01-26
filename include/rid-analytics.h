@@ -51,7 +51,7 @@
 #include "rid-router.h"
 #include "path-state.h"
 
-typedef std::map<std::string, int *> RID_TPMap;
+typedef std::map<std::string, std::vector<uint8_t> > RID_TPMap;
 typedef std::map<std::string, RID_Router *> RID_RouterMap;
 typedef std::pair<std::string, RID_Router *> RID_RouterPair;
 
@@ -110,7 +110,7 @@ class RID_Analytics {
         int mm_mode;
         int resolution_mode;
         RID_TPMap tp_sizes;
-        __float080 * f_r_distribution;
+        std::vector<__float080> f_r_distribution;
         // path state tree
         tree<Path_State *> path_state_tree;
         // for quick access to RID_Router * in the topology, via id strings 

@@ -91,7 +91,7 @@ __float080 Path_State::get_event_prob() {
     return this->event_prob; 
 }
 
-void Path_State::set_tree_bitmask(uint8_t * tree_bitmask, int tree_bitmask_size) {
+void Path_State::set_tree_bitmask(std::vector<uint8_t> * tree_bitmask, int tree_bitmask_size) {
     this->tree_bitmask_size = tree_bitmask_size;
     this->tree_bitmask = tree_bitmask;
 }
@@ -100,7 +100,7 @@ int Path_State::get_tree_bitmask_size() {
     return this->tree_bitmask_size; 
 }
 
-uint8_t * Path_State::get_tree_bitmask() { 
+std::vector<uint8_t> * Path_State::get_tree_bitmask() { 
     return this->tree_bitmask; 
 }
 

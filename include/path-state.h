@@ -59,8 +59,8 @@ class Path_State {
         RID_Router * get_router();
         char * to_string();
 
-        void set_tree_bitmask(uint8_t * tree_bitmask, int tree_bitmask_size);
-        uint8_t * get_tree_bitmask();
+        void set_tree_bitmask(std::vector<uint8_t> * tree_bitmask, int tree_bitmask_size);
+        std::vector<uint8_t> * get_tree_bitmask();
         int get_tree_bitmask_size();
 
         void set_ttl(int ttl);
@@ -84,7 +84,7 @@ class Path_State {
         __float080 * ingress_ptree_prob;
         __float080 ingress_iface_prob;
         // tree bitmask of the path
-        uint8_t * tree_bitmask;
+        std::vector<uint8_t> * tree_bitmask;
         int tree_bitmask_size;
         // ttl of packet
         int ttl;

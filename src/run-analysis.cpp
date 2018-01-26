@@ -237,7 +237,7 @@ int main (int argc, char **argv) {
     if (verbose)
         mode = (mode | MODE_VERBOSE);
 
-    rid_analytics_env->view_results(mode, std::string(data_dir), std::string(output_label));
+    // rid_analytics_env->view_results(mode, std::string(data_dir), std::string(output_label));
 
     // clean up after yourself...
     delete rid_analytics_env;
