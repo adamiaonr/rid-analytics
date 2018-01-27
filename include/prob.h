@@ -58,7 +58,7 @@ class Prob {
     private:
 
     int calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti = false);
-    void calc_log_prob_fp_lg(Prob::fp_data iface_fp_data, std::vector<__float080> & log_prob_fp_lg);
+    void calc_log_prob_fp_neq(Prob::fp_data iface_fp_data, std::vector<__float080> & log_prob_fp_neq);
 
     // largest match probabilities
     std::vector<std::vector<std::vector<__float080> > > lm_prob;

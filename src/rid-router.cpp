@@ -95,6 +95,9 @@ int RID_Router::add_fwd_table_entry(
     }
 
     this->fwd_table[i].num_entries = (__float080) this->fwd_table_size * iface_proportion;
+    std::cout << "RID_Router::add_fwd_table_entry() : [INFO] iface[" << i 
+        << "].num_entries = " << this->fwd_table[i].num_entries << std::endl;
+    
     this->fwd_table[i].iface = i;
     // iface_proportion : % of table entries associated w/ this iface
     this->fwd_table[i].iface_proportion = iface_proportion;
@@ -139,6 +142,9 @@ Prob::fp_data RID_Router::get_fp_data(
 
     } else {
 
+        iface_fp_data.f_distr = std::vector<__float080>(this->req_size, 0.0);
+        iface_fp_data.f_r_distr = std::vector<__float080>(this->req_size, 0.0);
+
         // sum all the fp data, for all ifaces other than i
         for (uint8_t k = 0; k < router->iface_num; k++) {
 
@@ -148,12 +154,19 @@ Prob::fp_data RID_Router::get_fp_data(
             iface_fp_data.tp_size = std::max(iface_fp_data.tp_size, router->tp_sizes[k]);
             // keep adding up the nr of entries
             iface_fp_data.num_entries += (__float080) router->fwd_table[k].num_entries;
+
             // elementwise sum of 2 vectors (result saved in first vector)
             std::transform(
                 iface_fp_data.f_distr.begin(), iface_fp_data.f_distr.end(), 
-                router->fwd_table[k].f_r_distr.begin(), 
+                router->fwd_table[k].f_distr.begin(), 
                 iface_fp_data.f_distr.begin(), 
                 std::plus<__float080>());
+
+            // std::cout << "RID_Router::get_fp_data() : [INFO]: " 
+            //     << "\t\n [f_distr] : ";
+            // for(uint8_t f = 0; f < this->req_size; f++) 
+            //     std::cout << "[" << (int) f << "] = " << iface_fp_data.f_distr[f] << ", ";
+            // std::cout << std::endl;
 
             std::transform(
                 iface_fp_data.f_r_distr.begin(), iface_fp_data.f_r_distr.end(), 
@@ -226,13 +239,14 @@ int RID_Router::forward(
     // }
     
     // 1) calculate largest match probabilities
-    std::vector<std::vector<Prob::fp_data> > iface_fp_data(2, std::vector<Prob::fp_data> (this->iface_num));
+    std::vector<std::vector<Prob::fp_data> > iface_fp_data(2);
     for (uint8_t i = 0; i < this->iface_num; i++) {
+        
         iface_fp_data[0].push_back(get_fp_data(this, i));
         iface_fp_data[1].push_back(get_fp_data(this, i, true));
     }
 
-    if (this->prob_mod->calc_lm_prob(&iface_fp_data) < 0) return -1;
+    if (this->prob_mod->calc_lm_prob(&(iface_fp_data)) < 0) return -1;
 
     // 1.2) print egress_ptree_prob[i][p], i.e. the 
     // probability of having the request bound to a fp prefix tree of size p, 

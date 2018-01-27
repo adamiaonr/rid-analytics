@@ -12,22 +12,22 @@ __float080 fp_rate(__float080 m, __float080 n, __float080 k, __float080 c) {
     return pow((1.0 - exp(-((n / m) * k))), k * c);
 }
 
-void Prob::calc_log_prob_fp_lg(
+void Prob::calc_log_prob_fp_neq(
     fp_data iface_fp_data,
-    std::vector<__float080> & log_prob_fp_lg) {
+    std::vector<__float080> & log_prob_fp_neq) {
 
-    // as a precaution, reset log_prob_fp_lg to 0.0
-    std::fill(log_prob_fp_lg.begin(), log_prob_fp_lg.end(), 0.0);
+    // as a precaution, reset log_prob_fp_neq to 0.0
+    std::fill(log_prob_fp_neq.begin(), log_prob_fp_neq.end(), 0.0);
 
-    for (uint8_t f = 0; f < log_prob_fp_lg.size(); f++) {
+    for (uint8_t f = 0; f < log_prob_fp_neq.size(); f++) {
         // total nr. of entries w/ size f
         __float080 num_entries = iface_fp_data.num_entries * iface_fp_data.f_distr[f];
-        // std::cout << "Prob::calc_log_prob_fp_lg() : num_entries[" << f << "] = " 
+        // std::cout << "Prob::calc_log_prob_fp_neq() : num_entries[" << f << "] = " 
         //     << num_entries << " (out of " << iface_fp_data.num_entries << ")" << std::endl;
 
         if (f == 0) {
             
-            log_prob_fp_lg[f] += num_entries * log(1.0 - fp_rate(this->m, this->n, this->k, (__float080) (f + 1)));
+            log_prob_fp_neq[f] += num_entries * log(1.0 - fp_rate(this->m, this->n, this->k, (__float080) (f + 1)));
 
         } else {
 
@@ -42,7 +42,7 @@ void Prob::calc_log_prob_fp_lg(
                 // total nr. of entries w/ size f and |f\r| = j
                 __float080 num_fr_entries = (__float080) num_entries * (iface_fp_data.f_r_distr[j] / subtotal_f_r);
                 // fp rate for size f, |f\r| = j
-                log_prob_fp_lg[f] += num_fr_entries * log(1.0 - fp_rate(this->m, this->n, this->k, (__float080) (j + 1)));
+                log_prob_fp_neq[f] += num_fr_entries * log(1.0 - fp_rate(this->m, this->n, this->k, (__float080) (j + 1)));
             }
         }
     }
@@ -56,10 +56,16 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
     if (!anti) lmp = &(this->lm_prob);
     else lmp = &(this->anti_lm_prob);
 
-    // std::cout << "Prob::calc_lm_prob(iface) : [INFO]: " 
-    //     << "\t\n [n, m, k] : " << this->n << ", " << this->m << ", " << this->k
-    //     << "\t\n [iface] : " << ((int) i)
-    //     << "\t\n [lmp size] : " << (*lmp).size() << std::endl;
+    std::cout << "Prob::calc_lm_prob(iface) : [INFO]: " 
+        << "\t\n [n, m, k] : " << this->n << ", " << this->m << ", " << this->k
+        << "\t\n [iface] : " << ((int) i)
+        << "\t\n [# entries] : " << iface_fp_data.num_entries
+        << "\t\n [lmp size] : " << (*lmp).size()
+        << "\t\n [f_distr] : ";
+
+    for(uint8_t f = 0; f < this->n; f++) 
+        std::cout << "[" << (int) f << "] = " << iface_fp_data.f_distr[f] << ", ";
+    std::cout << std::endl;
 
     // for (uint8_t j = 0; j < (*lmp)[i].size(); j++) {
     //     for (uint8_t k = 0; k < (*lmp)[i][j].size(); k++) {                  
@@ -76,10 +82,10 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
     // }
 
     // aux. arrays used in fp rate calculation:
-    //  - prob of fp match strictly larger than f
-    std::vector<__float080> log_prob_fp_lg(n + 1, 0.0);
+    //  - prob of not having an fp match of size f
+    std::vector<__float080> log_prob_fp_neq(n, 0.0);
     //  - prob of fp match smaller than or equal to f
-    std::vector<__float080> log_prob_fp_sm_eq(n + 1, 0.0);
+    std::vector<__float080> log_prob_fp_smeq(n + 1, 0.0);
 
     // if there are no entries for this iface, a match is impossible for 
     // this [i][ptree_size][f] combination
@@ -89,23 +95,27 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
         for (int fptree_size = (int) this->n; fptree_size >= 0; fptree_size--) {
             // std::cout << "Prob::calc_lm_prob(iface) : [INFO]: " 
             //     << "\t\n [fptree_size] : " << ((int) fptree_size) << std::endl;
-
             (*lmp)[i][fptree_size][0] = 1.0;
         }
 
         return 0;
     }
 
-    // fill log_prob_fp_lg w/ prob of *only* having fp matches larger than f
+    // fill log_prob_fp_neq w/ prob of *only* having fp matches larger than f
     // FIXME : get a fp_data struct
-    calc_log_prob_fp_lg(iface_fp_data, log_prob_fp_lg);
+    calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq);
 
-    // pre-calculate the probabilities of *NOT* having FPs larger than some 
-    // size f. this will be useful for the L_{i,ptree_size} calculations. e.g. 
-    // note that L_{iface,ptree_size} = f can only happen if a match larger 
-    // than f doesn't occur.
+    // prob of fp match smaller than or equal to f 
     for (int f = (int) (this->n - 1); f >= 0; f--)
-        log_prob_fp_sm_eq[f] = log_prob_fp_sm_eq[f + 1] + log_prob_fp_lg[f];
+        log_prob_fp_smeq[f] = log_prob_fp_smeq[f + 1] + log_prob_fp_neq[f];
+
+    std::cout << "Prob::calc_lm_prob(iface) : [INFO] probabilities : \n\tp(fp > x)  : ";
+    for(uint8_t f = 0; f < this->n; f++) 
+        std::cout << "[" << (int) (f) << "] = " << log_prob_fp_neq[f] << ", ";
+    std::cout << "\n\tp(fp <= x) : ";
+    for(uint8_t f = 0; f < (this->n + 1); f++) 
+        std::cout << "[" << (int) f << "] = " << log_prob_fp_smeq[f] << ", ";
+    std::cout << std::endl;
 
     for (int fptree_size = (int) this->n; fptree_size >= 0; fptree_size--) {
         for (int f = (int) this->n; f >= 0; f--) {
@@ -140,7 +150,7 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
                     } else {
 
                         // if f >= ptree_size, the largest match will *AT LEAST* be f.
-                        (*lmp)[i][fptree_size][f] = exp(log_prob_fp_sm_eq[f]);
+                        (*lmp)[i][fptree_size][f] = exp(log_prob_fp_smeq[f]);
                     }
 
                 } else {
@@ -158,11 +168,11 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
                         if (f == fptree_size) {
 
                             // the prob of this event can be calculated as:
-                            //  * not having fp matches larger than f : log_prob_fp_sm_eq[f]
-                            //  * AND having a fp match of size f : 1.0 - exp(log_prob_fp_lg[f - 1])
+                            //  * not having fp matches larger than f : log_prob_fp_smeq[f]
+                            //  * AND having a fp match of size f : 1.0 - exp(log_prob_fp_neq[f - 1])
                             (*lmp)[i][fptree_size][f] = 
-                                exp(log_prob_fp_sm_eq[f]) 
-                                * (1.0 - exp(log_prob_fp_lg[f - 1])) 
+                                exp(log_prob_fp_smeq[f]) 
+                                * (1.0 - exp(log_prob_fp_neq[f - 1])) 
                                 * ((iface_fp_data.num_entries > 0) ? 1.0 : 0.0);
 
                         } else {
@@ -179,11 +189,11 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
                             } else {
 
                                 // the prob of this event can be calculated as:
-                                //  * not having fps larger than f : log_prob_fp_sm_eq[f]
-                                //  * AND having a fp of size f : 1.0 - exp(log_prob_fp_lg[f - 1])
+                                //  * not having fps larger than f : log_prob_fp_smeq[f]
+                                //  * AND having a fp of size f : 1.0 - exp(log_prob_fp_neq[f - 1])
                                 (*lmp)[i][fptree_size][f] = 
-                                    exp(log_prob_fp_sm_eq[f]) 
-                                    * (1.0 - exp(log_prob_fp_lg[f - 1])) 
+                                    exp(log_prob_fp_smeq[f]) 
+                                    * (1.0 - exp(log_prob_fp_neq[f - 1])) 
                                     * ((iface_fp_data.num_entries > 0) ? 1.0 : 0.0);
                             }
                         }
@@ -198,7 +208,7 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
                         } else {
 
                             (*lmp)[i][fptree_size][f] = 
-                                exp(log_prob_fp_sm_eq[f]);
+                                exp(log_prob_fp_smeq[f]);
                         }
                     }
                 }
@@ -223,6 +233,12 @@ int Prob::calc_lm_prob(std::vector<std::vector<fp_data> > * iface_fp_data) {
     // }
 
     for (uint8_t i = 0; i < this->iface_num; i++) {
+
+        std::cout << "Prob::calc_lm_prob() : [INFO] iface[" << (int) i 
+            << "].num_entries = " << (*iface_fp_data)[0][i].num_entries << std::endl;
+        std::cout << "Prob::calc_lm_prob() : [INFO] iface[~" << (int) i 
+            << "].num_entries = " << (*iface_fp_data)[1][i].num_entries << std::endl;
+
         calc_lm_prob((*iface_fp_data)[0][i], i);
         calc_lm_prob((*iface_fp_data)[1][i], i, true);
 
