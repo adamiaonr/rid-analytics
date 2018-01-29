@@ -23,10 +23,7 @@
 #define EVENT_UNKNOWN   0x05    
 
 // modes for calc_marginal_prob()
-#define MODE_EI_EXCLUSIVE   0x00
-#define MODE_MIS            0x01
-#define MODE_LI             0x02
-#define MODE_EI_INCLUSIVE   0x03
+#define MODE_STRICT         0x00
 
 // modes for handling multiple matches in routers. this 
 // influences efficiency. there are 3 diff. modes:
@@ -135,8 +132,7 @@ class RID_Router {
                 
         int get_tree_bitmask_size(uint8_t i) { return this->fwd_table[i].tree_bitmask.size(); }
         std::vector<uint8_t> * get_tree_bitmask(uint8_t i) { return &(this->fwd_table[i].tree_bitmask); }
-
-        std::set<uint8_t> get_blocked_ifaces() { return this->blocked_ifaces; }
+        std::vector<bool> * get_blocked_ifaces() { return &(this->blocked_ifaces); }
 
         std::vector<uint8_t> * get_tp_sizes() { return &(this->tp_sizes); };
         void set_tp_sizes(std::vector<uint8_t> * tp_sizes) { this->tp_sizes = (*tp_sizes); };
@@ -149,7 +145,7 @@ class RID_Router {
             uint8_t ingress_iface,
             std::vector<uint8_t> * tree_bitmask,
             __float080 ingress_prob,
-            __float080 * in_fptree_prob);
+            std::vector<__float080> * in_fptree_prob);
 
     private:
 
@@ -160,29 +156,23 @@ class RID_Router {
         std::string id;
         // if the RID router is initialized
         bool initialized;
-
         // bloom filter parameters
         uint8_t req_size;
         uint16_t bf_size;
-
         // number of ifaces (at least 2 : LOCAL & // UPSTREAM)    
         uint8_t iface_num;
         // size of forwarding table (important for some calculations)
         uint64_t fwd_table_size;
-
         // the forwarding table : an array of fwd_table_row structs
         std::vector<RID_Router::fwd_table_row> fwd_table;
         // tp sizes for this router
         std::vector<uint8_t> tp_sizes;
-
-        // multiple match handling mode
-        uint8_t mm_mode;
-        // keep track of interfaces over which a router CAN'T forward packets 
-        // (e.g. ingress iface, upstream ifaces for valley-free routing, etc.)
-        std::set<uint8_t> blocked_ifaces;
+        // if strict mode is true, we calculate P(L_i > L~i), else P(L_i >= L~i)
+        bool strict;
+        // keep track of interfaces over which a router CAN'T forward packets
+        std::vector<bool> blocked_ifaces;
         // is iface i a continuation of a prefix tree?
         std::vector<bool> iface_on_fptree;
-
         // probability module
         Prob * prob_mod;
 };

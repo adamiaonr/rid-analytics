@@ -414,8 +414,8 @@ int RID_Analytics::run_rec(
     uint8_t iface_num = router->get_iface_num();
 
     __float080 path_prob = 0.0, fallback_carry_prob = 0.0;
-    __float080 ingress_prob = (*prev_path_state_itr)->get_ingress_iface_prob();
-    __float080 * ingress_ptree_prob = (*prev_path_state_itr)->get_ingress_ptree_prob();
+    __float080 in_prob = (*prev_path_state_itr)->get_ingress_iface_prob();
+    std::vector<__float080> * in_fptree_prob = (*prev_path_state_itr)->get_in_fptree_prob();
     // tree bitmask of the path tells us which sources are accessible over 
     // the followed path.
     std::vector<uint8_t> * tree_bitmask = (*prev_path_state_itr)->get_tree_bitmask();
@@ -450,8 +450,8 @@ int RID_Analytics::run_rec(
     router->forward(
         ingress_iface,
         tree_bitmask,
-        ingress_prob,
-        ingress_ptree_prob);
+        in_prob,
+        in_fptree_prob);
 
     // // we now cycle through all possible interface events and set the possible 
     // // path states and probabilities
@@ -711,14 +711,14 @@ int RID_Analytics::run_rec(
 
     //             // now, we deal with probabilities:
     //             //
-    //             //  -# ingress_ptree_probs : the prob of having the packet 
+    //             //  -# in_fptree_probs : the prob of having the packet 
     //             //     bound to a prefix tree of size s (no TP info)
     //             //
     //             //  -# ingress_iface_probs : the prob of having a packet 
     //             //     flow through iface i (takes TPs into account)
     //             //
-    //             // path_state->set_ingress_ptree_prob(router->get_egress_iface_probs(iface), this->f_max);
-    //             path_state->set_ingress_ptree_prob(router->get_egress_ptree_prob(iface), this->f_max);
+    //             // path_state->set_in_fptree_prob(router->get_egress_iface_probs(iface), this->f_max);
+    //             path_state->set_in_fptree_prob(router->get_egress_ptree_prob(iface), this->f_max);
 
     //             path_prob = router->get_egress_iface_prob(iface); 
     //             if (on_path_to_origin(router, ingress_iface, iface) && (this->mm_mode == MMH_FALLBACK)) {
@@ -856,12 +856,12 @@ int RID_Analytics::run(
 
     // set the initial ingress probabilities: ptree_size = 0 gets 1.0 
     // probability, i.e. initially the request isn't bound to any prefix tree
-    initial_state->set_ingress_ptree_prob(0, 1.0);
+    initial_state->set_in_fptree_prob(0, 1.0);
     initial_state->set_ingress_iface_prob(1.0);
 
     // all other prefix tree sizes get 0.0 probability
     for (uint8_t ptree_size = 1; ptree_size <= this->request_size; ptree_size++)
-        initial_state->set_ingress_ptree_prob(ptree_size, 0.0);
+        initial_state->set_in_fptree_prob(ptree_size, 0.0);
 
     // we first supply an empty tree bitmask (the size must be extracted from 
     // the first router)

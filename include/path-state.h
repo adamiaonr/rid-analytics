@@ -34,12 +34,12 @@ class Path_State {
         Path_State(RID_Router * router, int request_size);
         ~Path_State() {}
 
-        void set_ingress_ptree_prob(__float080 * prob, int prob_size);
-        void set_ingress_ptree_prob(int f, __float080 prob);
+        void set_in_fptree_prob(std::vector<__float080> * prob, int prob_size);
+        void set_in_fptree_prob(int f, __float080 prob);
         void set_ingress_iface_prob(__float080 prob);
 
-        __float080 * get_ingress_ptree_prob();
-        __float080 get_ingress_ptree_prob(uint8_t f);
+        std::vector<__float080> * get_in_fptree_prob();
+        __float080 get_in_fptree_prob(uint8_t f);
         __float080 get_ingress_iface_prob();
 
         void set_eop();
@@ -81,7 +81,7 @@ class Path_State {
         __float080 event_prob;
         // ingress probabilities : prob of a router receiving a request 
         // over a 'prefix tree' of size p
-        __float080 * ingress_ptree_prob;
+        std::vector<__float080> in_fptree_prob;
         __float080 ingress_iface_prob;
         // tree bitmask of the path
         std::vector<uint8_t> * tree_bitmask;

@@ -18,7 +18,7 @@ int RID_Router::init(
     uint8_t iface_num,
     uint8_t req_size,
     uint16_t bf_size,
-    int mm_mode) {
+    int mode) {
 
     if (this->initialized)
         return 0;
@@ -27,41 +27,22 @@ int RID_Router::init(
 
     this->req_size = req_size;
     this->bf_size = bf_size;
-
     // fwd table parameters
-    this->fwd_table_size = fwd_table_size;
     this->iface_num = iface_num;
+    this->fwd_table_size = fwd_table_size;
     // initialize forwarding table w/ 1 row per iface
     this->fwd_table = std::vector<RID_Router::fwd_table_row>(iface_num);
+    // blocked ifaces initialized to false
+    this->blocked_ifaces = std::vector<bool>(iface_num, false);
 
-    // // iface event probabilities. events are: 
-    // //  - EVENT_NLM: no link matches
-    // //  - EVENT_MLM: multiple link matches
-    // //  - EVENT_LLM: local link match
-    // //  - EVENT_SLM: single link match (other than local)
-    // this->iface_events_prob = (__float080 *) calloc(EVENT_NUM, sizeof(__float080));
-
-    // // initialize the in_fptree_prob[p] array. holds the prob of having 
-    // // request entering a router on a prefix tree of size p.
-    // this->in_fptree_prob = (__float080 *) calloc(this->req_size + 1, sizeof(__float080));
-    // // initialize the egress_ptree_prob[i][p] array. holds the prob of having 
-    // // request leaving a router on iface i, on a prefix tree of size p.
-    // this->egress_ptree_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
-    // for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
-    //     this->egress_ptree_prob[_iface] = (__float080 *) calloc(this->req_size + 1, sizeof(__float080));
-
-    // // initialize the egress_iface_prob[i][f] array. holds the probability 
-    // // of having a request leaving a router over iface i, due to a match of 
-    // // size f.
-    // this->egress_iface_prob = (__float080 **) calloc(this->iface_num, sizeof(__float080));
-    // for (uint8_t _iface = 0; _iface < this->iface_num; _iface++)
-    //     this->egress_iface_prob[_iface] = (__float080 *) calloc(this->req_size + 1, sizeof(__float080));
-
-    this->mm_mode = mm_mode;
+    // if strict mode, we calculate P(L_i > L~i), else P(L_i >= L~i)
+    if (mode == MODE_STRICT) this->strict = true;
+    else this->strict = false;
 
     // initialize router's probability module
     this->prob_mod = new Prob((__float080) this->bf_size, (__float080) this->req_size, this->iface_num);
 
+    // mark the router as initialized
     this->initialized = true;
 
     return 0;
@@ -73,9 +54,9 @@ RID_Router::RID_Router(
     uint8_t iface_num,
     uint8_t req_size,
     uint16_t bf_size,
-    int mm_mode) {
+    int mode) {
 
-    this->init(router_id, fwd_table_size, iface_num, req_size, bf_size, mm_mode);
+    this->init(router_id, fwd_table_size, iface_num, req_size, bf_size, mode);
 }
 
 RID_Router::~RID_Router() {}
@@ -137,8 +118,9 @@ Prob::fp_data RID_Router::get_fp_data(
         // pointers to f distr.
         iface_fp_data.f_distr = router->fwd_table[i].f_distr;
         iface_fp_data.f_r_distr = router->fwd_table[i].f_r_distr;
-
+        iface_fp_data.entry_prop = router->fwd_table[i].iface_proportion;
         iface_fp_data.on_fptree = router->iface_on_fptree[i];
+        iface_fp_data.is_blocked = router->blocked_ifaces[i];
 
     } else {
 
@@ -146,27 +128,26 @@ Prob::fp_data RID_Router::get_fp_data(
         iface_fp_data.f_r_distr = std::vector<__float080>(this->req_size, 0.0);
 
         // sum all the fp data, for all ifaces other than i
+        __float080 num_valid_ifaces = 0.0;
         for (uint8_t k = 0; k < router->iface_num; k++) {
 
+            // don't consider iface i, or blocked ifaces
             if ((k == i) || (router->fwd_table[k].num_entries < 1)) continue;
+            if (router->blocked_ifaces[k]) continue;
 
             // the tp is the max of the ifaces other than i
             iface_fp_data.tp_size = std::max(iface_fp_data.tp_size, router->tp_sizes[k]);
             // keep adding up the nr of entries
             iface_fp_data.num_entries += (__float080) router->fwd_table[k].num_entries;
 
-            // elementwise sum of 2 vectors (result saved in first vector)
+            // f_distr and f_r_distr vectors
+            // use std::transform() to get the elementwise sum of 2 vectors 
+            // (result saved in first vector)
             std::transform(
                 iface_fp_data.f_distr.begin(), iface_fp_data.f_distr.end(), 
                 router->fwd_table[k].f_distr.begin(), 
                 iface_fp_data.f_distr.begin(), 
                 std::plus<__float080>());
-
-            // std::cout << "RID_Router::get_fp_data() : [INFO]: " 
-            //     << "\t\n [f_distr] : ";
-            // for(uint8_t f = 0; f < this->req_size; f++) 
-            //     std::cout << "[" << (int) f << "] = " << iface_fp_data.f_distr[f] << ", ";
-            // std::cout << std::endl;
 
             std::transform(
                 iface_fp_data.f_r_distr.begin(), iface_fp_data.f_r_distr.end(), 
@@ -174,8 +155,18 @@ Prob::fp_data RID_Router::get_fp_data(
                 iface_fp_data.f_r_distr.begin(), 
                 std::plus<__float080>());
 
+            iface_fp_data.entry_prop += router->fwd_table[k].iface_proportion;
             iface_fp_data.on_fptree |= router->iface_on_fptree[k];
+
+            num_valid_ifaces++;
         }
+
+        // normalize the iface_fp_data.f_distr and iface_fp_data.f_r_distr
+        // vectors
+        for (uint8_t k; k < iface_fp_data.f_distr.size(); k++)
+            iface_fp_data.f_distr[k] /= num_valid_ifaces;
+        for (uint8_t k; k < iface_fp_data.f_r_distr.size(); k++)
+            iface_fp_data.f_r_distr[k] /= num_valid_ifaces;
     }
 
     return iface_fp_data;
@@ -184,8 +175,8 @@ Prob::fp_data RID_Router::get_fp_data(
 int RID_Router::forward(
     uint8_t ingress_iface,
     std::vector<uint8_t> * tree_bitmask,
-    __float080 ingress_prob,
-    __float080 * in_fptree_prob) {
+    __float080 in_prob,
+    std::vector<__float080> * in_fptree_prob) {
 
     std::cout << "RID_Router::forward() : [INFO] forwarding " << 
         "\n\tfrom : " << this->get_next_hop(ingress_iface).router->get_id() << 
@@ -199,92 +190,83 @@ int RID_Router::forward(
     // // pre-calculate fptree iface probabilities
     // calc_iface_on_fptree_probs();
 
-    // basic loop prevention : keep a list of ifaces over which the request
-    // should not be forwarded
+    // mark blocked ifaces for basic loop prevention
     this->blocked_ifaces.clear();
     // don't foward over ingress iface
-    this->blocked_ifaces.insert(ingress_iface);
+    this->blocked_ifaces[ingress_iface] = true;
     // don't forward over ifaces w/ no entries associated w/ them
     for (uint8_t i = 0; i < this->iface_num; i++)
         if (this->fwd_table[i].num_entries == 0)
-            this->blocked_ifaces.insert(i);
+            this->blocked_ifaces[i] = true;
 
-    std::cout << "RID_Router::forward() : [INFO] not forwarding over ifaces {";
-    for (std::set<uint8_t>::iterator it = this->blocked_ifaces.begin();
-        it != this->blocked_ifaces.end();
-        ++it) {
-
-        std::cout << (int) (*it) << ", ";        
+    std::cout << "RID_Router::forward() : [INFO] blocked ifaces {";
+    for (uint8_t k = 0; k < this->blocked_ifaces.size(); k++) {
+        std::cout << "[" << (int) k << "]:" << (int) this->blocked_ifaces[k] << ", ";        
     }
     std::cout << "}" << std::endl;
 
     // save the ingress probabilities for each diff. prefix tree size (i.e. 
     // the probability that a packet is already bound to a tree of size p)
 
-    // ingress probabilities, what are these?
-    //  - ingress_prob : probability of having the request forwarded 
-    //                   INTO this router by the previous router, regardless 
-    //                   of the cause.
+    // ingress probabilities:
+    //  - in_prob        : probability of having a request forwarded 
+    //                     into this router by the previous router.
     //
-    //  - in_fptree_prob : probability of having the request coming in while 
-    //                         'stuck' in a 'false positive' prefix tree of 
-    //                         size p, with 1 <= p <= req_size.
-    // this->ingress_prob = ingress_prob;
-    // std::cout << "RID_Router::forward() : P(INGRESS) = " << this->ingress_prob << std::endl;
+    //  - in_fptree_prob : probabilities of having the request coming into this 
+    //                     router while 'bound' to a fp tree of size p
 
-    // for (uint8_t fptree_size = 0; fptree_size <= this->req_size; fptree_size++) {
-    //     this->in_fptree_prob[fptree_size] = in_fptree_prob[fptree_size];
-    //     std::cout << "RID_Router::forward() : P(INGRESS_PTREE[" 
-    //         << (int) ptree_size << "]) = " << this->in_fptree_prob[ptree_size] << std::endl;
-    // }
-    
-    // 1) calculate largest match probabilities
+    std::cout << "RID_Router::forward() : P(in) = " << in_prob << std::endl;
+    std::cout << "RID_Router::forward() : P(in_fptree = p) :" << std::endl; 
+    for (uint8_t fptree_size = 0; fptree_size <= this->req_size; fptree_size++)
+        std::cout << "\tP(p = " << (int) fptree_size << "]) = " << (*in_fptree_prob)[fptree_size] << std::endl;
+
+    // get the iface probs P(I = i), i.e. the probability of having iface i 
+    // chosen as an egress iface 
+    // as input, we pass iface data from the fwd_table[] which has an 
+    // influence in fp rate and/or iface prob calculation    
     std::vector<std::vector<Prob::fp_data> > iface_fp_data(2);
     for (uint8_t i = 0; i < this->iface_num; i++) {
-        
         iface_fp_data[0].push_back(get_fp_data(this, i));
         iface_fp_data[1].push_back(get_fp_data(this, i, true));
     }
 
-    if (this->prob_mod->calc_lm_prob(&(iface_fp_data)) < 0) return -1;
+    std::vector<__float080> iface_probs(this->iface_num, 0.0);
+    if (this->prob_mod->calc_iface_probs(
+        &(iface_fp_data),
+        in_fptree_prob, 
+        iface_probs, 
+        this->strict) < 0) return -1;
 
-    // 1.2) print egress_ptree_prob[i][p], i.e. the 
-    // probability of having the request bound to a fp prefix tree of size p, 
-    // over iface i
-
-    // 2) calculate the joint probability distribution of the interface largest 
-    // matches, i.e. the probability of a forwarding event. a forwarding event 
-    // is represented by a 1 x iface_num vector, e.g. [1, 2, 5], which means 
-    // 'largest match of size 1 at iface 0, lm of size 2 at iface 1 and 
-    // lm of 5 at iface 3'. this allows us to answer several questions about 
-    // forwarding events:
-    //  - how likely is it to forward the request over iface i?
-    //  - how likely is it to forward the request over multiple ifaces?
-    //  - how likely is it to have no matches at all, i.e. event {0, 0, 0, 0}?
-
-    // 2.1) initializations
-
-    // 2.1.1) initialize matrix on which to save the joint largest match 
-    // probabilities
-    // FIXME: this is incredibly complex...
-
-    // 2.1.2) initialize iface_events_prob
-
-    // 2.1.3) initialize egress iface probs
-
-    // 2.2) compute the fwd event probs given that the request is bound to 
-    // a fp tree of size s. under such conditions, the possible events are 
-    // restricted to:
-    //  - fp tree of size s continues from the previous router, OR (nor XOR)
-    //  - new fp tree, of size >= s, starts at this router
+    std::cout << "RID_Router::forward() : [INFO] iface probs :" << std::endl;
+    for(uint8_t i = 0; i < this->iface_num; i++)
+        std::cout << "\tP(I = " << (int) i << ") = " << iface_probs[i] << std::endl;
 
     return 0;
 }
 
+// objective: find if iface i is part of a fp tree which started at a 
+//            previous router, encoded in tree_bitmask.
+//
+// how do we encode the fp trees? basically, using a bitmask. the k-th bit 
+// in the bitmask tells if the node w/ id equal to k can be reached by the 
+// current router or iface. e.g. if the bitmask is '10001000', then only the 
+// nodes w/ ids 3 and 7 can be reached from the current router.
+//
+// there are 2 bitmasks in this context:
+//  - tree bitmask      : encodes nodes reachable by current router 
+//  - iface[i] bitmask  : encodes nodes reachable by iface i
+//
+// algorithm:
+//  - for every bit k in iface[i] bitmask
+//      - if iface[i][k] == tree_bitmask[k], return true
+//          - i.e. iface i can be used to reach a node in the tree bitmask
+//  - return false : iface i can't reach any of the nodes in the tree bitmask
+//
+// why is this useful? 
+//
 bool RID_Router::is_iface_on_fptree(int i, std::vector<uint8_t> * tree_bitmask) {
 
-    std::cout << "RID_Router::is_iface_on_fptree() : [INFO] is " << i 
-        << " on prefix tree?";
+    std::cout << "RID_Router::is_iface_on_fptree() : [INFO] is " << i << " on prefix tree?";
 
     for (uint8_t t = 0; t < this->fwd_table[i].tree_bitmask.size(); t++) {
 

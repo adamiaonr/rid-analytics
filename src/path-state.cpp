@@ -1,6 +1,6 @@
 #include "path-state.h"
 
-Path_State::Path_State(RID_Router * router, int request_size) {
+Path_State::Path_State(RID_Router * router, int req_size) {
 
     this->router = router;
     // path info
@@ -11,7 +11,8 @@ Path_State::Path_State(RID_Router * router, int request_size) {
     this->event = (int) EVENT_UNKNOWN;
     this->event_prob = 0.0;
 
-    this->ingress_ptree_prob = (__float080 *) calloc(request_size + 1, sizeof(__float080));
+    this->in_fptree_prob = std::vector<__float080>(req_size + 1, 0.0);
+
     this->eop = false;
 }
 
@@ -39,15 +40,15 @@ __float080 Path_State::get_path_prob() {
     return this->path_prob;
 }
 
-void Path_State::set_ingress_ptree_prob(__float080 * prob, int prob_size) {
+void Path_State::set_in_fptree_prob(std::vector<__float080> * prob, int prob_size) {
 
     for (int f = 0; f < prob_size + 1; f++)
-        this->ingress_ptree_prob[f] = prob[f];
+        this->in_fptree_prob[f] = (*prob)[f];
 }
 
-void Path_State::set_ingress_ptree_prob(int f, __float080 prob) {
+void Path_State::set_in_fptree_prob(int f, __float080 prob) {
 
-    this->ingress_ptree_prob[f] = prob;
+    this->in_fptree_prob[f] = prob;
 }
 
 void Path_State::set_ingress_iface_prob(__float080 prob) {
@@ -55,14 +56,12 @@ void Path_State::set_ingress_iface_prob(__float080 prob) {
     this->ingress_iface_prob = prob;
 }
 
-__float080 * Path_State::get_ingress_ptree_prob() {
-
-    return this->ingress_ptree_prob;
+std::vector<__float080> * Path_State::get_in_fptree_prob() {
+    return &(this->in_fptree_prob);
 }
 
-__float080 Path_State::get_ingress_ptree_prob(uint8_t f) {
-
-    return this->ingress_ptree_prob[f];
+__float080 Path_State::get_in_fptree_prob(uint8_t f) {
+    return this->in_fptree_prob[f];
 }
 
 __float080 Path_State::get_ingress_iface_prob() {
