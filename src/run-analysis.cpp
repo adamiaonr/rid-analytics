@@ -107,8 +107,10 @@ int main (int argc, char **argv) {
     int request_size = 0;       
     // bloom filter size (in bit)
     int bf_size = 0;
-    // multiple match resolve mode
-    int mm_mode = 0;
+    // code for modes:
+    //  - bits 0 to 1 : multiple matches, 00 'flood', 01 'random', 10 'fallback'
+    //  - bit 2 : resolution OFF (0) ON (1) 
+    int mode = 0;
     // incorrect delivery handling mode
     int resolv_mode = 0;
     // origin server location. default is '1'
@@ -188,12 +190,14 @@ int main (int argc, char **argv) {
 
         if (cmds->foundOption(OPTION_MM_MODE)) {
 
-            mm_mode = std::stoi(cmds->optionValue(OPTION_MM_MODE));
+            mode = std::stoi(cmds->optionValue(OPTION_MM_MODE));
         }
 
         if (cmds->foundOption(OPTION_RESOLV_MODE)) {
 
-            resolv_mode = std::stoi(cmds->optionValue(OPTION_RESOLV_MODE));
+            int resolv = std::stoi(cmds->optionValue(OPTION_RESOLV_MODE));
+            // left-shift the resolv bit by 3
+            mode |= (resolv << 3);
         }
 
         if (cmds->foundOption(OPTION_ORIGIN_SERVER)) {
@@ -225,19 +229,12 @@ int main (int argc, char **argv) {
             std::string(scn_file),          // .scn file w/ topology info
             request_size, bf_size,          // parameters for FP rate calculation
             std::string(origin_server),     // origin server location: useful for latency
-            mm_mode, resolv_mode);          // how to handle (1) multiple matches; and (2) wrong deliveries
+            mode,                           // how to handle (1) multiple matches; and (2) wrong deliveries
+            std::string(data_dir), std::string(output_label));
 
     // ... and run the model
     rid_analytics_env->run(std::string(scn_file), std::string(start_router));
-
     printf("rid-analytics : output dir = %s, output label = %s\n", data_dir, output_label);
-
-    uint8_t mode = MODE_SAVE_OUTCOMES;
-
-    if (verbose)
-        mode = (mode | MODE_VERBOSE);
-
-    // rid_analytics_env->view_results(mode, std::string(data_dir), std::string(output_label));
 
     // clean up after yourself...
     delete rid_analytics_env;

@@ -5,6 +5,15 @@
 // double', decided to go with the alias '__float080' (80 bit size)
 #define __float080 long double
 
+// interface events
+#define EVENT_NUM       0x04 // hack : we don't count w/ EVENT_TTL
+#define EVENT_NLM       0x00 // no link matches
+#define EVENT_MLM       0x01 // multiple link matches
+#define EVENT_LLM       0x02 // local link match
+#define EVENT_SLM       0x03 // single link match (other than local)
+#define EVENT_TTL       0x04 // drop due to rtt expiration
+#define EVENT_UNKNOWN   0x05
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -59,24 +68,37 @@ class Prob {
 
     ~Prob() {}
 
-    int calc_iface_probs(
+    int calc_probs(
         std::vector<std::vector<fp_data> > * iface_fp_data,
         std::vector<__float080> * in_fptree_prob,
-        std::vector<__float080> & iface_probs,
-        bool strict = false);
+        std::vector<std::vector<__float080> > & iface_probs,
+        std::vector<__float080> & event_probs,
+        std::vector<std::vector<__float080> > & out_fptree_probs);
 
     private:
 
-    int calc_lm_probs(std::vector<std::vector<fp_data> > * iface_fp_data);
-    int calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti = false);
+    int calc_lm_probs(std::vector<std::vector<fp_data> > * iface_fp_data, std::vector<std::vector<__float080> > & out_fptree_probs);
+    int calc_lm_prob(uint8_t i, fp_data iface_fp_data, std::vector<std::vector<__float080> > & out_fptree_probs, bool anti = false);
+    int calc_iface_prob(uint8_t i, std::vector<__float080> & iface_prob);
+
+    int calc_event_probs(
+        std::vector<std::vector<__float080> > iface_probs,
+        std::vector<__float080> & event_probs);
+
+    int calc_out_fptree_prob(
+        uint8_t i,
+        fp_data iface_fp_data,
+        std::vector<__float080> log_prob_fp_neq,
+        std::vector<__float080> log_prob_fp_smeq,
+        std::vector<std::vector<__float080> > & out_fptree_probs);
     int calc_iface_on_fptree_probs(
         std::vector<std::vector<fp_data> > * iface_fp_data,
         std::vector<__float080> * in_fptree_prob);
 
-    __float080 calc_iface_prob(uint8_t i, bool strict = false);
+    __float080 calc_no_match_prob();
 
     void calc_log_prob_fp_neq(Prob::fp_data iface_fp_data, std::vector<__float080> & log_prob_fp_neq);
-    void print_lm_prob(uint8_t iface, bool anti = false);
+    void print_lm_prob(uint8_t i, bool anti = false);
 
     // largest match probabilities
     std::vector<std::vector<std::vector<__float080> > > lm_prob;

@@ -35,9 +35,9 @@ int RID_Router::init(
     // blocked ifaces initialized to false
     this->blocked_ifaces = std::vector<bool>(iface_num, false);
 
-    // if strict mode, we calculate P(L_i > L~i), else P(L_i >= L~i)
-    if (mode == MODE_STRICT) this->strict = true;
-    else this->strict = false;
+    // // if strict mode, we calculate P(L_i > L~i), else P(L_i >= L~i)
+    // if ((mode & MMH_FLOOD)) this->strict = true;
+    // else this->strict = false;
 
     // initialize router's probability module
     this->prob_mod = new Prob((__float080) this->bf_size, (__float080) this->req_size, this->iface_num);
@@ -176,7 +176,10 @@ int RID_Router::forward(
     uint8_t ingress_iface,
     std::vector<uint8_t> * tree_bitmask,
     __float080 in_prob,
-    std::vector<__float080> * in_fptree_prob) {
+    std::vector<__float080> * in_fptree_prob,
+    std::vector<std::vector<__float080> > & iface_probs,
+    std::vector<__float080> & event_probs,
+    std::vector<std::vector<__float080> > & out_fptree_probs) {
 
     std::cout << "RID_Router::forward() : [INFO] forwarding " << 
         "\n\tfrom : " << this->get_next_hop(ingress_iface).router->get_id() << 
@@ -208,13 +211,6 @@ int RID_Router::forward(
     // save the ingress probabilities for each diff. prefix tree size (i.e. 
     // the probability that a packet is already bound to a tree of size p)
 
-    // ingress probabilities:
-    //  - in_prob        : probability of having a request forwarded 
-    //                     into this router by the previous router.
-    //
-    //  - in_fptree_prob : probabilities of having the request coming into this 
-    //                     router while 'bound' to a fp tree of size p
-
     std::cout << "RID_Router::forward() : P(in) = " << in_prob << std::endl;
     std::cout << "RID_Router::forward() : P(in_fptree = p) :" << std::endl; 
     for (uint8_t fptree_size = 0; fptree_size <= this->req_size; fptree_size++)
@@ -222,24 +218,31 @@ int RID_Router::forward(
 
     // get the iface probs P(I = i), i.e. the probability of having iface i 
     // chosen as an egress iface 
-    // as input, we pass iface data from the fwd_table[] which has an 
-    // influence in fp rate and/or iface prob calculation    
+
+    // as input, we pass: 
+    //  - iface data from the fwd_table[] which has an influence in fp rate 
+    //    and/or iface prob calculation
+    //  - in_prob : probability of having a request forwarded 
+    //              into this router by the previous router.
+    //  - in_fptree_prob : probabilities of having the request coming into this 
+    //                     router while 'bound' to a fp tree of size p
     std::vector<std::vector<Prob::fp_data> > iface_fp_data(2);
     for (uint8_t i = 0; i < this->iface_num; i++) {
+
         iface_fp_data[0].push_back(get_fp_data(this, i));
         iface_fp_data[1].push_back(get_fp_data(this, i, true));
     }
 
-    std::vector<__float080> iface_probs(this->iface_num, 0.0);
-    if (this->prob_mod->calc_iface_probs(
+    if (this->prob_mod->calc_probs(
         &(iface_fp_data),
         in_fptree_prob, 
         iface_probs, 
-        this->strict) < 0) return -1;
+        event_probs,
+        out_fptree_probs) < 0) return -1;
 
     std::cout << "RID_Router::forward() : [INFO] iface probs :" << std::endl;
     for(uint8_t i = 0; i < this->iface_num; i++)
-        std::cout << "\tP(I = " << (int) i << ") = " << iface_probs[i] << std::endl;
+        std::cout << "\tP(I = " << (int) i << ") = " << iface_probs[i][1] << std::endl;
 
     return 0;
 }

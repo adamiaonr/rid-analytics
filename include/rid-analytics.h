@@ -7,45 +7,22 @@
 
 #define END_OF_PATH         (int) -1
 
-#define AVERAGE_LATENCY     (char *) "average_latency"
-#define CACHE_LATENCY       (char *) "cache_latency"
-#define ORIGIN_LATENCY      (char *) "origin_latency"
+// interface events
+#define EVENT_NUM       0x04 // hack : we don't count w/ EVENT_TTL
+#define EVENT_NLM       0x00 // no link matches
+#define EVENT_MLM       0x01 // multiple link matches
+#define EVENT_LLM       0x02 // local link match
+#define EVENT_SLM       0x03 // single link match (other than local)
+#define EVENT_TTL       0x04 // drop due to rtt expiration
+#define EVENT_UNKNOWN   0x05
 
-#define PENALTY_TYPE_FEEDBACK   (int) 0
-#define PENALTY_TYPE_FALLBACK   (int) 1
-
-#define PENALTY_TYPE_STR_SIZE   2
-
-#define MODE_VERBOSE        0x01
-#define MODE_SAVE_CDF       0x02
-#define MODE_SAVE_GRAPH     0x04
-#define MODE_SAVE_OUTCOMES  0x08
-
-// specifies if wrong deliveries should be fixed 
-// or not. it influences the probability of (in)correct
-// deliveries and latency. it can take 2 values:
-//  -# RESOLUTION_OFF : no fixes if a packet is 
-//     delivered incorrectly.
-//  -# RESOLUTION_ON : packet is sent to the origin 
-//     server if a wrong delivery occurs.
-#define RESOLUTION_OFF  0x00
-#define RESOLUTION_ON   0x01
-
-// indexes for output file array
-#define FILE_EVENTS         0
-#define FILE_PATHS          1
-
-// // error handling mode (unused)
-// #define EH_DEFAULT      0x00
-// #define EH_FALLBACK     0x01
-
-// P(|F|_i) distributions (for IFACE_LOCAL and otherwise)
-#define LOCAL       0x00
-#define NON_LOCAL   0x01
+#define RES_FALLBACKS       0x04
 
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sstream>
+#include <fstream>  // reading .nw files
 
 #include "tree/tree.hh"
 #include "rid-router.h"
@@ -62,22 +39,22 @@ class RID_Analytics {
         struct run_record
         {
             RID_Router * next_router;
-            int ingress_iface;
-            tree<Path_State *>::iterator prev_path_state_itr;
+            int in_iface;
+            Path_State * state;
         };
 
         RID_Analytics() {}
-        RID_Analytics(
+        RID_Analytics(    
             std::string nw_filename,
             uint8_t request_size,
             uint16_t bf_size,
-            std::string origin_server,
-            int mm_mode,
-            int resolution_mode);
+            std::string origin_server_id,
+            int mode,
+            std::string output_dir,
+            std::string output_label);
         ~RID_Analytics();
 
-        int run(std::string scn_filename, std::string start_router_id);
-        int view_results(uint8_t mode, std::string output_dir, std::string output_label);
+        void run(std::string scn_filename, std::string start_router_id);
 
     private:
 
@@ -86,44 +63,45 @@ class RID_Analytics {
         int run_rec(
                 RID_Router * router, 
                 uint8_t ingress_iface,
-                tree<Path_State *>::iterator prev_path_state_itr);
+                Path_State * prev_state);
         int erase_access_tree_rec(RID_Router * router);
 
         int get_origin_distance(RID_Router * from_router);
         int get_origin_distance_rec(RID_Router * from_router);
-        int on_path_to_origin(
-            RID_Router * router, 
-            int ingress_iface, 
-            int egress_iface);
 
-        // NETWORK PARAMETERS : 
+        int handle_nlm(RID_Router * router, __float080 event_prob, Path_State * prev_state);
+        int handle_llm(RID_Router * router, __float080 event_prob, Path_State * prev_state);
+        int handle_mlm(RID_Router * router, __float080 event_prob, Path_State * prev_state);
+        int handle_slm(
+            RID_Router * router,
+            Path_State * prev_state,
+            std::vector<std::vector<__float080> > iface_probs,
+            std::vector<std::vector<__float080> > out_fptree_probs,
+            std::vector<RID_Analytics::run_record> & slm_stack);
 
-        // height of tree
-        uint8_t access_tree_height;
-        // max. possible size for requests & forwarding entries
-        uint8_t f_max;
+        void init_output(std::string label, std::string output_dir);
+        void add_outcome(RID_Router * router, int outcome, __float080 prob, __float080 latency);
+        void add_events(RID_Router * router, std::vector<__float080> event_probs);
+        void add_fwd(RID_Router * router, int in_iface, Path_State * state, std::vector<std::vector<__float080> > iface_probs);
 
-        // FORWARDING PARAMETERS : only necessary when calling forward() on an 
-        // RID router
         uint8_t request_size;
         uint16_t bf_size;
-        int mm_mode;
-        int resolution_mode;
-        RID_TPMap tp_sizes;
+        int mode;
+
         std::vector<__float080> f_r_distribution;
-        // path state tree
-        tree<Path_State *> path_state_tree;
+
         // for quick access to RID_Router * in the topology, via id strings 
+        RID_TPMap tp_sizes;
         RID_RouterMap routers;
         // AS associated w/ origin server
         RID_Router * origin_server;
         RID_Router * start_router;
-        // AS path to origin server
-        std::set<std::string> origin_server_path;
+
         // ttl for network topology
         int ttl;
 
-        bool hit;
+        // array of output files (w/ results)
+        std::ofstream output_file[2];
 };
 
 #endif

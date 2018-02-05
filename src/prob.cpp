@@ -48,7 +48,48 @@ void Prob::calc_log_prob_fp_neq(
     }
 }
 
-int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
+int Prob::calc_out_fptree_prob(
+    uint8_t i,
+    fp_data iface_fp_data,
+    std::vector<__float080> log_prob_fp_neq,
+    std::vector<__float080> log_prob_fp_smeq,
+    std::vector<std::vector<__float080> > & out_fptree_probs) {
+
+    for (uint8_t p = 0; p <= this->n; p++)
+        out_fptree_probs[i][p] = 0.0;
+
+    // there are 2 events which can make iface i belong to a fp tree of size p:
+    //
+    //  event 1 : iface i is associated w/ the a prev fp tree of size p, i.e. 
+    //     the prefix tree chosen at a previous router.
+    //
+    //  event 2 : iface i is not associated w/ a previous fp tree of size p BUT it 
+    //     triggers a local fp match of size p. in this case, we say the 
+    //     request falls into a 'new' fp tree, starting at iface i.
+    //
+    // FIXME: this still needs work
+    for (uint8_t p = 1; p <= this->n; p++) {
+
+        // contribution of event 1
+        out_fptree_probs[i][p] = this->iface_on_fptree_prob[i][p];
+        // add contribution of event 2
+        out_fptree_probs[i][p] +=
+            // (1.0 - this->iface_on_fptree_prob[i][p])
+            // * 
+            exp(log_prob_fp_smeq[p])                    // not having a FP > f
+            * (1.0 - exp(log_prob_fp_neq[p - 1]))       // generating a FP of size f
+            * ((iface_fp_data.num_entries > 0) ? 1.0 : 0.0)
+            * ((iface_fp_data.f_distr[p - 1] > 0.0) ? 1.0 : 0.0);
+    }
+
+    return 0;
+}
+
+int Prob::calc_lm_prob(
+    uint8_t i, 
+    fp_data iface_fp_data,
+    std::vector<std::vector<__float080> > & out_fptree_probs,
+    bool anti) {
 
     // decide if we're calculating the iface or 'anti-iface' largest match 
     // probabilities
@@ -108,6 +149,9 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
     // prob of fp match smaller than or equal to f 
     for (int f = (int) (this->n - 1); f >= 0; f--)
         log_prob_fp_smeq[f] = log_prob_fp_smeq[f + 1] + log_prob_fp_neq[f];
+
+    // FIXME: this still needs work
+    calc_out_fptree_prob(i, iface_fp_data, log_prob_fp_neq, log_prob_fp_smeq, out_fptree_probs);
 
     // std::cout << "Prob::calc_lm_prob(iface) : [INFO] probabilities : \n\tp(fp > x)  : ";
     // for(uint8_t f = 0; f < this->n; f++) 
@@ -219,7 +263,9 @@ int Prob::calc_lm_prob(fp_data iface_fp_data, uint8_t i, bool anti) {
     return 0;
 }
 
-int Prob::calc_lm_probs(std::vector<std::vector<fp_data> > * iface_fp_data) {
+int Prob::calc_lm_probs(
+    std::vector<std::vector<fp_data> > * iface_fp_data,
+    std::vector<std::vector<__float080> > & out_fptree_probs) {
 
     if (this->has_lm_prob) {
         std::cout << "Prob::calc_lm_probs() : [INFO] pre-calculated lm_prob table available. skipping." << std::endl;
@@ -228,8 +274,8 @@ int Prob::calc_lm_probs(std::vector<std::vector<fp_data> > * iface_fp_data) {
 
     for (uint8_t i = 0; i < this->iface_num; i++) {
 
-        calc_lm_prob((*iface_fp_data)[0][i], i);
-        calc_lm_prob((*iface_fp_data)[1][i], i, true);
+        calc_lm_prob(i, (*iface_fp_data)[0][i], out_fptree_probs);
+        calc_lm_prob(i, (*iface_fp_data)[1][i], out_fptree_probs, true);
 
         print_lm_prob(i);
         print_lm_prob(i, true);
@@ -246,11 +292,7 @@ int Prob::calc_lm_probs(std::vector<std::vector<fp_data> > * iface_fp_data) {
 // 
 // algorithm:
 //  - for each [i][p] pair:
-//      - [i][p = 0] : represents the case of iface i not on any *existing* fp tree,
-//                     i.e. a fp tree that comes from a previous router
-//          - in this case, we assume P([i][0]) = (1.0 / (num_valid_ifaces)), i.e. 
-//            a uniform distribution of P(p = 0) per iface
-//
+//      - [i][p = 0] : represents the case of iface i not on any *existing* fp tree.
 //      - [i][p > 0] : iface i *may* be on a fp tree of size p.
 //          - if iface_fp_data[i].on_fptree[p] == false, P([i][p]) = 0.0
 //          - else, P([i][p]) = iface_fp_data[i].entry_prop * iface_fp_data[i].f_ditr[p] / (f_prop[p]), 
@@ -262,11 +304,11 @@ int Prob::calc_iface_on_fptree_probs(
     std::vector<std::vector<fp_data> > * iface_fp_data,
     std::vector<__float080> * in_fptree_prob) {
 
-    // calc number of valid ifaces
-    __float080 num_valid_ifaces = 0.0;
-    for (uint8_t i = 0; i < this->iface_num; i++) {
-        if (!(*iface_fp_data)[0][i].is_blocked) num_valid_ifaces++;
-    }
+    // // calc number of valid ifaces
+    // __float080 num_valid_ifaces = 0.0;
+    // for (uint8_t i = 0; i < this->iface_num; i++) {
+    //     if (!(*iface_fp_data)[0][i].is_blocked) num_valid_ifaces++;
+    // }
 
     // calc the entry size proportions, i.e. share of entries of size f among 
     // all entries in the router.
@@ -284,7 +326,9 @@ int Prob::calc_iface_on_fptree_probs(
 
         // for P([i][p = 0])
         // this->iface_on_fptree_prob[i][0] = (*in_fptree_prob)[0] * (1.0 / num_valid_ifaces);
+        // FIXME: not sure about the (1.0 / num_valid_ifaces) part
         this->iface_on_fptree_prob[i][0] = (*in_fptree_prob)[0];
+
         // for P([i][p > 0])
         for (uint8_t p = 1; p < (this->n + 1); p++) {
 
@@ -298,21 +342,56 @@ int Prob::calc_iface_on_fptree_probs(
     return 0;
 }
 
-__float080 Prob::calc_iface_prob(uint8_t i, bool strict) {
+__float080 Prob::calc_no_match_prob() {
 
-    __float080 iface_prob = 0.0;
+    __float080 marginal_prob = 0.0;
+    for (uint8_t i = 0; i < this->iface_num; i++) {
+        for (uint8_t fptree_size = 0; fptree_size < (this->n + 1); fptree_size++) {
+            // calc joint prob P(L_i = 0, L_{~i} = 0 | 'i in p')
+            __float080 iface_prob = this->lm_prob[i][fptree_size][0] * this->anti_lm_prob[i][0][0];
+            // calc P(L_i = 0, L_{~i} = 0, 'i in p')
+            iface_prob *= this->iface_on_fptree_prob[i][fptree_size];
+            // marginalize P(L_i = 0, L_{~i} = 0, 'i in p') over p and i (note 
+            // that P('i on p') is in fact a joint prob P(i,p))
+            marginal_prob += iface_prob;
+        }
+    }
+
+    return marginal_prob;
+}
+
+int Prob::calc_event_probs(
+    std::vector<std::vector<__float080> > iface_probs,
+    std::vector<__float080> & event_probs) {
+
+    // LLM probs: only iface 0 (0 is always the local)
+    event_probs[EVENT_LLM] = iface_probs[0][1];
+    // NLM & SLM probs:
+    //  - NLM : corresponds to P(L_i = 0 AND L_j = 0) for all i, j
+    event_probs[EVENT_NLM] = calc_no_match_prob();
+    //  - SLM : comes from P(L_i > L_{~i}), for all i. these are independet 
+    //          events, i.e. P(L_i > L_{~i}) AND P(L_j > L_{~j}) = 0 (for i != j).
+    //          P(L_i > L_{~i}) is given by iface_probs[i][0]
+    for (int i = 0; i < iface_probs.size(); i++)
+        event_probs[EVENT_SLM] += iface_probs[i][0];
+
+    // MLM probs
+    event_probs[EVENT_MLM] = 1.0 - (event_probs[EVENT_NLM] + event_probs[EVENT_SLM]);
+
+    return 0;
+}
+
+int Prob::calc_iface_prob(uint8_t i, std::vector<__float080> & iface_prob) {
+
     for (uint8_t fptree_size = 0; fptree_size < (this->n + 1); fptree_size++) {
 
+        __float080 cond_prob_strict = 0.0;
         __float080 cond_prob = 0.0;
         for (int f = this->n; f >= 0; f--) {
-            // in 'strict' mode, we only consider cases for which L_i > L_{~i}
-            // else, we consider L_i >= L_{~i}
-            int m = 0;
-            (strict ? m = f : m = (f + 1));
 
             // calc the conditional prob P(L_i >= L_{~i} | 'i on p')
-            //  - note that lm_prob holds P(L_i = f | 'i on p')
-            //  - note that anti_lm_prob holds P(L_{~i} = k | 'i on p')
+            //  - note that lm_prob is P(L_i = f | 'i on p')
+            //  - note that anti_lm_prob is P(L_{~i} = k | 'i on p')
             
             //  - as such, we do P(L_i >= L_{~i} | 'i on p') = 
             //      = sum^(m)_k [ P(L_i = f, L_{~i} = k | 'i on p') ]
@@ -320,15 +399,22 @@ __float080 Prob::calc_iface_prob(uint8_t i, bool strict) {
 
             //  - note that we assume 'i on p' == '~i on 0', i.e. 
             //    if iface i is on the fp tree p, then ~i is not on any fp tree  
-            for (int k = 0; k < m; k++)
-                cond_prob += (this->lm_prob[i][fptree_size][f] * this->anti_lm_prob[i][0][k]);
+            for (int k = 0; k < f; k++)
+                cond_prob_strict += (this->lm_prob[i][fptree_size][f] * this->anti_lm_prob[i][0][k]);
+
+            // the '=' part of P(L_i >= L_{~i} | 'i on p')
+            cond_prob = cond_prob_strict + (this->lm_prob[i][fptree_size][f] * this->anti_lm_prob[i][0][f]);
         }
 
         // by def of joint prob : P(L_i >= L_{~i} , 'i on p') = P(L_i >= L_{~i} | 'i on p') * P('i on p')
-        iface_prob += cond_prob * this->iface_on_fptree_prob[i][fptree_size];
+        // note:
+        //  - iface_prob[0] contains P(L_i > L_{~i} , 'i on p')
+        iface_prob[0] += cond_prob_strict * this->iface_on_fptree_prob[i][fptree_size];
+        //  - iface_prob[1] contains P(L_i >= L_{~i} , 'i on p')
+        iface_prob[1] += cond_prob * this->iface_on_fptree_prob[i][fptree_size];
     }
 
-    return iface_prob;
+    return 0;
 }
 
 // objective: calc P(i) = P(L_i >= L_{~i}), for each i, i.e. the probability of 
@@ -358,20 +444,24 @@ __float080 Prob::calc_iface_prob(uint8_t i, bool strict) {
 //
 // complexity: O(I*N^4), I being the nr. of ifaces, N the req. size
 //
-int Prob::calc_iface_probs(
+int Prob::calc_probs(
     std::vector<std::vector<fp_data> > * iface_fp_data,
     std::vector<__float080> * in_fptree_prob,
-    std::vector<__float080> & iface_probs,
-    bool strict) {
-
-    if (calc_lm_probs(iface_fp_data) < 0) 
-        return -1;
+    std::vector<std::vector<__float080> > & iface_probs,
+    std::vector<__float080> & event_probs,
+    std::vector<std::vector<__float080> > & out_fptree_probs) {
 
     if (calc_iface_on_fptree_probs(iface_fp_data, in_fptree_prob) < 0)
         return -1;
 
+    if (calc_lm_probs(iface_fp_data, out_fptree_probs) < 0) 
+        return -1;
+
     for (uint8_t i = 0; i < this->iface_num; i++)
-        iface_probs[i] = calc_iface_prob(i, strict);
+        calc_iface_prob(i, iface_probs[i]);
+
+    if (calc_event_probs(iface_probs, event_probs) < 0)
+        return -1;
 
     return 0;
 }

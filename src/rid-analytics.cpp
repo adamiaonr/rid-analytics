@@ -16,67 +16,29 @@ RID_Analytics::RID_Analytics(
     uint8_t request_size,
     uint16_t bf_size,
     std::string origin_server_id,
-    int mm_mode,
-    int resolution_mode) {
+    int mode,
+    std::string output_dir,
+    std::string output_label) {
 
     // initialize the scenario parameters set at runtime
     this->request_size = request_size;
-    this->f_max = request_size;
     this->bf_size = bf_size;
-    // modes:
-    //  -# mm_mode : modes for handling multiple matches in routers. this 
-    //               influences efficiency. there are 3 diff. modes:
-    //                  -# MMH_FLOOD    : forward over all matching ifaces
-    //                  -# MMH_RANDOM   : forward over 1 random iface (not used)
-    //                  -# MMH_FALLBACK : forward using the fallback address
-    //
-    //
-    //  -# resolution_mode : specifies if wrong deliveries should be fixed 
-    //                       or not. it influences the probability of (in)correct
-    //                       deliveries and latency. it can take 2 values:
-    //                          -# RESOLUTION_OFF : no fixes if a packet is 
-    //                             delivered incorrectly.
-    //                          -# RESOLUTION_ON : packet is sent to the origin 
-    //                             server if a wrong delivery occurs.  
-    //                             
-    this->mm_mode = mm_mode;
-    this->resolution_mode = resolution_mode;
+    this->mode = mode;
 
     // ... and build the network
-    this->build_network(nw_filename);
-    this->read_scn(nw_filename);
+    build_network(nw_filename);
+    read_scn(nw_filename);
 
     // after building the network, save the origin server pointer
     this->origin_server = this->routers[origin_server_id];
     std::cout << "RID_Analytics::RID_Analytics() [INFO] : origin_server_id = " 
         << this->routers[origin_server_id]->get_id() << std::endl;
 
-    // // FIXME : hack to make simulations shorter
-    // this->hit = false;
+    // init output files
+    init_output(output_label, output_dir);
 }
 
 RID_Analytics::~RID_Analytics() {
-
-    // erase the path state tree
-    tree<Path_State *>::iterator dfs_itr = this->path_state_tree.begin();
-    // tree<Path_State *>::post_order_iterator post_itr = this->path_state_tree.begin_post();
-    // tree<Path_State *>::post_order_iterator end_post_itr = this->path_state_tree.end_post();
-
-    while (dfs_itr != this->path_state_tree.end()) {
-
-        if ((*dfs_itr)->get_router()) {
-            std::cout << "RID_Analytics::get_network() : [INFO] deleting {"
-                << (*dfs_itr)->get_path_length() << ", "
-                << (*dfs_itr)->get_router()->get_id() << ", "
-                << (*dfs_itr)->get_path_status() << ", "
-                << (*dfs_itr)->get_path_prob() << "}" << std::endl;
-        }
-
-        // delete the Path_State object associated with the tree node (not the 
-        // node itself)
-        delete(*dfs_itr);
-        ++dfs_itr;
-    }
 
     // erase the routers in the topology. use the router map for that (see the 
     // advantage of using modern C++ features you dummy?)
@@ -88,39 +50,51 @@ RID_Analytics::~RID_Analytics() {
     }
 }
 
-int RID_Analytics::on_path_to_origin(
-    RID_Router * router, 
-    int ingress_iface, 
-    int egress_iface = -1) {
+std::string get_unix_timestamp() {
 
-    // trivial case : router is THE origin server
-    if (router->get_id() == this->origin_server->get_id())
-        return 1;
+    std::stringstream strm;
+    strm << time(NULL);
 
-    uint8_t bitmask_value = (1 << (std::stoi(this->origin_server->get_id()) % 8));
-    uint8_t bitmask_byte = (std::stoi(this->origin_server->get_id()) / 8);
-    uint8_t tree_bitmask_value = 0;
+    return strm.str();
+}
 
-    if ((egress_iface == -1)) {
+void RID_Analytics::init_output(
+    std::string label,
+    std::string output_dir) {
 
-        for (uint8_t k = 1; k < router->get_iface_num(); k++) {
+    // we create 4 .tsv files:
+    //  -# events.tsv       : probs of events (LLM, SLM, NLM, MLM) per router
+    //  -# outcomes.tsv     : probs + latency + router of outcome
+    //  -# forwarding.tsv   : description of fwding events, including next router probs
+    //  -# ifaces.tsv       : description of fwding events, including iface probs per router
 
-            if (k == ingress_iface)
-                continue;
-
-            tree_bitmask_value = (*(router->get_tree_bitmask(k)))[bitmask_byte];
-            if ((bitmask_value & tree_bitmask_value) == bitmask_value)
-                return 1;
-        }
-
-        return 0;
+    // file names follow the convention <type>.<label>.<unix-timestamp>.tsv
+    std::string filename[4] = {"events", "outcomes", "forwarding", "ifaces"};
+    for (int i = 0; i < 3; i++) {
+        filename[i] += std::string(".") + label + std::string(".") + get_unix_timestamp() + std::string(".tsv");
+        output_file[i].open(output_dir + std::string("/") + filename[i]);
     }
 
-    tree_bitmask_value = (*(router->get_tree_bitmask(egress_iface)))[bitmask_byte];
-    if ((bitmask_value & tree_bitmask_value) == bitmask_value)
-        return 1;
-
-    return 0;
+    // events header
+    output_file[0] << "router\tnlm\tllm\tmlm\tslm\n";
+    // outcome header
+    output_file[1] << "router\ttype\tprob\tlatency\n";
+    // forwarding header
+    output_file[2] << "from\tinprob\tinto";
+    for (auto const& r : this->routers)
+        output_file[2] << "\t" << r.second->get_id();
+    output_file[2] << "\n";
+    
+    // ifaces header
+    // determine router w/ largest iface_num
+    uint8_t iface_num = 0;
+    for (auto const& r : this->routers) {
+        iface_num = std::max(iface_num, r.second->get_iface_num());
+    }
+        
+    output_file[3] << "router";
+    for (int i = 0; i < iface_num; i++) output_file[3] << "\t" << i;
+    output_file[3] << "\n";
 }
 
 int RID_Analytics::get_origin_distance(RID_Router * from_router) {
@@ -183,7 +157,7 @@ int RID_Analytics::read_scn(std::string nw_filename) {
 
     pugi::xml_node topology = nw_doc.child("topology");
 
-    this->f_r_distribution = std::vector<__float080>(this->f_max, 0.0);
+    this->f_r_distribution = std::vector<__float080>(this->request_size, 0.0);
     for (pugi::xml_node f_r_dist = topology.child("f_r_dist"); 
         f_r_dist; 
         f_r_dist = f_r_dist.next_sibling("f_r_dist")) {
@@ -293,9 +267,9 @@ int RID_Analytics::build_network(std::string nw_filename) {
                 router_id,
                 table_size,                 // nr. of table entries for router
                 iface_num,                  // nr. of ifaces (i.e. nr. of adjacent routers)
-                this->f_max,                // max. request & forwarding entry size
+                this->request_size,         // max. request & forwarding entry size
                 this->bf_size,              // BF size (of both requests and entries, in bit)
-                this->mm_mode);             // multiple match mode
+                this->mode);                // modes for multiple matches and error resolution
 
         } else {
 
@@ -304,9 +278,9 @@ int RID_Analytics::build_network(std::string nw_filename) {
                     router_id,
                     table_size,
                     iface_num,
-                    this->f_max,
+                    this->request_size,
                     this->bf_size,
-                    this->mm_mode);
+                    this->mode);
 
             // add the router to the router map
             this->routers[router_id] = new_router;
@@ -314,9 +288,6 @@ int RID_Analytics::build_network(std::string nw_filename) {
             std::cout << "RID_Analytics::build_network() : [INFO] added new router : "
                 << router_id << std::endl;
         }
-
-        // if (tier == this->access_tree_height && tier_index > 0)
-        //     new_router->set_leaf();
 
         // ***
         // *** initialize router ifaces & add fwd entries
@@ -405,428 +376,361 @@ int RID_Analytics::build_network(std::string nw_filename) {
     return 0;
 }
 
-int RID_Analytics::run_rec(
+void RID_Analytics::add_outcome(
     RID_Router * router,
-    uint8_t ingress_iface,
-    tree<Path_State *>::iterator prev_path_state_itr) {
-
-    // local vars for quick access to router attributes
-    uint8_t iface_num = router->get_iface_num();
-
-    __float080 path_prob = 0.0, fallback_carry_prob = 0.0;
-    __float080 in_prob = (*prev_path_state_itr)->get_ingress_iface_prob();
-    std::vector<__float080> * in_fptree_prob = (*prev_path_state_itr)->get_in_fptree_prob();
-    // tree bitmask of the path tells us which sources are accessible over 
-    // the followed path.
-    std::vector<uint8_t> * tree_bitmask = (*prev_path_state_itr)->get_tree_bitmask();
-
-    // next hop information
-    RID_Router::nw_address next_hop;
-    tree<Path_State *>::iterator path_state_itr;
-    std::vector<RID_Analytics::run_record> single_link_match_states;
-
-    // run the forward() operation on this router : this will determine the 
-    // following info:
-    //  1) interface event probabilities
-    //  2) egress size probabilities
-    //
-    // we then use this info to determine the path state
-    std::cout << "\nRID_Analytics::run_rec() : FORWARD() BY ROUTER : " 
-        << router->get_id() << std::endl;
-
-    // if (this->tp_sizes.empty())
-    //     std::cout << "RID_Analytics::run_rec() : [INFO] TP sizes is empty!";
-    // else {
-
-    //     std::cout << "RID_Analytics::run_rec() : [INFO] TP sizes keys : " << std::endl;
-    //     RID_TPMap::iterator itr;
-    //     for (itr = this->tp_sizes.begin(); itr != this->tp_sizes.end(); itr++)
-    //         std::cout << "\tTP[" << itr->first << "]" << std::endl;
-    // }
-
-    // for (int i = 0; i < routers[router->get_id()]->get_iface_num(); i++)
-    //     std::cout << "\tTP[" << i << "] = " << (int) this->tp_sizes[router->get_id()][i] << std::endl;       
-
-    router->forward(
-        ingress_iface,
-        tree_bitmask,
-        in_prob,
-        in_fptree_prob);
-
-    // // we now cycle through all possible interface events and set the possible 
-    // // path states and probabilities
-    // for (int event = EVENT_NLM; event < EVENT_NUM; event++) {
-
-    //     // we differentiate the establishment of states by iface events
-    //     //
-    //     //  1) if EVENT_SLM, the path continues, and so we have 
-    //     //     additional work : setting FP tree probabilities, 
-    //     //     determining the intermediate state (TP or FP), calling run_rec() 
-    //     //     again, etc.
-    //     //
-    //     //  2) otherwise, the path may or may not end here
-    //     //
-    //     if (event < EVENT_SLM) {
-
-    //         Path_State * path_state = new Path_State(router, this->request_size);
-    //         path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
-
-    //         // set the event & event probability
-    //         path_state->set_event(event, router->get_iface_events_prob(event));
-    //         // all events < EVENT_SINGLE_IFACE_MATCH are 'ends of the line' 
-    //         // in a way.
-    //         path_state->set_path_prob(router->get_iface_events_prob(event));
-    //         path_state->set_path_length((*prev_path_state_itr)->get_path_length());
-
-    //         std::cout << "RID_Analytics::run_rec() : [INFO] ADDED NODE TO PATH STATE TREE: "
-    //             << "\n\tEVENT : " << event << " EVENT PROB : " << path_state->get_event_prob()
-    //             << "\n\tPROB : " << router->get_iface_events_prob(event)
-    //             << "\n\tPATH LATENCY : " << (*prev_path_state_itr)->get_path_length() + 1
-    //             << std::endl;
-
-    //         if (event > EVENT_NLM) {
-
-    //             // why???? 
-    //             path_state->set_eop();
-
-    //             // resolving Multiple Link Match (MLM) events:
-    //             //  1) MMH_FALLBACK : send the request over the correct iface 
-    //             //                    towards the origin server
-    //             //  2) MMH_FLOOD    : we skip any further processing here, and 
-    //             //                    and handle it when processing EVENT_SLM
-    //             if (event == EVENT_MLM) {
-
-    //                 if (this->mm_mode == MMH_FALLBACK) {
-
-    //                     path_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
-
-    //                     if (on_path_to_origin(router, ingress_iface)) {
-
-    //                         // if the router is on the path to origin, we save 
-    //                         // the MLM event probability for later use while 
-    //                         // processing SLM events
-    //                         if (router->get_id() != this->origin_server->get_id())
-    //                             fallback_carry_prob += router->get_iface_events_prob(event);
-    //                         // ... and set the path length of this state to 0.0
-    //                         // FIXME: this shouldn't be necessary
-    //                         path_state->set_path_length(0.0);
-
-    //                     } else {
-
-    //                         // otherwise, we set the path length for this MLM 
-    //                         // event
-    //                         path_state->set_path_length(
-    //                             (*prev_path_state_itr)->get_path_length());
-
-    //                         // we add a new state representing the fallback 
-    //                         // delivery, appending it to the MLM event state
-    //                         //  -# the router of the resolution state should 
-    //                         //     be the origin server
-    //                         //  -# append it to 'path_state_itr'
-    //                         //  -# event should be EVENT_LLM 
-    //                         //  -# event prob should be the same as P(MLM)
-    //                         //  -# path status should be 'OUTCOME_FALLBACK_DELIVERY'
-    //                         //  -# path prob should be the same as P(MLM)
-    //                         //  -# path length is set to current length + 1 + distance to origin server
-    //                         Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
-    //                         this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
-
-    //                         resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
-    //                         resolution_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
-    //                         resolution_state->set_path_prob(router->get_iface_events_prob(event));
-    //                         resolution_state->set_path_length(
-    //                             (*prev_path_state_itr)->get_path_length() + get_origin_distance(router));
-    //                     }
-
-    //                 } else {
-
-    //                     // if other handling method other than MMH_FALLBACK, then 
-    //                     // the prob of EVENT_MLM will be transfered to STATUS_TP 
-    //                     // or STATUS_FP
-    //                     path_state->set_path_prob(0.0);
-    //                 }
-
-    //             } else if (event == EVENT_LLM) {
-
-    //                 // if we hit a cache, and there's a TP at iface local, 
-    //                 // we get a correct delivery, otherwise an incorrect delivery
-    //                 if (this->tp_sizes[router->get_id()][IFACE_LOCAL] > 0) {
-
-    //                     path_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
-    //                     // this->hit = true;
-
-    //                 } else {
-
-    //                     path_state->set_path_status(OUTCOME_INCORRECT_DELIVERY);
-    //                     path_state->set_path_length((*prev_path_state_itr)->get_path_length());
-
-    //                     int penalty = 0;
-    //                     if (this->mm_mode == MMH_FALLBACK) {
-
-    //                         if (on_path_to_origin(router, ingress_iface)) {
-
-    //                             // if the router is on the path to origin, we save 
-    //                             // the LLM event probability for later use while 
-    //                             // processing SLM events
-    //                             if (router->get_id() != this->origin_server->get_id())
-    //                                 fallback_carry_prob += router->get_iface_events_prob(event);
-    //                             // ... and set the path length of this state to 0.0
-    //                             // FIXME: this shouldn't be necessary
-    //                             path_state->set_path_length(0.0);
-
-    //                         } else {
-
-    //                             penalty = get_origin_distance(router);
-
-    //                             Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
-    //                             this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
-
-    //                             resolution_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
-    //                             resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
-    //                             resolution_state->set_path_prob(router->get_iface_events_prob(event));
-    //                             resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + penalty);
-    //                         }
-
-    //                     } else {
-
-    //                         // otherwise, the request source must receive 
-    //                         // feedback of the incorrect delivery, in addition 
-    //                         // to the time of having the request 
-    //                         // fetched from the origin server.
-    //                         penalty = (*prev_path_state_itr)->get_path_length() 
-    //                             + get_origin_distance(this->start_router);
-
-    //                         if (this->resolution_mode == RESOLUTION_ON) {
-
-    //                             Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
-    //                             this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
-
-    //                             resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
-    //                             resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
-    //                             resolution_state->set_path_prob(router->get_iface_events_prob(event));
-    //                             resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + penalty);
-    //                         }
-    //                     }
-    //                 }
-    //             }
-
-    //         } else {
-
-    //             // if an NLM event, it is just dropped. some resolution 
-    //             // method may kick in (e.g. fallbacks or feedback).
-    //             path_state->set_path_status(OUTCOME_PACKET_DROP);
-    //             path_state->set_path_length((*prev_path_state_itr)->get_path_length());
-
-    //             int penalty = 0;
-    //             if (this->mm_mode == MMH_FALLBACK) {
-
-    //                 if (on_path_to_origin(router, ingress_iface)) {
-
-    //                     // if the router is on the path to origin, we save 
-    //                     // the LLM event probability for later use while 
-    //                     // processing SLM events
-    //                     if (router->get_id() != this->origin_server->get_id())
-    //                         fallback_carry_prob += router->get_iface_events_prob(event);
-    //                     // ... and set the path length of this state to 0.0
-    //                     // FIXME: this shouldn't be necessary, now to calculate 
-    //                     // avg. latencies you should only look into correct 
-    //                     // deliveries
-    //                     path_state->set_path_status(OUTCOME_FALLBACK_DELIVERY);
-    //                     path_state->set_path_length(0.0);
-
-    //                 } else {
-
-    //                     penalty = get_origin_distance(router);
-
-    //                     Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
-    //                     this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
-
-    //                     resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
-    //                     resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
-    //                     resolution_state->set_path_prob(router->get_iface_events_prob(event));
-    //                     resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + penalty);
-    //                 }
-
-    //             } else {
-
-    //                 penalty = (*prev_path_state_itr)->get_path_length() 
-    //                             + get_origin_distance(this->start_router);
-
-    //                 if (this->resolution_mode == RESOLUTION_ON) {
-
-    //                     Path_State * resolution_state = new Path_State(this->origin_server, this->request_size);
-    //                     this->path_state_tree.append_child(prev_path_state_itr, resolution_state);
-
-    //                     resolution_state->set_path_status(OUTCOME_CORRECT_DELIVERY);
-    //                     resolution_state->set_event(EVENT_LLM, router->get_iface_events_prob(event));
-    //                     resolution_state->set_path_prob(router->get_iface_events_prob(event));
-    //                     resolution_state->set_path_length((*prev_path_state_itr)->get_path_length() + penalty);
-    //                 }
-    //             }
-    //         }
-
-    //     } else {
-
-    //         bool event_added = false;
-
-    //         // if the packet's TTL goes below 0, the path ends here. each  
-    //         // remaining event will be translated into a NLM event.
-    //         if (((*prev_path_state_itr)->get_ttl() - 1) < 0) {
-
-    //             std::cout << "RID_Analytics::run_rec() : [INFO] TTL LIMIT REACHED" << std::endl;
-
-    //             Path_State * path_state = new Path_State(router, this->request_size);
-    //             path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
-
-    //             path_state->set_path_status(OUTCOME_TTL_DROP);
-    //             path_state->set_path_length((*prev_path_state_itr)->get_path_length());
-    //             path_state->set_event(EVENT_TTL, router->get_iface_events_prob(event));
-
-    //             __float080 _prob = router->get_iface_events_prob(event) + fallback_carry_prob;
-    //             if (_prob > 0.0)
-    //                 _prob = 1.0;
-
-    //             path_state->set_path_prob(_prob);
-
-    //             // don't do anything else
-    //             continue;
-    //         }
-
-    //         // if EVENT_SLM, the request paths continue to be 
-    //         // built. therefore, we cycle through all egress interfaces
-    //         for (int iface = IFACE_LOCAL + 1; iface < iface_num; iface++) {
-
-    //             // don't add a state for a blocked iface
-    //             std::set<uint8_t> blocked_ifaces = router->get_blocked_ifaces();
-    //             std::set<uint8_t>::iterator it = blocked_ifaces.find((uint8_t) iface);
-    //             if (it != blocked_ifaces.end())
-    //                 continue;
-
-    //             // create a new PathState object for each egress iface
-    //             Path_State * path_state = new Path_State(router, this->request_size);
-    //             path_state_itr = this->path_state_tree.append_child(prev_path_state_itr, path_state);
-
-    //             // increment the path length by +1 hop
-    //             path_state->set_path_length((*prev_path_state_itr)->get_path_length() + 1);
-
-    //             // now, we deal with probabilities:
-    //             //
-    //             //  -# in_fptree_probs : the prob of having the packet 
-    //             //     bound to a prefix tree of size s (no TP info)
-    //             //
-    //             //  -# ingress_iface_probs : the prob of having a packet 
-    //             //     flow through iface i (takes TPs into account)
-    //             //
-    //             // path_state->set_in_fptree_prob(router->get_egress_iface_probs(iface), this->f_max);
-    //             path_state->set_in_fptree_prob(router->get_egress_ptree_prob(iface), this->f_max);
-
-    //             path_prob = router->get_egress_iface_prob(iface); 
-    //             if (on_path_to_origin(router, ingress_iface, iface) && (this->mm_mode == MMH_FALLBACK)) {
-
-    //                 std::cout << "RID_Analytics::run_rec() : [INFO] router " 
-    //                     << router->get_id() << " is on the path to the origin "
-    //                     << ", adding " << fallback_carry_prob << " to P^E(SLM)[" 
-    //                     << iface << "] = " << path_prob << std::endl;
-
-    //                 path_prob += fallback_carry_prob;
-    //                 if (path_prob > 1.0)
-    //                     path_prob = 1.0;
-    //             }
-
-    //             path_state->set_path_prob(path_prob);
-    //             path_state->set_ingress_iface_prob(path_prob);
-    //             path_state->set_ttl((*prev_path_state_itr)->get_ttl() - 1);
-
-    //             // add a record of an SLM event to the path state and its 
-    //             // probability
-    //             if (!event_added) {
-
-    //                 __float080 _prob = router->get_iface_events_prob(event) + fallback_carry_prob;
-    //                 if (_prob > 1.0)
-    //                     _prob = 1.0;
-
-    //                 path_state->set_event(event, _prob);
-    //                 event_added = true;
-    //             } else {
-    //                 path_state->set_event(event, 0.0);
-    //             }
-
-    //             std::cout << "RID_Analytics::run_rec() : [INFO] ADDED NODE TO PATH STATE TREE: "
-    //                 << "\n\tEVENT : " << event << " EVENT PROB. : " << path_state->get_event_prob()
-    //                 << "\n\tPATH PROB. : " << path_prob
-    //                 << "\n\tPATH LATENCY : " << (*prev_path_state_itr)->get_path_length() + 1
-    //                 << "\n\tTTL : " << (*prev_path_state_itr)->get_ttl() - 1
-    //                 << std::endl;
-
-    //             // determine the correctness of the forwarding decision
-    //             if (this->tp_sizes[router->get_id()][iface] > 0) {
-
-    //                 // if router has a TP on iface, set the even as 
-    //                 // an intermediate TP, i.e. "we're on the right path"
-    //                 path_state->set_path_status(STATUS_TP);
-    //                 // if (!(this->hit))
-    //                 //     path_state->set_ttl((*prev_path_state_itr)->get_ttl());
-
-    //             } else {
-
-    //                 // else, an 'unlucky' FP happened: we're on the wrong path 
-    //                 // now (a FP match occurred, in an iface which does not 
-    //                 // have TP entries)
-    //                 path_state->set_path_status(STATUS_FP);
-    //             }
-
-    //             // finally, we continue with the request path
-    //             // get the next hop router by iface
-    //             next_hop = router->get_next_hop(iface);
-
-    //             // set the path's tree bitmask (by extracting the bitmask from 
-    //             // the router's iface)
-    //             int _tree_bitmask_size = router->get_tree_bitmask_size(iface);
-    //             uint8_t * _tree_bitmask = router->get_tree_bitmask(iface);
-    //             path_state->set_tree_bitmask(_tree_bitmask, _tree_bitmask_size);
-
-    //             // this can still happen (or can it?)
-    //             // FIXME: this subtle condition is the one that actually 
-    //             // terminates the run. 
-    //             // FIXME: this could be the source of trouble.
-    //             if (next_hop.router == router || iface == ingress_iface) {
-
-    //                 std::cout << "RID_Analytics::run_rec() : [INFO] FOUND THE MAGIC STOPPING CONDITION" << std::endl;
-
-    //                 continue;
-    //             }
-
-    //             std::cout << "RID_Analytics::run_rec() : [INFO] saving slm record :"
-    //                 << "\n\ton router[" << router->get_id() << "]"
-    //                 << "\n\tforwarding to router[" << next_hop.router->get_id() << "]"
-    //                 << "\n\tttl = " << (int) path_state->get_ttl() << std::endl;
-
-
-    //             RID_Analytics::run_record slm_record;
-
-    //             slm_record.next_router = next_hop.router;
-    //             slm_record.ingress_iface = next_hop.iface;
-    //             slm_record.prev_path_state_itr = path_state_itr;
-
-    //             single_link_match_states.push_back(slm_record);
-    //             //run_rec(next_hop.router, next_hop.iface, path_state_itr);
-    //         }
-
-    //         std::vector<RID_Analytics::run_record>::iterator itr;
-    //         for (itr = single_link_match_states.begin(); itr != single_link_match_states.end(); itr++) {
-
-    //             std::cout << "RID_Analytics::run_rec() : [INFO] on router[" << router->get_id() 
-    //                 << "], forwarding to router[" << (*itr).next_router->get_id() 
-    //                 << "], ttl = " << (int) (*((*itr).prev_path_state_itr))->get_ttl() << std::endl;
-    //             run_rec((*itr).next_router, (*itr).ingress_iface, (*itr).prev_path_state_itr);
-    //         }
-    //     }
-    // }
+    int outcome, 
+    __float080 prob,
+    __float080 latency) {
+
+    // header : router\ttype\tprob\tlatency\n
+    std::string code = "";
+    switch (outcome) {
+
+        case OUTCOME_CORRECT_DELIVERY:
+            code = "cd";
+            break;
+
+        case OUTCOME_INCORRECT_DELIVERY:
+            code = "id";
+            break;
+
+        case OUTCOME_FALLBACK_DELIVERY:
+            code = "fd";
+            break;
+
+        case OUTCOME_RESOLVED_DELIVERY:
+            code = "rd";
+            break;
+
+        case OUTCOME_PACKET_DROP:
+            code = "dr";
+            break;
+
+        default:
+            code = "uk";
+            break;
+    }
+
+    // add line to outcome file
+    this->output_file[1] << router->get_id() << "\t" 
+        << code << "\t" << prob << "\t" << latency << "\n";
+}
+
+void RID_Analytics::add_events(
+    RID_Router * router,
+    std::vector<__float080> event_probs) {
+
+    // header: router\tnlm\tllm\tmlm\tslm\n
+    output_file[0] << router->get_id();
+    for (int e = 0; e < event_probs.size(); e++)
+        output_file[0] << "\t" << event_probs[e];
+    output_file[0] << "\n";
+}
+
+void RID_Analytics::add_fwd(
+    RID_Router * router,
+    int in_iface,
+    Path_State * state,
+    std::vector<std::vector<__float080> > iface_probs) {
+
+    // forwarding file
+    // forwarding header : 'from\tinprob\tinto\t<router-0>\t<router-1>\t....\t<router-n>\n'
+    output_file[2] << router->get_id() 
+        << "\t" << state->get_in_iface_prob() 
+        << "\t" << router->get_next_hop(in_iface).router->get_id();
+    // ifaces file
+    // ifaces header : 'router\t<iface-0>\t<iface-1>\t....\t<iface-n>\n'
+    output_file[3] << router->get_id();
+
+    // FLOOD or non-FLOOD mode? defines the correct value to extract from 
+    // iface_probs
+    int m = ((this->mode & MMH_FLOOD) ? 1 : 0);
+
+    // add routers attached to ifaces of router
+    std::map<std::string, __float080> neighbor_probs;
+    for (int i = 0; i < iface_probs.size(); i++) {
+        std::string nid = router->get_next_hop(i).router->get_id(); 
+        neighbor_probs[nid] = iface_probs[i][m];
+
+        // build line for ifaces file
+        output_file[3] << "\t" << iface_probs[i][m];
+    }
+    output_file[3] << "\n";
+
+    // add line to forwarding file
+    for (auto const& r : this->routers) {
+        if (neighbor_probs.count(r.second->get_id()) > 0)
+            output_file[2] << "\t" << neighbor_probs[r.second->get_id()];
+        else
+            output_file[2] << "\t" << 0.0;
+    }
+    output_file[2] << "\n";
+}
+
+int RID_Analytics::handle_nlm(
+    RID_Router * router,
+    __float080 event_prob,
+    Path_State * prev_state) {
+
+    // NLM : 'no link matches' at all
+    std::cout << "RID_Analytics::handle_nlm() : analyzing NLM event" << std::endl;
+
+    //  - add outcome and state info
+    // 2 options to resolve the situation:
+    //  - ! RES_FALLBACKS : drop the packet
+    //  - RES_FALLBACKS : 
+    //      - SOFT_FALLBACK : packet is *FORWARDED TOWARDS* origin
+    //      - HARD_FALLBACK : packet is *DELIVERED* to origin server
+    if ((this->mode & RES_FALLBACKS)) {
+
+        add_outcome(
+            router, 
+            OUTCOME_FALLBACK_DELIVERY, 
+            event_prob, 
+            prev_state->get_length() + get_origin_distance(router));
+
+    } else {
+
+        add_outcome(router, OUTCOME_PACKET_DROP, event_prob, prev_state->get_length());
+    }
 
     return 0;
 }
 
-int RID_Analytics::run(
+int RID_Analytics::handle_llm(
+    RID_Router * router,
+    __float080 event_prob,
+    Path_State * prev_state) {
+
+    // LLM : 'local link match' i.e. a delivery to a cache
+    std::cout << "RID_Analytics::handle_llm() : analyzing NLM event" 
+        << std::endl;
+
+    if (this->tp_sizes[router->get_id()][0] > 0) {
+
+        add_outcome(router, OUTCOME_CORRECT_DELIVERY, event_prob, prev_state->get_length());
+
+    } else {
+
+        // add record of incorrect delivery
+        add_outcome(router, OUTCOME_INCORRECT_DELIVERY, event_prob, prev_state->get_length());
+
+        // depending on the resolution strategy, add outcome:
+        //  - fallback
+        //  - resolved delivery : report failure to start router 
+        //    and deliver to origin
+        if ((this->mode & RES_FALLBACKS)) {
+
+            add_outcome(
+                router, 
+                OUTCOME_FALLBACK_DELIVERY, 
+                event_prob, 
+                prev_state->get_length() + get_origin_distance(router)); 
+
+        } else {
+
+            add_outcome(
+                router, 
+                OUTCOME_RESOLVED_DELIVERY,
+                event_prob,
+                prev_state->get_length() + get_origin_distance(this->start_router));
+        }
+    }
+
+    return 0;
+}
+
+int RID_Analytics::handle_mlm(
+    RID_Router * router,
+    __float080 event_prob,
+    Path_State * prev_state) {
+
+    // MLM : 'multiple link match' i.e. a multiple link matches
+    std::cout << "RID_Analytics::handle_mlm() : analyzing MLM event" 
+        << std::endl;
+
+    // depending on the resolution strategy, add outcome:
+    //  - fallback
+    //  - otherwise, the MLM event_prob will be handled when
+    //    analyzing SLM
+    if ((this->mode & MMH_FALLBACK)) {
+
+        add_outcome(
+            router, 
+            OUTCOME_FALLBACK_DELIVERY, 
+            event_prob, 
+            prev_state->get_length() + get_origin_distance(router));
+    }
+
+    return 0;
+}
+
+int RID_Analytics::handle_slm(
+    RID_Router * router,
+    Path_State * prev_state,
+    std::vector<std::vector<__float080> > iface_probs,
+    std::vector<std::vector<__float080> > out_fptree_probs,
+    std::vector<RID_Analytics::run_record> & slm_stack) {
+
+    // SLM : 'single link match' i.e. handle the forwarding 
+    // of packets over each iface 
+    std::cout << "RID_Analytics::handle_slm() : analyzing SLM event" 
+        << std::endl;
+
+    for (int i = 1; i < router->get_iface_num(); i++) {
+
+        // if prob of following iface i is 0.0, skip it
+        if (iface_probs[i][1] == 0.0) continue;
+
+        // create a new path state
+        Path_State * next_state = new Path_State(router, this->request_size);
+        next_state->set_length(prev_state->get_length() + 1);
+
+        // now, we deal with probabilities:
+        //
+        //  -# in_fptree_probs : the prob of having the packet 
+        //     bound to a prefix tree of size s (no TP info)
+        //
+        //  -# in_iface_probs : the prob of having a packet 
+        //     flow through iface i (takes TPs into account)
+        //
+        next_state->set_in_fptree_prob(&out_fptree_probs[i], this->request_size);
+
+        __float080 path_prob = 0.0;
+        // if 'flood' mode is active, consider the '==' part of the iface probs
+        if ((this->mode & MMH_FLOOD)) path_prob = iface_probs[i][1];
+        else path_prob = iface_probs[i][0];
+
+        next_state->set_path_prob(path_prob);
+        next_state->set_in_iface_prob(path_prob);
+        next_state->set_ttl(prev_state->get_ttl() - 1);
+
+        // determine the correctness of the forwarding decision
+        if (this->tp_sizes[router->get_id()][i] > 0) {
+
+            // if router has a TP on iface, set the even as 
+            // an intermediate TP, i.e. "we're on the right path"
+            next_state->set_path_status(STATUS_TP);
+
+        } else {
+
+            // else, an 'unlucky' FP happened: we're on the wrong path 
+            // now (a FP match occurred, in an iface which does not 
+            // have TP entries)
+            next_state->set_path_status(STATUS_FP);
+        }
+
+        // finally, we continue with the request path get the next hop router by iface
+        RID_Router::nw_address next_hop = router->get_next_hop(i);
+        // set the path's tree bitmask (by extracting the bitmask from the router's iface)
+        next_state->set_tree_bitmask(
+            router->get_tree_bitmask(i), 
+            router->get_tree_bitmask_size(i));
+
+        // this can still happen (or can it?)
+        // FIXME: this subtle condition is the one that actually terminates the run. 
+        // FIXME: this could be the source of trouble.
+        if (next_hop.router == router || i == prev_state->get_in_iface_prob()) {
+            std::cout << "RID_Analytics::handle_slm() : [INFO] "
+                << "found magic stopping condition" << std::endl;
+            continue;
+        }
+
+        // add SLM record to slm stack
+        std::cout << "RID_Analytics::handle_slm() : [INFO] saving slm record :"
+            << "\n\ton router[" << router->get_id() << "]"
+            << "\n\tforwarding to router[" << next_hop.router->get_id() << "]"
+            << "\n\tttl = " << (int) next_state->get_ttl() << std::endl;
+
+        RID_Analytics::run_record slm_record = {next_hop.router, next_hop.iface, next_state};
+        slm_stack.push_back(slm_record);
+    }
+
+    return 0;
+}
+
+int RID_Analytics::run_rec(
+    RID_Router * router,
+    uint8_t in_iface,
+    Path_State * prev_state) {
+
+    std::cout << "\nRID_Analytics::run_rec() : forward operation by router : " 
+        << router->get_id() << std::endl;
+
+    uint8_t iface_num = router->get_iface_num();
+    __float080 in_prob = prev_state->get_in_iface_prob();
+    std::vector<__float080> * in_fptree_prob = prev_state->get_in_fptree_prob();
+    // tree bitmask of the path tells us which sources are accessible over 
+    // the followed path.
+    std::vector<uint8_t> * tree_bitmask = prev_state->get_tree_bitmask();
+
+    // run the forward() operation on this router & collect: 
+    //  - iface probs
+    //  - event probs
+    //  - out fp tree probs 
+    std::vector<std::vector<__float080> > iface_probs(iface_num, std::vector<__float080> (2, 0.0));
+    std::vector<__float080> event_probs(EVENT_NUM, 0.0);
+    std::vector<std::vector<__float080> > out_fptree_probs(iface_num, std::vector<__float080> (this->request_size + 1, 0.0));
+    router->forward(
+        in_iface,           // INPUTS
+        tree_bitmask,
+        in_prob,
+        in_fptree_prob,
+        iface_probs,        // OUTPUTS
+        event_probs,
+        out_fptree_probs);
+
+    // add fwd record to results
+    add_fwd(router, in_iface, prev_state, iface_probs);
+    //  - add events probs to results
+    add_events(router, event_probs);
+
+    // run state machine
+    for (int event = EVENT_NLM; event < EVENT_NUM; event++) {
+
+        __float080 event_prob = event_probs[event];
+        if (event_prob == 0.0) continue;
+
+        switch (event) {
+
+            case EVENT_NLM:
+                handle_nlm(router, event_prob, prev_state);
+                break;
+
+            case EVENT_LLM:
+                handle_llm(router, event_prob, prev_state);
+                break;
+
+            case EVENT_MLM:
+                handle_mlm(router, event_prob, prev_state);
+                break;
+
+            case EVENT_SLM:
+
+                // use handle_slm() to collect slm events
+                std::vector<RID_Analytics::run_record> slm_stack;
+                handle_slm(router, prev_state, iface_probs, out_fptree_probs, slm_stack);
+
+                // recursively call run_rec() to continue the analysis
+                for (int k = 0; k < slm_stack.size(); k++) {
+
+                    std::cout << "RID_Analytics::handle_slm() : [INFO] on router[" << router->get_id() 
+                        << "], forwarding to router[" << slm_stack[k].next_router->get_id() 
+                        << "], ttl = " << (int) slm_stack[k].state->get_ttl() << std::endl;
+
+                    run_rec(slm_stack[k].next_router, slm_stack[k].in_iface, slm_stack[k].state);
+                }
+
+                break;
+        }
+    }
+
+    delete prev_state;
+
+    return 0;
+}
+
+void RID_Analytics::run(
     std::string nw_filename,
     std::string start_router_id) {
 
@@ -842,118 +746,30 @@ int RID_Analytics::run(
 
     this->start_router = this->routers[start_router_id];
 
-    tree<Path_State *>::iterator path_state_tree_itr;
-    path_state_tree_itr = this->path_state_tree.begin();
-
-    // FIXME: not sure if it is ok to set the rid_router arg on Path_State() 
-    // as NULL
-    Path_State * initial_state = new Path_State(NULL, request_size);
-    initial_state->set_path_length(0);
-
-    path_state_tree_itr = this->path_state_tree.insert(
-                                                    path_state_tree_itr, 
-                                                    initial_state);
+    // FIXME: not sure if it is ok to set the rid_router arg on Path_State() as NULL
+    Path_State * init_state = new Path_State(NULL, request_size);
+    init_state->set_length(0);
 
     // set the initial ingress probabilities: ptree_size = 0 gets 1.0 
     // probability, i.e. initially the request isn't bound to any prefix tree
-    initial_state->set_in_fptree_prob(0, 1.0);
-    initial_state->set_ingress_iface_prob(1.0);
+    init_state->set_in_fptree_prob(0, 1.0);
+    init_state->set_in_iface_prob(1.0);
 
     // all other prefix tree sizes get 0.0 probability
-    for (uint8_t ptree_size = 1; ptree_size <= this->request_size; ptree_size++)
-        initial_state->set_in_fptree_prob(ptree_size, 0.0);
+    for (uint8_t p = 1; p <= this->request_size; p++)
+        init_state->set_in_fptree_prob(p, 0.0);
 
     // we first supply an empty tree bitmask (the size must be extracted from 
     // the first router)
     int tree_bitmask_size = this->start_router->get_tree_bitmask_size(0);
     std::vector<uint8_t> tree_bitmask(tree_bitmask_size, 0);
-    initial_state->set_tree_bitmask(&tree_bitmask, tree_bitmask_size);
+    init_state->set_tree_bitmask(&tree_bitmask, tree_bitmask_size);
     // the initial ttl is set to the distance from starting router to the 
     // origin server
-    initial_state->set_ttl(4);
+    init_state->set_ttl(4);
 
     // we always start at the ingress iface, so that we don't have a local 
-    // match at the initial router (not sure if this can work directly like 
-    // this)
-    run_rec(this->start_router, 0, path_state_tree_itr);
-
-    return 0;
-}
-
-std::string get_unix_timestamp() {
-
-    std::stringstream strm;
-    strm << time(NULL);
-
-    return strm.str();
-}
-
-int RID_Analytics::view_results(
-    uint8_t modes,
-    std::string output_dir,
-    std::string output_label) {
-
-    __float080 checksum = 0.0;
-    char * path_state_str = NULL;
-
-    // if verbose mode is on, print results in stdout
-    if ((modes & MODE_VERBOSE))
-        std::cout << "\n*** RESULTS ***\n" << std::endl;
-
-    // we create x .tsv files, each for different
-    //  -# events.tsv       : probabilities of events (LLM, SLM, NLM, MLM) per router
-    //  -# outcomes.tsv     : outcomes (correct/incorrect delivery, etc.) per router
-    //  -# latencies.tsv    : final path latencies (nr. of hops)
-    ofstream output_file[2];  
-    // file names follow the convention <type>.<label>.<unix-timestamp>.tsv
-    std::string output_filename[2] = {"events", "path"};
-    for (int i = 0; i < 2; i++) {
-        output_filename[i] += std::string(".") + output_label + std::string(".") + get_unix_timestamp() + std::string(".tsv");
-        output_file[i].open(output_dir + std::string("/") + output_filename[i]);
-    }
-
-    // add column lines to .tsv files
-    output_file[FILE_EVENTS] << "AS\tEVENT\tPROB\n";
-    output_file[FILE_PATHS] << "AS\tSTATUS\tLATENCY\tPROB\n";
-
-    // gather event stats (DFS iterator traverses the whole path state tree)
-    tree<Path_State *>::iterator dfs_itr = this->path_state_tree.begin();
-    while(dfs_itr != this->path_state_tree.end()) {
-
-        if ((*dfs_itr)->get_router())
-            output_file[FILE_EVENTS] << (*dfs_itr)->get_router()->get_id() << "\t"
-                << (int) (*dfs_itr)->get_event() << "\t"
-                << (*dfs_itr)->get_event_prob() << "\n";
-
-        ++dfs_itr;
-    }
-
-    // gather outcome and latency stats (by only looking at leafs of path state tree)
-    tree<Path_State *>::leaf_iterator leaf_itr      = this->path_state_tree.begin_leaf();
-    tree<Path_State *>::leaf_iterator end_leaf_itr  = this->path_state_tree.end_leaf();
-    while (leaf_itr != end_leaf_itr) {
-
-        if ((modes & MODE_VERBOSE)) {
-
-            path_state_str = (*leaf_itr)->to_string();
-            std::cout << "[PATH_TREE DEPTH " 
-                << (int) this->path_state_tree.depth(leaf_itr)
-                << " : " << path_state_str << std::endl;
-
-            free(path_state_str);
-        }
-
-        output_file[FILE_PATHS] << (*leaf_itr)->get_router()->get_id() << "\t"
-            << (int) (*leaf_itr)->get_path_status() << "\t"
-            << (int) (*leaf_itr)->get_path_length() << "\t"
-            << (*leaf_itr)->get_path_prob() << "\n";
-
-        checksum += (*leaf_itr)->get_path_prob();
-        ++leaf_itr;
-    }
-
-    if ((modes & MODE_VERBOSE)) 
-        std::cout << "\n[CHECKSUM : " << checksum << std::endl;
-
-    return 0;
+    // match at the initial router (not sure if this can work directly like this)
+    run_rec(this->start_router, 0, init_state);
+    delete init_state;
 }

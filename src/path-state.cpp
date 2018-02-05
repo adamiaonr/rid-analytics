@@ -16,11 +16,11 @@ Path_State::Path_State(RID_Router * router, int req_size) {
     this->eop = false;
 }
 
-void Path_State::set_path_length(int length) {
+void Path_State::set_length(int length) {
     this->path_length = length;
 }
 
-int Path_State::get_path_length() {
+int Path_State::get_length() {
     return this->path_length;
 }
 
@@ -40,20 +40,17 @@ __float080 Path_State::get_path_prob() {
     return this->path_prob;
 }
 
-void Path_State::set_in_fptree_prob(std::vector<__float080> * prob, int prob_size) {
-
-    for (int f = 0; f < prob_size + 1; f++)
+void Path_State::set_in_fptree_prob(std::vector<__float080> * prob, uint8_t prob_size) {
+    for (int f = 0; f < (*prob).size(); f++)
         this->in_fptree_prob[f] = (*prob)[f];
 }
 
 void Path_State::set_in_fptree_prob(int f, __float080 prob) {
-
     this->in_fptree_prob[f] = prob;
 }
 
-void Path_State::set_ingress_iface_prob(__float080 prob) {
-
-    this->ingress_iface_prob = prob;
+void Path_State::set_in_iface_prob(__float080 prob) {
+    this->in_iface_prob = prob;
 }
 
 std::vector<__float080> * Path_State::get_in_fptree_prob() {
@@ -64,9 +61,9 @@ __float080 Path_State::get_in_fptree_prob(uint8_t f) {
     return this->in_fptree_prob[f];
 }
 
-__float080 Path_State::get_ingress_iface_prob() {
+__float080 Path_State::get_in_iface_prob() {
 
-    return this->ingress_iface_prob;
+    return this->in_iface_prob;
 }
 
 void Path_State::set_eop() { 
@@ -132,9 +129,12 @@ char * Path_State::to_string() {
         case OUTCOME_FALLBACK_DELIVERY:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "FALLBACK_DELIVERY");
             break;
-        case OUTCOME_FALLBACK_RELAY:
-            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "FALLBACK_RELAY");
+        case OUTCOME_RESOLVED_DELIVERY:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "RESOLVED_DELIVERY");
             break;
+        // case OUTCOME_FALLBACK_RELAY:
+        //     snprintf(status, MAX_PATH_STATE_STRING_SIZE, "FALLBACK_RELAY");
+        //     break;
         case OUTCOME_PACKET_DROP:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "PACKET_DROP");
             break;

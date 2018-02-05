@@ -10,21 +10,6 @@
 #define MAX_RID_ROUTER_IFACE_NUM    10
 #define MAX_RID_ROUTER_ENTRY_SIZE   30
 
-// special iface indexes
-#define IFACE_LOCAL     0x00
-
-// interface events
-#define EVENT_NUM       0x04 // hack : we don't count w/ EVENT_TTL
-#define EVENT_NLM       0x00 // no link matches
-#define EVENT_MLM       0x01 // multiple link matches
-#define EVENT_LLM       0x02 // local link match
-#define EVENT_SLM       0x03 // single link match (other than local)
-#define EVENT_TTL       0x04 // drop due to rtt expiration
-#define EVENT_UNKNOWN   0x05    
-
-// modes for calc_marginal_prob()
-#define MODE_STRICT         0x00
-
 // modes for handling multiple matches in routers. this 
 // influences efficiency. there are 3 diff. modes:
 //  -# MMH_FLOOD    : forward over all matching ifaces
@@ -99,7 +84,7 @@ class RID_Router {
             uint8_t iface_num,
             uint8_t req_size,
             uint16_t bf_size,
-            int mm_mode);
+            int mode);
 
         ~RID_Router();
 
@@ -109,7 +94,7 @@ class RID_Router {
             uint8_t iface_num,
             uint8_t req_size,
             uint16_t bf_size,
-            int mm_mode);
+            int mode);
 
         std::string get_id() { return this->id; }
 
@@ -145,7 +130,10 @@ class RID_Router {
             uint8_t ingress_iface,
             std::vector<uint8_t> * tree_bitmask,
             __float080 ingress_prob,
-            std::vector<__float080> * in_fptree_prob);
+            std::vector<__float080> * in_fptree_prob,
+            std::vector<std::vector<__float080> > & iface_probs,
+            std::vector<__float080> & event_probs,
+            std::vector<std::vector<__float080> > & out_fptree_probs);
 
     private:
 
@@ -167,8 +155,6 @@ class RID_Router {
         std::vector<RID_Router::fwd_table_row> fwd_table;
         // tp sizes for this router
         std::vector<uint8_t> tp_sizes;
-        // if strict mode is true, we calculate P(L_i > L~i), else P(L_i >= L~i)
-        bool strict;
         // keep track of interfaces over which a router CAN'T forward packets
         std::vector<bool> blocked_ifaces;
         // is iface i a continuation of a prefix tree?

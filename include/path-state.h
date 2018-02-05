@@ -7,7 +7,8 @@
 #define OUTCOME_CORRECT_DELIVERY    (int) 0x00
 #define OUTCOME_INCORRECT_DELIVERY  (int) 0x01
 #define OUTCOME_FALLBACK_DELIVERY   (int) 0x02
-#define OUTCOME_FALLBACK_RELAY      (int) 0x03
+#define OUTCOME_RESOLVED_DELIVERY   (int) 0x03
+// #define OUTCOME_FALLBACK_RELAY      (int) 0x03
 #define OUTCOME_PACKET_DROP         (int) 0x04
 #define OUTCOME_TTL_DROP            (int) 0x05
 #define OUTCOME_UNDEF               (int) 0x06
@@ -34,21 +35,21 @@ class Path_State {
         Path_State(RID_Router * router, int request_size);
         ~Path_State() {}
 
-        void set_in_fptree_prob(std::vector<__float080> * prob, int prob_size);
+        void set_in_fptree_prob(std::vector<__float080> * prob, uint8_t prob_size);
         void set_in_fptree_prob(int f, __float080 prob);
-        void set_ingress_iface_prob(__float080 prob);
+        void set_in_iface_prob(__float080 prob);
 
         std::vector<__float080> * get_in_fptree_prob();
         __float080 get_in_fptree_prob(uint8_t f);
-        __float080 get_ingress_iface_prob();
+        __float080 get_in_iface_prob();
 
         void set_eop();
         bool is_eop();
 
-        void set_path_length(int length);
+        void set_length(int length);
         void set_path_status(int status);
         void set_path_prob(__float080 prob);
-        int get_path_length();
+        int get_length();
         int get_path_status();
         __float080 get_path_prob();
 
@@ -82,7 +83,7 @@ class Path_State {
         // ingress probabilities : prob of a router receiving a request 
         // over a 'prefix tree' of size p
         std::vector<__float080> in_fptree_prob;
-        __float080 ingress_iface_prob;
+        __float080 in_iface_prob;
         // tree bitmask of the path
         std::vector<uint8_t> * tree_bitmask;
         int tree_bitmask_size;
