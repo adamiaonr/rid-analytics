@@ -51,39 +51,52 @@ class Prob {
         this->k = (log(2) * ((__float080) this->m)) / ((__float080) this->n);
 
         this->iface_num = iface_num;
-        // for (uint8_t f = 0; f < this->n; f++)
-        //     this->iface_on_fptree_prob.push_back(0.0);
 
-        // initialize largest match prob matrix
+        // initialize prob arrays:
+        //  - P(L_i = l | P_i = p)
+        //  - P(L_(~i) = l | P_(~i) = p)
         for (unsigned i = 0; i < this->iface_num; i++) {
-            this->lm_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
-            this->anti_lm_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
+            this->lm_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
+            this->lm_complement_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
         }
+        //  - P(L_i = l)
+        lm_marg_prob = std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080>((this->n + 1), 0.0));
+        //  - P(L_{~i} = l)
+        lm_complement_marg_prob = std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080>((this->n + 1), 0.0));
+        //  - P(P_i = p) and P(P_(~i) = p)
+        this->fptree_prob.push_back(std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080> ((n + 1), 0.0)));
+        this->fptree_prob.push_back(std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080> ((n + 1), 0.0)));
+
         // mark largest match probs as 'not calc'ed'
         this->has_lm_prob = false;
-
-        // initialize P('iface i on fp tree of size p') matrix
-        this->iface_on_fptree_prob = std::vector<std::vector<__float080> >((iface_num), std::vector<__float080> ((n + 1), 0.0));
     }
 
     ~Prob() {}
 
     int calc_probs(
         std::vector<std::vector<fp_data> > * iface_fp_data,
+        __float080 in_prob,
         std::vector<__float080> * in_fptree_prob,
         std::vector<std::vector<__float080> > & iface_probs,
-        std::vector<__float080> & event_probs,
+        std::vector<__float080> & event_num,
         std::vector<std::vector<__float080> > & out_fptree_probs);
 
     private:
 
     int calc_lm_probs(std::vector<std::vector<fp_data> > * iface_fp_data, std::vector<std::vector<__float080> > & out_fptree_probs);
-    int calc_lm_prob(uint8_t i, fp_data iface_fp_data, std::vector<std::vector<__float080> > & out_fptree_probs, bool anti = false);
+    int calc_lm_prob(uint8_t i, fp_data iface_fp_data, std::vector<std::vector<__float080> > & out_fptree_probs, bool iface_complement = false);
     int calc_iface_prob(uint8_t i, std::vector<__float080> & iface_prob);
 
-    int calc_event_probs(
+    int calc_event_num(
+        std::vector<std::vector<fp_data> > * iface_fp_data,
         std::vector<std::vector<__float080> > iface_probs,
-        std::vector<__float080> & event_probs);
+        std::vector<__float080> & event_num);
+
+    int calc_fptree_probs(
+        std::vector<std::vector<fp_data> > * iface_fp_data,
+        __float080 in_prob,
+        std::vector<__float080> * in_fptree_prob,
+        bool iface_complement = false);
 
     int calc_out_fptree_prob(
         uint8_t i,
@@ -91,30 +104,32 @@ class Prob {
         std::vector<__float080> log_prob_fp_neq,
         std::vector<__float080> log_prob_fp_smeq,
         std::vector<std::vector<__float080> > & out_fptree_probs);
-    int calc_iface_on_fptree_probs(
-        std::vector<std::vector<fp_data> > * iface_fp_data,
-        std::vector<__float080> * in_fptree_prob);
-
-    __float080 calc_no_match_prob();
 
     void calc_log_prob_fp_neq(Prob::fp_data iface_fp_data, std::vector<__float080> & log_prob_fp_neq);
-    void print_lm_prob(uint8_t i, bool anti = false);
+    void print_lm_prob(uint8_t i, bool iface_complement = false);
 
-    // largest match probabilities
-    std::vector<std::vector<std::vector<__float080> > > lm_prob;
-    std::vector<std::vector<std::vector<__float080> > > anti_lm_prob;
-    // P('iface i on fp tree of size p') matrix
-    std::vector<std::vector<__float080> > iface_on_fptree_prob;
+    // basic units of prob calculation:
+    //  - P(L_i = l | P_i = p)
+    std::vector<std::vector<std::vector<__float080> > > lm_cond_prob;
+    //  - P(L_(~i) = l | P_(~i) = p)
+    std::vector<std::vector<std::vector<__float080> > > lm_complement_cond_prob;
+    //  - P(L_i = l)
+    std::vector<std::vector<__float080> > lm_marg_prob;
+    //  - P(L_{~i} = l)
+    std::vector<std::vector<__float080> > lm_complement_marg_prob;
+    //  - P(P_i = p) and P(P_(~i) = p)
+    std::vector<std::vector<std::vector<__float080> > > fptree_prob;
 
     // fp rate parameters
     __float080 m;   // fp rate m : nr. of bits in bf
     __float080 n;   // fp rate n : nr. of elements encoded in bf (same as req size)
     __float080 k;   // fp rate k : nr. of hashes in bf
+
     // num of ifaces in respective router
     // FIXME: why do we need this?
     uint8_t iface_num;
-
     // flag to mark if lm probs are cached or not
+    // FIXME: why do we need this?
     bool has_lm_prob;
 };
 

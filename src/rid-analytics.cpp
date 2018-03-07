@@ -418,12 +418,12 @@ void RID_Analytics::add_outcome(
 
 void RID_Analytics::add_events(
     RID_Router * router,
-    std::vector<__float080> event_probs) {
+    std::vector<__float080> event_nums) {
 
     // header: router\tnlm\tllm\tmlm\tslm\n
     output_file[0] << router->get_id();
-    for (int e = 0; e < event_probs.size(); e++)
-        output_file[0] << "\t" << event_probs[e];
+    for (int e = 0; e < event_nums.size(); e++)
+        output_file[0] << "\t" << event_nums[e];
     output_file[0] << "\n";
 }
 
@@ -469,7 +469,7 @@ void RID_Analytics::add_fwd(
 
 int RID_Analytics::handle_nlm(
     RID_Router * router,
-    __float080 event_prob,
+    __float080 event_num,
     Path_State * prev_state) {
 
     // NLM : 'no link matches' at all
@@ -486,12 +486,12 @@ int RID_Analytics::handle_nlm(
         add_outcome(
             router, 
             OUTCOME_FALLBACK_DELIVERY, 
-            event_prob, 
+            event_num, 
             prev_state->get_length() + get_origin_distance(router));
 
     } else {
 
-        add_outcome(router, OUTCOME_PACKET_DROP, event_prob, prev_state->get_length());
+        add_outcome(router, OUTCOME_PACKET_DROP, event_num, prev_state->get_length());
     }
 
     return 0;
@@ -499,7 +499,7 @@ int RID_Analytics::handle_nlm(
 
 int RID_Analytics::handle_llm(
     RID_Router * router,
-    __float080 event_prob,
+    __float080 event_num,
     Path_State * prev_state) {
 
     // LLM : 'local link match' i.e. a delivery to a cache
@@ -508,12 +508,12 @@ int RID_Analytics::handle_llm(
 
     if (this->tp_sizes[router->get_id()][0] > 0) {
 
-        add_outcome(router, OUTCOME_CORRECT_DELIVERY, event_prob, prev_state->get_length());
+        add_outcome(router, OUTCOME_CORRECT_DELIVERY, event_num, prev_state->get_length());
 
     } else {
 
         // add record of incorrect delivery
-        add_outcome(router, OUTCOME_INCORRECT_DELIVERY, event_prob, prev_state->get_length());
+        add_outcome(router, OUTCOME_INCORRECT_DELIVERY, event_num, prev_state->get_length());
 
         // depending on the resolution strategy, add outcome:
         //  - fallback
@@ -524,7 +524,7 @@ int RID_Analytics::handle_llm(
             add_outcome(
                 router, 
                 OUTCOME_FALLBACK_DELIVERY, 
-                event_prob, 
+                event_num, 
                 prev_state->get_length() + get_origin_distance(router)); 
 
         } else {
@@ -532,7 +532,7 @@ int RID_Analytics::handle_llm(
             add_outcome(
                 router, 
                 OUTCOME_RESOLVED_DELIVERY,
-                event_prob,
+                event_num,
                 prev_state->get_length() + get_origin_distance(this->start_router));
         }
     }
@@ -542,7 +542,7 @@ int RID_Analytics::handle_llm(
 
 int RID_Analytics::handle_mlm(
     RID_Router * router,
-    __float080 event_prob,
+    __float080 event_num,
     Path_State * prev_state) {
 
     // MLM : 'multiple link match' i.e. a multiple link matches
@@ -551,14 +551,14 @@ int RID_Analytics::handle_mlm(
 
     // depending on the resolution strategy, add outcome:
     //  - fallback
-    //  - otherwise, the MLM event_prob will be handled when
+    //  - otherwise, the MLM event_num will be handled when
     //    analyzing SLM
     if ((this->mode & MMH_FALLBACK)) {
 
         add_outcome(
             router, 
             OUTCOME_FALLBACK_DELIVERY, 
-            event_prob, 
+            event_num, 
             prev_state->get_length() + get_origin_distance(router));
     }
 
@@ -669,7 +669,7 @@ int RID_Analytics::run_rec(
     //  - event probs
     //  - out fp tree probs 
     std::vector<std::vector<__float080> > iface_probs(iface_num, std::vector<__float080> (2, 0.0));
-    std::vector<__float080> event_probs(EVENT_NUM, 0.0);
+    std::vector<__float080> event_nums(EVENT_NUM, 0.0);
     std::vector<std::vector<__float080> > out_fptree_probs(iface_num, std::vector<__float080> (this->request_size + 1, 0.0));
     router->forward(
         in_iface,           // INPUTS
@@ -677,32 +677,32 @@ int RID_Analytics::run_rec(
         in_prob,
         in_fptree_prob,
         iface_probs,        // OUTPUTS
-        event_probs,
+        event_nums,
         out_fptree_probs);
 
     // add fwd record to results
     add_fwd(router, in_iface, prev_state, iface_probs);
     //  - add events probs to results
-    add_events(router, event_probs);
+    add_events(router, event_nums);
 
     // run state machine
     for (int event = EVENT_NLM; event < EVENT_NUM; event++) {
 
-        __float080 event_prob = event_probs[event];
-        if (event_prob == 0.0) continue;
+        __float080 event_num = event_nums[event];
+        if (event_num == 0.0) continue;
 
         switch (event) {
 
             case EVENT_NLM:
-                handle_nlm(router, event_prob, prev_state);
+                handle_nlm(router, event_num, prev_state);
                 break;
 
             case EVENT_LLM:
-                handle_llm(router, event_prob, prev_state);
+                handle_llm(router, event_num, prev_state);
                 break;
 
             case EVENT_MLM:
-                handle_mlm(router, event_prob, prev_state);
+                handle_mlm(router, event_num, prev_state);
                 break;
 
             case EVENT_SLM:

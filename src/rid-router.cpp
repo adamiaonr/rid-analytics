@@ -178,7 +178,7 @@ int RID_Router::forward(
     __float080 in_prob,
     std::vector<__float080> * in_fptree_prob,
     std::vector<std::vector<__float080> > & iface_probs,
-    std::vector<__float080> & event_probs,
+    std::vector<__float080> & event_num,
     std::vector<std::vector<__float080> > & out_fptree_probs) {
 
     std::cout << "RID_Router::forward() : [INFO] forwarding " << 
@@ -235,9 +235,10 @@ int RID_Router::forward(
 
     if (this->prob_mod->calc_probs(
         &(iface_fp_data),
+        in_prob,
         in_fptree_prob, 
         iface_probs, 
-        event_probs,
+        event_num,
         out_fptree_probs) < 0) return -1;
 
     std::cout << "RID_Router::forward() : [INFO] iface probs :" << std::endl;
@@ -248,11 +249,13 @@ int RID_Router::forward(
 }
 
 // objective: find if iface i is part of a fp tree which started at a 
-//            previous router, encoded in tree_bitmask.
+//            previous router.
 //
-// how do we encode the fp trees? basically, using a bitmask. the k-th bit 
-// in the bitmask tells if the node w/ id equal to k can be reached by the 
-// current router or iface. e.g. if the bitmask is '10001000', then only the 
+// how do we encode the fp trees? 
+// basically, using a bitmask. 
+// the k-th bit in the bitmask tells if the node w/ id equal to k can be 
+// reached by the current router or iface. 
+// e.g. if the bitmask is '10001000', then only the 
 // nodes w/ ids 3 and 7 can be reached from the current router.
 //
 // there are 2 bitmasks in this context:
