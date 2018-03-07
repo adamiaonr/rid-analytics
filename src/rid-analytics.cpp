@@ -422,7 +422,7 @@ void RID_Analytics::add_events(
 
     // header: router\tnlm\tllm\tmlm\tslm\n
     output_file[0] << router->get_id();
-    for (int e = 0; e < event_nums.size(); e++)
+    for (unsigned int e = 0; e < event_nums.size(); e++)
         output_file[0] << "\t" << event_nums[e];
     output_file[0] << "\n";
 }
@@ -448,7 +448,7 @@ void RID_Analytics::add_fwd(
 
     // add routers attached to ifaces of router
     std::map<std::string, __float080> neighbor_probs;
-    for (int i = 0; i < iface_probs.size(); i++) {
+    for (unsigned int i = 0; i < iface_probs.size(); i++) {
         std::string nid = router->get_next_hop(i).router->get_id(); 
         neighbor_probs[nid] = iface_probs[i][m];
 
@@ -712,7 +712,7 @@ int RID_Analytics::run_rec(
                 handle_slm(router, prev_state, iface_probs, out_fptree_probs, slm_stack);
 
                 // recursively call run_rec() to continue the analysis
-                for (int k = 0; k < slm_stack.size(); k++) {
+                for (unsigned int k = 0; k < slm_stack.size(); k++) {
 
                     std::cout << "RID_Analytics::handle_slm() : [INFO] on router[" << router->get_id() 
                         << "], forwarding to router[" << slm_stack[k].next_router->get_id() 

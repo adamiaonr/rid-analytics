@@ -41,7 +41,7 @@ __float080 Path_State::get_path_prob() {
 }
 
 void Path_State::set_in_fptree_prob(std::vector<__float080> * prob, uint8_t prob_size) {
-    for (int f = 0; f < (*prob).size(); f++)
+    for (unsigned int f = 0; f < (*prob).size(); f++)
         this->in_fptree_prob[f] = (*prob)[f];
 }
 

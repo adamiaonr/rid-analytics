@@ -361,7 +361,7 @@ int Prob::calc_event_num(
     //          these are independent events, i.e. P(L_i > L_{~i}) AND P(L_j > L_{~j}) = 0 (for i != j)
     //          P(L_i > L_{~i}) is given by iface_probs[i][0]
     int blocked_ifaces_num = 0;
-    for (int i = 0; i < iface_probs.size(); i++) {
+    for (unsigned int i = 0; i < iface_probs.size(); i++) {
         // count the nr. of block ifaces
         if ((*iface_fp_data)[0][i].is_blocked) { blocked_ifaces_num++; continue; }
 
