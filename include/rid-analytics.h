@@ -75,9 +75,14 @@ class RID_Analytics {
         int handle_slm(
             RID_Router * router,
             Path_State * prev_state,
+            uint8_t in_iface,
             std::vector<std::vector<__float080> > iface_probs,
             std::vector<std::vector<__float080> > out_fptree_probs,
             std::vector<RID_Analytics::run_record> & slm_stack);
+        int handle_ttl_drop(
+            RID_Router * router,
+            __float080 event_num,
+            Path_State * prev_state);
 
         void init_output(std::string label, std::string output_dir);
         void add_outcome(RID_Router * router, int outcome, __float080 prob, __float080 latency);
@@ -101,7 +106,7 @@ class RID_Analytics {
         int ttl;
 
         // array of output files (w/ results)
-        std::ofstream output_file[2];
+        std::vector<std::ofstream> output_file;
 };
 
 #endif

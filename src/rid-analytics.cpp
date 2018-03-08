@@ -69,21 +69,22 @@ void RID_Analytics::init_output(
     //  -# ifaces.tsv       : description of fwding events, including iface probs per router
 
     // file names follow the convention <type>.<label>.<unix-timestamp>.tsv
+    this->output_file = std::vector<std::ofstream> (4);
     std::string filename[4] = {"events", "outcomes", "forwarding", "ifaces"};
     for (int i = 0; i < 3; i++) {
         filename[i] += std::string(".") + label + std::string(".") + get_unix_timestamp() + std::string(".tsv");
-        output_file[i].open(output_dir + std::string("/") + filename[i]);
+        this->output_file[i].open(output_dir + std::string("/") + filename[i]);
     }
 
     // events header
-    output_file[0] << "router\tnlm\tllm\tmlm\tslm\n";
+    this->output_file[0] << "router\tnlm\tllm\tmlm\tslm\n";
     // outcome header
-    output_file[1] << "router\ttype\tprob\tlatency\n";
+    this->output_file[1] << "router\ttype\tprob\tlatency\n";
     // forwarding header
-    output_file[2] << "from\tinprob\tinto";
+    this->output_file[2] << "from\tinprob\tinto";
     for (auto const& r : this->routers)
-        output_file[2] << "\t" << r.second->get_id();
-    output_file[2] << "\n";
+        this->output_file[2] << "\t" << r.second->get_id();
+    this->output_file[2] << "\n";
     
     // ifaces header
     // determine router w/ largest iface_num
@@ -92,9 +93,9 @@ void RID_Analytics::init_output(
         iface_num = std::max(iface_num, r.second->get_iface_num());
     }
         
-    output_file[3] << "router";
-    for (int i = 0; i < iface_num; i++) output_file[3] << "\t" << i;
-    output_file[3] << "\n";
+    this->output_file[3] << "router";
+    for (int i = 0; i < iface_num; i++) this->output_file[3] << "\t" << i;
+    this->output_file[3] << "\n";
 }
 
 int RID_Analytics::get_origin_distance(RID_Router * from_router) {
@@ -421,10 +422,10 @@ void RID_Analytics::add_events(
     std::vector<__float080> event_nums) {
 
     // header: router\tnlm\tllm\tmlm\tslm\n
-    output_file[0] << router->get_id();
+    this->output_file[0] << router->get_id();
     for (unsigned int e = 0; e < event_nums.size(); e++)
-        output_file[0] << "\t" << event_nums[e];
-    output_file[0] << "\n";
+        this->output_file[0] << "\t" << event_nums[e];
+    this->output_file[0] << "\n";
 }
 
 void RID_Analytics::add_fwd(
@@ -435,12 +436,12 @@ void RID_Analytics::add_fwd(
 
     // forwarding file
     // forwarding header : 'from\tinprob\tinto\t<router-0>\t<router-1>\t....\t<router-n>\n'
-    output_file[2] << router->get_id() 
+    this->output_file[2] << router->get_id() 
         << "\t" << state->get_in_iface_prob() 
         << "\t" << router->get_next_hop(in_iface).router->get_id();
     // ifaces file
     // ifaces header : 'router\t<iface-0>\t<iface-1>\t....\t<iface-n>\n'
-    output_file[3] << router->get_id();
+    this->output_file[3] << router->get_id();
 
     // FLOOD or non-FLOOD mode? defines the correct value to extract from 
     // iface_probs
@@ -453,18 +454,18 @@ void RID_Analytics::add_fwd(
         neighbor_probs[nid] = iface_probs[i][m];
 
         // build line for ifaces file
-        output_file[3] << "\t" << iface_probs[i][m];
+        this->output_file[3] << "\t" << iface_probs[i][m];
     }
-    output_file[3] << "\n";
+    this->output_file[3] << "\n";
 
     // add line to forwarding file
     for (auto const& r : this->routers) {
         if (neighbor_probs.count(r.second->get_id()) > 0)
-            output_file[2] << "\t" << neighbor_probs[r.second->get_id()];
+            this->output_file[2] << "\t" << neighbor_probs[r.second->get_id()];
         else
-            output_file[2] << "\t" << 0.0;
+            this->output_file[2] << "\t" << 0.0;
     }
-    output_file[2] << "\n";
+    this->output_file[2] << "\n";
 }
 
 int RID_Analytics::handle_nlm(
@@ -568,6 +569,7 @@ int RID_Analytics::handle_mlm(
 int RID_Analytics::handle_slm(
     RID_Router * router,
     Path_State * prev_state,
+    uint8_t in_iface,
     std::vector<std::vector<__float080> > iface_probs,
     std::vector<std::vector<__float080> > out_fptree_probs,
     std::vector<RID_Analytics::run_record> & slm_stack) {
@@ -630,7 +632,7 @@ int RID_Analytics::handle_slm(
         // this can still happen (or can it?)
         // FIXME: this subtle condition is the one that actually terminates the run. 
         // FIXME: this could be the source of trouble.
-        if (next_hop.router == router || i == prev_state->get_in_iface_prob()) {
+        if (next_hop.router == router || i == in_iface) {
             std::cout << "RID_Analytics::handle_slm() : [INFO] "
                 << "found magic stopping condition" << std::endl;
             continue;
@@ -644,6 +646,34 @@ int RID_Analytics::handle_slm(
 
         RID_Analytics::run_record slm_record = {next_hop.router, next_hop.iface, next_state};
         slm_stack.push_back(slm_record);
+    }
+
+    return 0;
+}
+
+int RID_Analytics::handle_ttl_drop(
+    RID_Router * router,
+    __float080 event_num,
+    Path_State * prev_state) {
+
+    std::cout << "RID_Analytics::handle_ttl_drop() : analyzing TTL drop event" 
+        << std::endl;
+
+    add_outcome(
+        router, 
+        OUTCOME_TTL_DROP, 
+        event_num, 
+        prev_state->get_length());
+
+    // depending on the resolution strategy, add outcome:
+    //  - fallback
+    if ((this->mode & MMH_FALLBACK)) {
+
+        add_outcome(
+            router, 
+            OUTCOME_FALLBACK_DELIVERY, 
+            event_num, 
+            prev_state->get_length() + get_origin_distance(router));
     }
 
     return 0;
@@ -707,18 +737,27 @@ int RID_Analytics::run_rec(
 
             case EVENT_SLM:
 
-                // use handle_slm() to collect slm events
-                std::vector<RID_Analytics::run_record> slm_stack;
-                handle_slm(router, prev_state, iface_probs, out_fptree_probs, slm_stack);
+                // check if the packet's ttl goes below 0 : if it does, end 
+                // the path here
+                if ((prev_state->get_ttl() - 1) < 0) { 
+                    
+                    handle_ttl_drop(router, event_num, prev_state);
 
-                // recursively call run_rec() to continue the analysis
-                for (unsigned int k = 0; k < slm_stack.size(); k++) {
+                } else {
 
-                    std::cout << "RID_Analytics::handle_slm() : [INFO] on router[" << router->get_id() 
-                        << "], forwarding to router[" << slm_stack[k].next_router->get_id() 
-                        << "], ttl = " << (int) slm_stack[k].state->get_ttl() << std::endl;
+                    // use handle_slm() to collect slm events
+                    std::vector<RID_Analytics::run_record> slm_stack;
+                    handle_slm(router, prev_state, in_iface, iface_probs, out_fptree_probs, slm_stack);
 
-                    run_rec(slm_stack[k].next_router, slm_stack[k].in_iface, slm_stack[k].state);
+                    // recursively call run_rec() to continue the analysis
+                    for (unsigned int k = 0; k < slm_stack.size(); k++) {
+
+                        std::cout << "RID_Analytics::run_rec() : [INFO] on router[" << router->get_id() 
+                            << "], forwarding to router[" << slm_stack[k].next_router->get_id() 
+                            << "], ttl = " << (int) slm_stack[k].state->get_ttl() << std::endl;
+
+                        run_rec(slm_stack[k].next_router, slm_stack[k].in_iface, slm_stack[k].state);
+                    }
                 }
 
                 break;
@@ -771,5 +810,4 @@ void RID_Analytics::run(
     // we always start at the ingress iface, so that we don't have a local 
     // match at the initial router (not sure if this can work directly like this)
     run_rec(this->start_router, 0, init_state);
-    delete init_state;
 }

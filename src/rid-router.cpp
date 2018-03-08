@@ -181,7 +181,7 @@ int RID_Router::forward(
     std::vector<__float080> & event_num,
     std::vector<std::vector<__float080> > & out_fptree_probs) {
 
-    std::cout << "RID_Router::forward() : [INFO] forwarding " << 
+    std::cout << "RID_Router::forward() : [INFO] *** forwarding *** " << 
         "\n\tfrom : " << this->get_next_hop(ingress_iface).router->get_id() << 
         "\n\tinto : " << this->get_id() << "[" << (int) ingress_iface << "]" << std::endl;
 
@@ -194,13 +194,16 @@ int RID_Router::forward(
     // calc_iface_on_fptree_probs();
 
     // mark blocked ifaces for basic loop prevention
-    this->blocked_ifaces.clear();
-    // don't foward over ingress iface
-    this->blocked_ifaces[ingress_iface] = true;
     // don't forward over ifaces w/ no entries associated w/ them
-    for (uint8_t i = 0; i < this->iface_num; i++)
+    for (uint8_t i = 0; i < this->iface_num; i++) {
+
+        this->blocked_ifaces[i] = false;
+        
         if (this->fwd_table[i].num_entries == 0)
             this->blocked_ifaces[i] = true;
+    }
+    // don't foward over ingress iface
+    this->blocked_ifaces[ingress_iface] = true;
 
     std::cout << "RID_Router::forward() : [INFO] blocked ifaces {";
     for (uint8_t k = 0; k < this->blocked_ifaces.size(); k++) {

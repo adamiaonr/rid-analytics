@@ -60,12 +60,12 @@ int Prob::calc_lm_prob(
     if (!iface_complement) lmp = &(this->lm_cond_prob);
     else lmp = &(this->lm_complement_cond_prob);
 
-    std::cout << "Prob::calc_lm_prob(iface) : [INFO]: " 
-        << "\t\n [n, m, k] : " << this->n << ", " << this->m << ", " << this->k
-        << "\t\n [iface] : " << (iface_complement ? "~" : "") << ((int) i)
-        << "\t\n [# entries] : " << iface_fp_data.num_entries
-        << "\t\n [lmp size] : " << (*lmp).size()
-        << "\t\n [f_distr] : ";
+    // std::cout << "Prob::calc_lm_prob(iface) : [INFO]: " 
+    //     << "\t\n [n, m, k] : " << this->n << ", " << this->m << ", " << this->k
+    //     << "\t\n [iface] : " << (iface_complement ? "~" : "") << ((int) i)
+    //     << "\t\n [# entries] : " << iface_fp_data.num_entries
+    //     << "\t\n [lmp size] : " << (*lmp).size()
+    //     << "\t\n [f_distr] : ";
 
     for(uint8_t f = 0; f < this->n; f++) 
         std::cout << "[" << (int) f << "] = " << iface_fp_data.f_distr[f] << ", ";
@@ -301,7 +301,7 @@ int Prob::calc_fptree_probs(
     std::vector<__float080> * in_fptree_prob,
     bool iface_complement) {
 
-    // if icomplement == true, then use the ~i values
+    // if iface complement == true, then use the ~i values
     int ic = 0;
     if (iface_complement) ic = 1;
 
@@ -320,7 +320,7 @@ int Prob::calc_fptree_probs(
             if (!(*iface_fp_data)[ic][i].on_fptree)
                 this->fptree_prob[ic][i][t] = 0.0;
             else
-                this->fptree_prob[ic][i][t] = (*in_fptree_prob)[t] / in_prob;
+                this->fptree_prob[ic][i][t] = (*in_fptree_prob)[t] / (in_prob > 0.0 ? in_prob : 1.0);
 
             cumulative_fp_prob += this->fptree_prob[ic][i][t];
         }
@@ -328,6 +328,11 @@ int Prob::calc_fptree_probs(
         // calc P(T_i = t), for t == 0
         this->fptree_prob[ic][i][0] = (1.0 - cumulative_fp_prob);
     }
+
+    std::cout << "Prob::calc_fptree_probs() : P(T_i = p) :" << std::endl; 
+    for (uint8_t i = 0; i < this->iface_num; i++)
+        for (uint8_t t = 0; t < (this->n + 1); t++)
+            std::cout << "\tP(T[" << (ic > 0 ? "~" : "") << (int) i << "] = " << (int) t << "]) = " << this->fptree_prob[ic][i][t] << std::endl;
 
     return 0;
 }
@@ -412,16 +417,26 @@ int Prob::calc_event_num(
 //
 int Prob::calc_iface_prob(uint8_t i, std::vector<__float080> & iface_prob) {
 
+    // reset arrays to 0.0s
+    // FIXME : this shouldn't be necessary as this means that the arrays you 
+    // clear should exist on a local scope only.
+    std::fill(lm_marg_prob[i].begin(), lm_marg_prob[i].end(), 0.0);
+    std::fill(lm_complement_marg_prob[i].begin(), lm_complement_marg_prob[i].end(), 0.0);
+
     // 1) calc P(L_i = l) and P(L_{~i} = l), for all l
-    for (uint8_t f = this->n; f >= 0; f--) {
+    std::cout << "Prob::calc_iface_prob() : P(L_(~)i = l) :" << std::endl; 
+    for (int f = this->n; f >= 0; f--) {
         for (uint8_t t = 0; t < (this->n + 1); t++) {
             this->lm_marg_prob[i][f] += this->lm_cond_prob[i][t][f] * this->fptree_prob[0][i][t];
             this->lm_complement_marg_prob[i][f] += this->lm_complement_cond_prob[i][t][f] * this->fptree_prob[1][i][t];
         }
+
+        std::cout << "\tP(L_" << (int) i << " = " << (int) f << ") = " << this->lm_marg_prob[i][f] << std::endl;
+        std::cout << "\tP(L_{~" << (int) i << "} = " << (int) f << ") = " << this->lm_complement_marg_prob[i][f] << std::endl;
     }
 
     // 2) calc P(L_i >= L_{~i})
-    for (uint8_t f = this->n; f >= 0; f--) {
+    for (int f = this->n; f >= 0; f--) {
 
         __float080 prob_strict = 0.0;
         __float080 prob_total = 0.0;
