@@ -445,7 +445,7 @@ void RID_Analytics::add_fwd(
 
     // FLOOD or non-FLOOD mode? defines the correct value to extract from 
     // iface_probs
-    int m = ((this->mode & MMH_FLOOD) ? 1 : 0);
+    int m = ((this->mode == MMH_FLOOD) ? 1 : 0);
 
     // add routers attached to ifaces of router
     std::map<std::string, __float080> neighbor_probs;
@@ -600,7 +600,7 @@ int RID_Analytics::handle_slm(
 
         __float080 path_prob = 0.0;
         // if 'flood' mode is active, consider the '==' part of the iface probs
-        if ((this->mode & MMH_FLOOD)) path_prob = iface_probs[i][1];
+        if ((this->mode == MMH_FLOOD)) path_prob = iface_probs[i][1];
         else path_prob = iface_probs[i][0];
 
         next_state->set_path_prob(path_prob);

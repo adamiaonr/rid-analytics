@@ -138,7 +138,7 @@ class RID_Router {
     private:
 
         bool is_iface_on_fptree(int iface, std::vector<uint8_t> * tree_bitmask);
-        Prob::fp_data get_fp_data(RID_Router * router, uint8_t i, bool anti = false);
+        Prob::fp_data * get_fp_data(RID_Router * router, uint8_t i, bool iface_complement = false);
 
         // router id follows the format <tree_index>.<height>.<width>
         std::string id;

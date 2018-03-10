@@ -27,16 +27,31 @@ class Prob {
 
     public:
 
-    struct fp_data {
+    class fp_data {
 
-        uint8_t tp_size = 0;                // max tp size (note: this initialization is permitted by C++11)
-        __float080 num_entries = 0.0;       // nr. of entries
-        __float080 entry_prop = 0.0;        // proportion of entries
+        public:
+
+        fp_data() {
+
+            tp_size = 0;
+            num_entries = 0.0;
+            entry_prop = 0.0;
+
+            on_fptree = false;
+            is_blocked = false;
+        }
+        ~fp_data() {}
+
+        // FIXME: to make things easy, let them be public
+        uint8_t tp_size;                    // max tp size (note: this initialization is permitted by C++11)
+        __float080 num_entries;             // nr. of entries
+        __float080 entry_prop;              // proportion of entries
         std::vector<__float080> f_distr;    // distr. of entry sizes
         std::vector<__float080> f_r_distr;  // |f\r| distr.
 
-        bool on_fptree = false;             // is iface on a fp tree? FIXME: should have size info
-        bool is_blocked = false;            // is the iface blocked?
+        std::vector<uint8_t> tree_bitmask;  // bitmask of iface
+        bool on_fptree;
+        bool is_blocked;                    // is the iface blocked?
     };
 
     Prob(
@@ -74,7 +89,8 @@ class Prob {
     ~Prob() {}
 
     int calc_probs(
-        std::vector<std::vector<fp_data> > * iface_fp_data,
+        std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
+        std::vector<uint8_t> * tree_bitmask,    // tree bitmask from prev router
         __float080 in_prob,
         std::vector<__float080> * in_fptree_prob,
         std::vector<std::vector<__float080> > & iface_probs,
@@ -83,29 +99,40 @@ class Prob {
 
     private:
 
-    int calc_lm_probs(std::vector<std::vector<fp_data> > * iface_fp_data, std::vector<std::vector<__float080> > & out_fptree_probs);
-    int calc_lm_prob(uint8_t i, fp_data iface_fp_data, std::vector<std::vector<__float080> > & out_fptree_probs, bool iface_complement = false);
-    int calc_iface_prob(uint8_t i, std::vector<__float080> & iface_prob);
+    int calc_lm_probs(
+        std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
+        std::vector<uint8_t> * tree_bitmask,
+        std::vector<std::vector<__float080> > & out_fptree_probs);
+    int calc_lm_prob(
+        uint8_t i, 
+        Prob::fp_data * iface_fp_data,
+        std::vector<uint8_t> * tree_bitmask,
+        std::vector<std::vector<__float080> > & out_fptree_probs, 
+        bool iface_complement = false);
+    int calc_iface_prob(uint8_t i, __float080 in_prob, std::vector<__float080> & iface_prob);
 
     int calc_event_num(
-        std::vector<std::vector<fp_data> > * iface_fp_data,
+        std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
         std::vector<std::vector<__float080> > iface_probs,
         std::vector<__float080> & event_num);
 
     int calc_fptree_probs(
-        std::vector<std::vector<fp_data> > * iface_fp_data,
-        __float080 in_prob,
+        std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
+        std::vector<uint8_t> * tree_bitmask,
         std::vector<__float080> * in_fptree_prob,
         bool iface_complement = false);
 
     int calc_out_fptree_prob(
         uint8_t i,
-        fp_data iface_fp_data,
+        Prob::fp_data * iface_fp_data,
         std::vector<__float080> log_prob_fp_neq,
         std::vector<__float080> log_prob_fp_smeq,
         std::vector<std::vector<__float080> > & out_fptree_probs);
 
-    void calc_log_prob_fp_neq(Prob::fp_data iface_fp_data, std::vector<__float080> & log_prob_fp_neq);
+    void calc_log_prob_fp_neq(
+        Prob::fp_data * iface_fp_data,
+        std::vector<__float080> & log_prob_fp_neq,
+        __float080 lt_ratio = 1.0);
     void print_lm_prob(uint8_t i, bool iface_complement = false);
 
     // basic units of prob calculation:

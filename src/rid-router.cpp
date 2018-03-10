@@ -104,28 +104,30 @@ int RID_Router::add_fwd_table_entry(
     return 0;
 }
 
-Prob::fp_data RID_Router::get_fp_data(
+Prob::fp_data * RID_Router::get_fp_data(
     RID_Router * router, 
-    uint8_t i, 
-    bool anti) {
+    uint8_t i,
+    bool iface_complement) {
 
-    Prob::fp_data iface_fp_data;
+    Prob::fp_data * iface_fp_data = new Prob::fp_data();
 
-    if (!anti) {
+    if (!iface_complement) {
 
-        iface_fp_data.tp_size = router->tp_sizes[i];
-        iface_fp_data.num_entries = (__float080) router->fwd_table[i].num_entries;
+        iface_fp_data->tp_size = router->tp_sizes[i];
+        iface_fp_data->num_entries = (__float080) router->fwd_table[i].num_entries;
         // pointers to f distr.
-        iface_fp_data.f_distr = router->fwd_table[i].f_distr;
-        iface_fp_data.f_r_distr = router->fwd_table[i].f_r_distr;
-        iface_fp_data.entry_prop = router->fwd_table[i].iface_proportion;
-        iface_fp_data.on_fptree = router->iface_on_fptree[i];
-        iface_fp_data.is_blocked = router->blocked_ifaces[i];
+        iface_fp_data->f_distr = router->fwd_table[i].f_distr;
+        iface_fp_data->f_r_distr = router->fwd_table[i].f_r_distr;
+        iface_fp_data->entry_prop = router->fwd_table[i].iface_proportion;
+        iface_fp_data->tree_bitmask = router->fwd_table[i].tree_bitmask;
+        iface_fp_data->on_fptree = router->iface_on_fptree[i];
+        iface_fp_data->is_blocked = router->blocked_ifaces[i];
 
     } else {
 
-        iface_fp_data.f_distr = std::vector<__float080>(this->req_size, 0.0);
-        iface_fp_data.f_r_distr = std::vector<__float080>(this->req_size, 0.0);
+        iface_fp_data->f_distr = std::vector<__float080>(this->req_size, 0.0);
+        iface_fp_data->f_r_distr = std::vector<__float080>(this->req_size, 0.0);
+        iface_fp_data->tree_bitmask = std::vector<uint8_t>(this->fwd_table[0].tree_bitmask.size(), 0);
 
         // sum all the fp data, for all ifaces other than i
         __float080 num_valid_ifaces = 0.0;
@@ -136,37 +138,41 @@ Prob::fp_data RID_Router::get_fp_data(
             if (router->blocked_ifaces[k]) continue;
 
             // the tp is the max of the ifaces other than i
-            iface_fp_data.tp_size = std::max(iface_fp_data.tp_size, router->tp_sizes[k]);
+            iface_fp_data->tp_size = std::max(iface_fp_data->tp_size, router->tp_sizes[k]);
             // keep adding up the nr of entries
-            iface_fp_data.num_entries += (__float080) router->fwd_table[k].num_entries;
+            iface_fp_data->num_entries += (__float080) router->fwd_table[k].num_entries;
 
             // f_distr and f_r_distr vectors
             // use std::transform() to get the elementwise sum of 2 vectors 
             // (result saved in first vector)
             std::transform(
-                iface_fp_data.f_distr.begin(), iface_fp_data.f_distr.end(), 
+                iface_fp_data->f_distr.begin(), iface_fp_data->f_distr.end(), 
                 router->fwd_table[k].f_distr.begin(), 
-                iface_fp_data.f_distr.begin(), 
+                iface_fp_data->f_distr.begin(), 
                 std::plus<__float080>());
 
             std::transform(
-                iface_fp_data.f_r_distr.begin(), iface_fp_data.f_r_distr.end(), 
+                iface_fp_data->f_r_distr.begin(), iface_fp_data->f_r_distr.end(), 
                 router->fwd_table[k].f_r_distr.begin(), 
-                iface_fp_data.f_r_distr.begin(), 
+                iface_fp_data->f_r_distr.begin(), 
                 std::plus<__float080>());
 
-            iface_fp_data.entry_prop += router->fwd_table[k].iface_proportion;
-            iface_fp_data.on_fptree |= router->iface_on_fptree[k];
+            // fill the bitmask of ~i in the old fashioned way...
+            for (int j = 0; j < router->fwd_table[k].tree_bitmask.size(); j++)
+                iface_fp_data->tree_bitmask[j] |= router->fwd_table[k].tree_bitmask[j];
+
+            iface_fp_data->entry_prop += router->fwd_table[k].iface_proportion;
+            iface_fp_data->on_fptree |= router->iface_on_fptree[k];
 
             num_valid_ifaces++;
         }
 
-        // normalize the iface_fp_data.f_distr and iface_fp_data.f_r_distr
+        // normalize the iface_fp_data->f_distr and iface_fp_data->f_r_distr
         // vectors
-        for (uint8_t k; k < iface_fp_data.f_distr.size(); k++)
-            iface_fp_data.f_distr[k] /= num_valid_ifaces;
-        for (uint8_t k; k < iface_fp_data.f_r_distr.size(); k++)
-            iface_fp_data.f_r_distr[k] /= num_valid_ifaces;
+        for (uint8_t k; k < iface_fp_data->f_distr.size(); k++)
+            iface_fp_data->f_distr[k] /= num_valid_ifaces;
+        for (uint8_t k; k < iface_fp_data->f_r_distr.size(); k++)
+            iface_fp_data->f_r_distr[k] /= num_valid_ifaces;
     }
 
     return iface_fp_data;
@@ -229,7 +235,7 @@ int RID_Router::forward(
     //              into this router by the previous router.
     //  - in_fptree_prob : probabilities of having the request coming into this 
     //                     router while 'bound' to a fp tree of size p
-    std::vector<std::vector<Prob::fp_data> > iface_fp_data(2);
+    std::vector<std::vector<Prob::fp_data *> > iface_fp_data(2);
     for (uint8_t i = 0; i < this->iface_num; i++) {
 
         iface_fp_data[0].push_back(get_fp_data(this, i));
@@ -238,6 +244,7 @@ int RID_Router::forward(
 
     if (this->prob_mod->calc_probs(
         &(iface_fp_data),
+        tree_bitmask,
         in_prob,
         in_fptree_prob, 
         iface_probs, 
@@ -246,7 +253,7 @@ int RID_Router::forward(
 
     std::cout << "RID_Router::forward() : [INFO] iface probs :" << std::endl;
     for(uint8_t i = 0; i < this->iface_num; i++)
-        std::cout << "\tP(I = " << (int) i << ") = " << iface_probs[i][1] << std::endl;
+        std::cout << "\tP(I = " << (int) i << ") = " << iface_probs[i][0] << " : " << iface_probs[i][1] << std::endl;
 
     return 0;
 }
