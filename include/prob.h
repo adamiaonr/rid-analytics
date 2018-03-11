@@ -74,10 +74,7 @@ class Prob {
             this->lm_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
             this->lm_complement_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
         }
-        //  - P(L_i = l)
-        lm_marg_prob = std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080>((this->n + 1), 0.0));
-        //  - P(L_{~i} = l)
-        lm_complement_marg_prob = std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080>((this->n + 1), 0.0));
+
         //  - P(P_i = p) and P(P_(~i) = p)
         this->fptree_prob.push_back(std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080> ((n + 1), 0.0)));
         this->fptree_prob.push_back(std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080> ((n + 1), 0.0)));
@@ -142,10 +139,6 @@ class Prob {
     std::vector<std::vector<std::vector<__float080> > > lm_cond_prob;
     //  - P(L_(~i) = l | P_(~i) = p)
     std::vector<std::vector<std::vector<__float080> > > lm_complement_cond_prob;
-    //  - P(L_i = l)
-    std::vector<std::vector<__float080> > lm_marg_prob;
-    //  - P(L_{~i} = l)
-    std::vector<std::vector<__float080> > lm_complement_marg_prob;
     //  - P(P_i = p) and P(P_(~i) = p)
     std::vector<std::vector<std::vector<__float080> > > fptree_prob;
 

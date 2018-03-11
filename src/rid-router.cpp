@@ -159,7 +159,7 @@ Prob::fp_data * RID_Router::get_fp_data(
                 std::plus<__float080>());
 
             // fill the bitmask of ~i in the old fashioned way...
-            for (int j = 0; j < router->fwd_table[k].tree_bitmask.size(); j++)
+            for (unsigned int j = 0; j < router->fwd_table[k].tree_bitmask.size(); j++)
                 iface_fp_data->tree_bitmask[j] |= router->fwd_table[k].tree_bitmask[j];
 
             iface_fp_data->entry_prop += router->fwd_table[k].iface_proportion;
