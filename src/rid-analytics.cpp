@@ -233,6 +233,7 @@ int RID_Analytics::build_network(std::string nw_filename) {
         router = router.next_sibling("router")) {
 
         std::string router_id = std::string(router.attribute("id").value());
+        std::cout << "RID_Analytics::build_network() : [INFO] installing router " << router_id << std::endl;
 
         // ***
         // *** extract iface nr. & entry distr. per iface
@@ -256,6 +257,8 @@ int RID_Analytics::build_network(std::string nw_filename) {
         }
         std::cout << std::endl;
 
+        std::cout << "RID_Analytics::build_network() : [INFO] iface_num = " << (int) iface_num << std::endl;
+
         // ***
         // *** create or initialize new RID router
         // ***
@@ -278,7 +281,7 @@ int RID_Analytics::build_network(std::string nw_filename) {
                 new RID_Router(
                     router_id,
                     table_size,
-                    iface_num,
+                    (uint8_t) iface_num,
                     this->request_size,
                     this->bf_size,
                     this->mode);

@@ -28,6 +28,7 @@ int RID_Router::init(
     this->req_size = req_size;
     this->bf_size = bf_size;
     // fwd table parameters
+    std::cout << "RID_Router::init() : [INFO] iface_num = " << (int) iface_num << std::endl;
     this->iface_num = iface_num;
     this->fwd_table_size = fwd_table_size;
     // initialize forwarding table w/ 1 row per iface
@@ -56,6 +57,7 @@ RID_Router::RID_Router(
     uint16_t bf_size,
     int mode) {
 
+    this->initialized = false;
     this->init(router_id, fwd_table_size, iface_num, req_size, bf_size, mode);
 }
 
@@ -71,7 +73,7 @@ int RID_Router::add_fwd_table_entry(
 
     if ((i < 0) || (i > (this->iface_num - 1))) {
         std::cerr << "RID_Router::add_fwd_table_entry() : [ERROR] invalid iface index: "
-            << i << std::endl;
+            << i << " vs. " << (int) this->iface_num << std::endl;
         return -1;
     }
 
@@ -115,7 +117,6 @@ Prob::fp_data * RID_Router::get_fp_data(
 
         iface_fp_data->tp_size = router->tp_sizes[i];
         iface_fp_data->num_entries = (__float080) router->fwd_table[i].num_entries;
-        // pointers to f distr.
         iface_fp_data->f_distr = router->fwd_table[i].f_distr;
         iface_fp_data->f_r_distr = router->fwd_table[i].f_r_distr;
         iface_fp_data->entry_prop = router->fwd_table[i].iface_proportion;

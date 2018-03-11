@@ -109,7 +109,10 @@ class Prob {
         std::vector<uint8_t> * tree_bitmask,
         std::vector<std::vector<__float080> > & out_fptree_probs, 
         bool iface_complement = false);
-    int calc_iface_prob(uint8_t i, __float080 in_prob, std::vector<__float080> & iface_prob);
+    int calc_iface_prob(
+        uint8_t i, 
+        std::vector<std::vector<Prob::fp_data *> > * iface_fp_data, 
+        std::vector<__float080> & iface_prob);
 
     int calc_event_num(
         std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
@@ -119,8 +122,7 @@ class Prob {
     int calc_fptree_probs(
         std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
         std::vector<uint8_t> * tree_bitmask,
-        std::vector<__float080> * in_fptree_prob,
-        bool iface_complement = false);
+        std::vector<__float080> * in_fptree_prob);
 
     int calc_out_fptree_prob(
         uint8_t i,
