@@ -16,7 +16,16 @@
 #define EVENT_TTL       0x04 // drop due to rtt expiration
 #define EVENT_UNKNOWN   0x05
 
-#define RES_FALLBACKS       0x04
+// multiple match & incorrect delivery handling
+#define MMH_FLOOD           0x00
+#define MMH_RANDOM          0x01
+#define MMH_FALLBACK        0x02
+// 'fallback' type
+# define HARD_FALLBACK      0x02
+# define SOFT_FALLBACK      0x03
+// resolution on / off
+#define RES_OFF             0x00
+#define RES_ON              0x01
 
 #include <math.h>
 #include <stdlib.h>
@@ -36,9 +45,11 @@ class RID_Analytics {
 
     public:
 
-        struct run_record
+        struct fwd_decision
         {
+            RID_Router * prev_router;
             RID_Router * next_router;
+            int out_iface;
             int in_iface;
             Path_State * state;
         };
@@ -69,25 +80,29 @@ class RID_Analytics {
         int get_origin_distance(RID_Router * from_router);
         int get_origin_distance_rec(RID_Router * from_router);
 
-        int handle_nlm(RID_Router * router, __float080 event_prob, Path_State * prev_state);
-        int handle_llm(RID_Router * router, __float080 event_prob, Path_State * prev_state);
-        int handle_mlm(RID_Router * router, __float080 event_prob, Path_State * prev_state);
-        int handle_slm(
+        int handle_llm(
+            RID_Router * router, 
+            std::vector<__float080> iface_probs, 
+            std::vector<__float080> & events, 
+            Path_State * prev_state);
+        int handle_ttl_drop(RID_Router * router, __float080 prob, Path_State * prev_state);
+
+        int make_fwd_decision(
             RID_Router * router,
             Path_State * prev_state,
             uint8_t in_iface,
             std::vector<std::vector<__float080> > iface_probs,
             std::vector<std::vector<__float080> > out_fptree_probs,
-            std::vector<RID_Analytics::run_record> & slm_stack);
-        int handle_ttl_drop(
-            RID_Router * router,
-            __float080 event_num,
-            Path_State * prev_state);
+            std::vector<RID_Analytics::fwd_decision> & fwd_decisions);
 
         void init_output(std::string label, std::string output_dir);
         void add_outcome(RID_Router * router, int outcome, __float080 prob, __float080 latency);
-        void add_events(RID_Router * router, std::vector<__float080> event_probs);
-        void add_fwd(RID_Router * router, int in_iface, Path_State * state, std::vector<std::vector<__float080> > iface_probs);
+        void add_events(RID_Router * router, std::vector<__float080> events);
+        void add_fwd(
+            RID_Router * router, 
+            int in_iface, 
+            Path_State * state, 
+            std::vector<RID_Analytics::fwd_decision> fwd_decisions);
 
         uint8_t request_size;
         uint16_t bf_size;

@@ -271,7 +271,8 @@ int Prob::calc_out_fptree_prob(
         // FIXME : isn't '* fptree_prob[0][i][0]' missing here? 
         // i.e the multiplication by P(T_i = 0)...
         out_fptree_probs[i][t] +=
-            exp(log_prob_fp_smeq[t])                // not have a FP > t
+            this->fptree_prob[0][i][0]
+            * exp(log_prob_fp_smeq[t])              // not have a FP > t
             * (1.0 - exp(log_prob_fp_neq[t - 1]));  // have a FP of size t
     }
 
@@ -354,6 +355,7 @@ int Prob::calc_fptree_probs(
 
         // calc P(T_i = t), for all t > 0
         __float080 cumulative_fptree_prob[2] = {0.0, 0.0};
+        // uint8_t max_tree = 0;
         for (uint8_t t = 1; t < (this->n + 1); t++) {
 
             this->fptree_prob[0][i][t] = 
@@ -361,23 +363,24 @@ int Prob::calc_fptree_probs(
                 * (tr[i] / ((tr_total > 0.0) ? tr_total : 1.0)) 
                 * (*in_fptree_prob)[t];
 
+            // if (this->fptree_prob[0][i][t] > 0.0) max_tree = t;
             this->fptree_prob[1][i][t] = ((*in_fptree_prob)[t] - this->fptree_prob[0][i][t]);
 
-            cumulative_fptree_prob[0] += this->fptree_prob[0][i][t];
-            cumulative_fptree_prob[1] += this->fptree_prob[1][i][t];
+            // FIXME: what is the logic behind this ??!?
+            if ((*iface_fp_data)[0][i]->tp_size != t)
+                cumulative_fptree_prob[0] += this->fptree_prob[0][i][t];
+            if ((*iface_fp_data)[1][i]->tp_size != t)
+                cumulative_fptree_prob[1] += this->fptree_prob[1][i][t];
         }
 
-        // set P(T_i = 0) = 1.0 (adjustments are handled in P(L_i = l) calculation))
-        this->fptree_prob[0][i][0] = 1.0;
-        this->fptree_prob[1][i][0] = 1.0;
 
-        if ((*iface_fp_data)[0][i]->tp_size > 0) {
-            this->fptree_prob[1][i][0] = 1.0 - cumulative_fptree_prob[1];
-        }
+        this->fptree_prob[0][i][0] = 1.0 - cumulative_fptree_prob[0];
+        std::cout << "Prob::calc_fptree_probs() : P(T[" << (int) i << "] = 0) = 1.0 - " 
+            << cumulative_fptree_prob[0] << " = " << (this->fptree_prob[0][i][0]) << std::endl;
 
-        if ((*iface_fp_data)[1][i]->tp_size > 0) {
-            this->fptree_prob[0][i][0] = 1.0 - cumulative_fptree_prob[0];
-        }
+        this->fptree_prob[1][i][0] = (__float080) ((float) 1.0 - (float) cumulative_fptree_prob[1]);
+        std::cout << "Prob::calc_fptree_probs() : P(T[~" << (int) i << "] = 0) = 1.0 - " 
+            << cumulative_fptree_prob[1] << " = " << (this->fptree_prob[1][i][0]) << std::endl;
     }
 
     std::cout << "Prob::calc_fptree_probs() : P(T_i = t) :" << std::endl;
@@ -393,60 +396,60 @@ int Prob::calc_fptree_probs(
     return 0;
 }
 
-// objective: calc avg nr. of events of type e, for all events
-//
-// algorithm: 
-//  - events are:
-//      - EVENT_LLM : choosing iface 0 (local)
-//      - EVENT_NLM : prob of not choosing any iface at all, i.e. P(L_i = 0, L_j = 0), for all i, j
-//      - EVENT_SLM : sum of P(L_i > L_{~i}), for all i.
-//                    P(L_i > L_{~i}) is given by iface_probs[i][0]
-//                    time complexity is O(N * I)
-//      - EVENT_MLM : 'max. possible nr. events' - P(EVENT_NLM) + P(EVENT_SLM)
-//
-// time complexity: 
-//  - O(I)
-//
-int Prob::calc_event_num(
-    std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
-    std::vector<std::vector<__float080> > iface_probs,
-    std::vector<__float080> & event_num) {
+// // objective: calc avg nr. of events of type e, for all events
+// //
+// // algorithm: 
+// //  - events are:
+// //      - EVENT_LLM : choosing iface 0 (local)
+// //      - EVENT_NLM : prob of not choosing any iface at all, i.e. P(L_i = 0, L_j = 0), for all i, j
+// //      - EVENT_SLM : sum of P(L_i > L_{~i}), for all i.
+// //                    P(L_i > L_{~i}) is given by iface_probs[i][0]
+// //                    time complexity is O(N * I)
+// //      - EVENT_MLM : 'max. possible nr. events' - P(EVENT_NLM) + P(EVENT_SLM)
+// //
+// // time complexity: 
+// //  - O(I)
+// //
+// int Prob::calc_event_num(
+//     std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
+//     std::vector<std::vector<__float080> > iface_probs,
+//     std::vector<__float080> & event_num) {
 
-    // LLM avg. num_entries: only iface 0 (0 is always the local)
-    // FIXME : in this case, we give priority to iface 0, and always consider 
-    // P(L_0 >= L_{~0}) probability (instead the 'strict' P(L_0 > L_{~0}))
-    event_num[EVENT_LLM] = iface_probs[0][1];
-    // NLM & SLM avg. nrs:
-    //  - NLM : corresponds to P(L_i = 0 AND L_j = 0, ..., L_n = 0) for all ifaces i, j, ... n
-    //          NOTE : this is simply P(L_i = 0 AND L_{~i} = 0), for any i (?)
-    event_num[EVENT_NLM] = 0.0;
-    //  - SLM : sum P(L_i > L_{~i}), for all i 
-    //          these are independent events, i.e. P(L_i > L_{~i}) AND P(L_j > L_{~j}) = 0 (for i != j)
-    //          P(L_i > L_{~i}) is given by iface_probs[i][0]
-    int blocked_ifaces_num = 0;
-    __float080 event_num_total = 0.0;
-    for (unsigned int i = 0; i < iface_probs.size(); i++) {
-        // count the nr. of block ifaces
-        if ((*iface_fp_data)[0][i]->is_blocked) { blocked_ifaces_num++; continue; }
-        // (SLM : as above)
-        event_num[EVENT_SLM] += iface_probs[i][0];
-        // P(L_i >= L_{~i}), will be useful for MLM avg. nr. computation
-        event_num_total += iface_probs[i][1];
-    }
+//     // LLM avg. num_entries: only iface 0 (0 is always the local)
+//     // FIXME : in this case, we give priority to iface 0, and always consider 
+//     // P(L_0 >= L_{~0}) probability (instead the 'strict' P(L_0 > L_{~0}))
+//     event_num[EVENT_LLM] = iface_probs[0][1];
+//     // NLM & SLM avg. nrs:
+//     //  - NLM : corresponds to P(L_i = 0 AND L_j = 0, ..., L_n = 0) for all ifaces i, j, ... n
+//     //          NOTE : this is simply P(L_i = 0 AND L_{~i} = 0), for any i (?)
+//     event_num[EVENT_NLM] = 0.0;
+//     //  - SLM : sum P(L_i > L_{~i}), for all i 
+//     //          these are independent events, i.e. P(L_i > L_{~i}) AND P(L_j > L_{~j}) = 0 (for i != j)
+//     //          P(L_i > L_{~i}) is given by iface_probs[i][0]
+//     int blocked_ifaces_num = 0;
+//     __float080 event_num_total = 0.0;
+//     for (unsigned int i = 0; i < iface_probs.size(); i++) {
+//         // count the nr. of block ifaces
+//         if ((*iface_fp_data)[0][i]->is_blocked) { blocked_ifaces_num++; continue; }
+//         // (SLM : as above)
+//         event_num[EVENT_SLM] += iface_probs[i][0];
+//         // P(L_i >= L_{~i}), will be useful for MLM avg. nr. computation
+//         event_num_total += iface_probs[i][1];
+//     }
 
-    // MLM avg. nrs.:
-    // FIXME : this still bugs me a lot
-    event_num[EVENT_MLM] = event_num_total - (event_num[EVENT_NLM] + event_num[EVENT_SLM]);
+//     // MLM avg. nrs.:
+//     // FIXME : this still bugs me a lot
+//     event_num[EVENT_MLM] = event_num_total - (event_num[EVENT_NLM] + event_num[EVENT_SLM]);
 
 
-    std::cout << "Prob::calc_event_num() : E[event type] = " << std::endl; 
-    std::cout << "\tE[EVENT_LLM] = " << event_num[EVENT_LLM] << std::endl;
-    std::cout << "\tE[EVENT_NLM] = " << event_num[EVENT_NLM] << std::endl;
-    std::cout << "\tE[EVENT_SLM] = " << event_num[EVENT_SLM] << std::endl;
-    std::cout << "\tE[EVENT_MLM] = " << event_num[EVENT_MLM] << std::endl;
+//     std::cout << "Prob::calc_event_num() : E[event type] = " << std::endl; 
+//     std::cout << "\tE[EVENT_LLM] = " << event_num[EVENT_LLM] << std::endl;
+//     std::cout << "\tE[EVENT_NLM] = " << event_num[EVENT_NLM] << std::endl;
+//     std::cout << "\tE[EVENT_SLM] = " << event_num[EVENT_SLM] << std::endl;
+//     std::cout << "\tE[EVENT_MLM] = " << event_num[EVENT_MLM] << std::endl;
 
-    return 0;
-}
+//     return 0;
+// }
 
 __float080 calc_joint_prob(
     __float080 cond_prob,
@@ -523,7 +526,7 @@ int Prob::calc_iface_prob(
                 calc_joint_prob(
                     this->lm_cond_prob[i][t][f],    // P(L_i = l | T_i = t)
                     this->fptree_prob[0][i][t],     // P(T_i = t)
-                    (t > 0 && ((*iface_fp_data)[0][i]->tp_size >= t))); // condition
+                    (t > 0 && ((*iface_fp_data)[0][i]->tp_size == t))); // condition
             // add the joint P(L_i = l, T_i = t) to marginal P(L_i = l)
             lm_marg_prob[i][f] += joint_prob;
             // print if P(L_i = l, T_i = t) > 0.0
@@ -538,7 +541,7 @@ int Prob::calc_iface_prob(
                 calc_joint_prob(
                     this->lm_complement_cond_prob[i][t][f],     // P(L_{~i} = l | T_{~i} = t)
                     this->fptree_prob[1][i][t],                 // P(T_{~i} = t)
-                    (t > 0 && ((*iface_fp_data)[1][i]->tp_size >= t))); // condition
+                    (t > 0 && ((*iface_fp_data)[1][i]->tp_size == t))); // condition
             // add the joint P(L_{~i} = l, T_{~i} = t) to marginal P(L_{~i} = l)
             lm_complement_marg_prob[i][f] += joint_prob;
             // print if P(L_{~i} = l, T_{~i} = t) > 0.0
@@ -592,7 +595,6 @@ int Prob::calc_probs(
     __float080 in_prob,
     std::vector<__float080> * in_fptree_prob,
     std::vector<std::vector<__float080> > & iface_probs,
-    std::vector<__float080> & event_num,
     std::vector<std::vector<__float080> > & out_fptree_probs) {
 
     // calc P(P_i = p) and P(P_{~i} = p)
@@ -616,10 +618,10 @@ int Prob::calc_probs(
         iface_probs[i][1] *= in_prob;
     }
 
-    // calc avg. nr. of events (LLM, NLM, SLM and MLM)
-    // time complexity : O(I)
-    if (calc_event_num(iface_fp_data, iface_probs, event_num) < 0)
-        return -1;
+    // // calc avg. nr. of events (LLM, NLM, SLM and MLM)
+    // // time complexity : O(I)
+    // if (calc_event_num(iface_fp_data, iface_probs, event_num) < 0)
+    //     return -1;
 
     // for joint event '& got into this router'
     for (uint8_t i = 0; i < this->iface_num; i++) {

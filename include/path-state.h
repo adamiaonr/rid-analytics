@@ -4,14 +4,14 @@
 #define MAX_PATH_STATE_STRING_SIZE 128
 
 // possible outcomes
-#define OUTCOME_CORRECT_DELIVERY    (int) 0x00
-#define OUTCOME_INCORRECT_DELIVERY  (int) 0x01
-#define OUTCOME_FALLBACK_DELIVERY   (int) 0x02
-#define OUTCOME_RESOLVED_DELIVERY   (int) 0x03
-// #define OUTCOME_FALLBACK_RELAY      (int) 0x03
-#define OUTCOME_PACKET_DROP         (int) 0x04
-#define OUTCOME_TTL_DROP            (int) 0x05
-#define OUTCOME_UNDEF               (int) 0x06
+#define OUTCOME_CORRECT_DELIVERY        (int) 0x00
+#define OUTCOME_INCORRECT_DELIVERY      (int) 0x01
+#define OUTCOME_HARD_FALLBACK_DELIVERY  (int) 0x02
+#define OUTCOME_SOFT_FALLBACK_FWD       (int) 0x0A
+#define OUTCOME_FEEDBACK_DELIVERY       (int) 0x03
+#define OUTCOME_PACKET_DROP             (int) 0x04
+#define OUTCOME_TTL_DROP                (int) 0x05
+#define OUTCOME_UNDEF                   (int) 0x06
 
 // path status
 #define STATUS_TP     (int) 0x06

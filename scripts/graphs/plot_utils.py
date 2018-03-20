@@ -74,10 +74,12 @@ def extract_data(data_dir):
 
     for file_name in sorted(glob.glob(os.path.join(data_dir, '*.tsv'))):
 
-        file_type = file_name.split(".")[0].split("/")[-1]
-        file_label = file_name.split(".")[1]
+        file_type = file_name.split("/")[-1].split(".")[0]
+        if file_type not in ['outcome']:
+            continue
 
-        # print("filename = %s, type = %s, label = %s" % (file_name, file_type, file_label))
+        file_label = file_name.split("/")[-1].split(".")[1]
+        print("filename = %s, type = %s, label = %s" % (file_name, file_type, file_label))
 
         data[file_type][file_label] = pd.read_csv(file_name, sep = "\t")
         data[file_type][file_label] = data[file_type][file_label].convert_objects(convert_numeric = True)

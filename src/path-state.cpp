@@ -126,11 +126,13 @@ char * Path_State::to_string() {
         case OUTCOME_INCORRECT_DELIVERY:
             snprintf(status, MAX_PATH_STATE_STRING_SIZE, "INCORRECT_DELIVERY");
             break;
-        case OUTCOME_FALLBACK_DELIVERY:
-            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "FALLBACK_DELIVERY");
+        case OUTCOME_HARD_FALLBACK_DELIVERY:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "HARD_FALLBACK_DELIVERY");
+        case OUTCOME_SOFT_FALLBACK_FWD:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "SOFT_FALLBACK_FWD");
             break;
-        case OUTCOME_RESOLVED_DELIVERY:
-            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "RESOLVED_DELIVERY");
+        case OUTCOME_FEEDBACK_DELIVERY:
+            snprintf(status, MAX_PATH_STATE_STRING_SIZE, "FEEDBACK_DELIVERY");
             break;
         // case OUTCOME_FALLBACK_RELAY:
         //     snprintf(status, MAX_PATH_STATE_STRING_SIZE, "FALLBACK_RELAY");

@@ -36,10 +36,6 @@ int RID_Router::init(
     // blocked ifaces initialized to false
     this->blocked_ifaces = std::vector<bool>(iface_num, false);
 
-    // // if strict mode, we calculate P(L_i > L~i), else P(L_i >= L~i)
-    // if ((mode & MMH_FLOOD)) this->strict = true;
-    // else this->strict = false;
-
     // initialize router's probability module
     this->prob_mod = new Prob((__float080) this->bf_size, (__float080) this->req_size, this->iface_num);
 
@@ -84,7 +80,6 @@ int RID_Router::add_fwd_table_entry(
     this->fwd_table[i].iface = i;
     // iface_proportion : % of table entries associated w/ this iface
     this->fwd_table[i].iface_proportion = iface_proportion;
-
     // distribution of sizes among the entries associated w/ this iface
     this->fwd_table[i].f_distr = std::vector<__float080>(this->req_size, 0.0);
 
@@ -185,7 +180,6 @@ int RID_Router::forward(
     __float080 in_prob,
     std::vector<__float080> * in_fptree_prob,
     std::vector<std::vector<__float080> > & iface_probs,
-    std::vector<__float080> & event_num,
     std::vector<std::vector<__float080> > & out_fptree_probs) {
 
     std::cout << "RID_Router::forward() : [INFO] *** forwarding *** " << 
@@ -249,7 +243,6 @@ int RID_Router::forward(
         in_prob,
         in_fptree_prob, 
         iface_probs, 
-        event_num,
         out_fptree_probs) < 0) return -1;
 
     std::cout << "RID_Router::forward() : [INFO] iface probs :" << std::endl;

@@ -212,9 +212,9 @@ class Topology:
     def get_neighbors_within_radius(self, node_id, radius):
         return [node for node in nx.single_source_shortest_path(self.topology, node_id, radius)]
 
-    # add true positive entries to a topology (.scn file). we start by applying 
-    # changes in a networkx object, then call convert_to_scn() to generate a .scn 
-    # file.
+    # add true positive entries to a topology (.scn file). 
+    # we start by applying changes in a networkx object, then call 
+    # convert_to_scn() to generate a .scn file.
     #
     # algorithm:
     #   - find all shortest paths in topology originated on tp_src_id 
@@ -329,27 +329,25 @@ class Topology:
 
             return 0
 
-        # routes = nx.single_source_shortest_path(topology, tp_src_id)
+        print("Topology::add_tp_route() : [INFO] adding tp routes towards %s" % (str(tp_src_id)))
+        # get all shortest path starting at tp_src
         routes = self.get_shortest_paths()[tp_src_id]
-
-        # add a tp entry to the local iface of tp_src_id. this is basically 
-        # an edge with the same head and tail.
+        # add a tp entry to the *local* iface of tp_src
+        # this is basically an edge with the same head and tail
         self.topology.add_edge(tp_src_id, tp_src_id, 
             type = 'internal', 
             e1 = ("%d:%d"       % (tp_src_id, 0)), 
             e2 = ("%d:%d"       % (tp_src_id, 0)),
             tp = ("%d:%d:%d"    % (tp_src_id, 0, tp_size)))
 
-        # iterate through the links in the path, so that we add tp information to them
+        # iterate through the links in the path, add tp information to them
         for route in routes:
 
             path = [int(n) for n in route.split(",")]
             for i in xrange(len(path) - 1):
-                
                 # get src and dst ends of the edge
                 src, dst = path[i], path[i + 1]
-                # print("%d,%d" % (src, dst))
-                # determine the interface of dst to which we should add the tp info
+                 # determine the interface of dst to which we should add the tp info
                 edge = self.topology.get_edge_data(src, dst);
 
                 iface = 0
@@ -478,40 +476,37 @@ class Topology:
 
     def generate_paths(self, nr_paths, path_size):
 
-        print("%d and %d" % (nr_paths, path_size))
-
-        paths = defaultdict()
-
         stats = self.get_pop_level_statistics()
         shortest_paths = self.get_shortest_paths()
 
+        print("Topology::generate_paths() : [INFO] %d shortest path sources for [n : %d, size : %d]:" 
+            % (len(shortest_paths), nr_paths, path_size))
+
+        # collect x valid paths per source
+        paths = defaultdict()
+        sources = set([])
         for source in reversed([s for s in shortest_paths]):
 
-            if randint(0,0) > 0:
-                continue
-
-            if nr_paths < 1:
-                break
-
+            n_paths = 2
             for path in [p.split(",") for p in shortest_paths[source]]:
 
-                if nr_paths < 1:
-                    break
-                
                 curr_path_size = (len(path) - 1)
                 if curr_path_size == path_size:
-
-                    avg_path_outdegree = float(sum([stats['outdegree-list'][int(r)] for r in path])) / float(curr_path_size)                    
-                    if avg_path_outdegree > 10.0:
-                        continue
-
+                    sources.add(source)
+                    avg_path_outdegree = float(sum([stats['outdegree-list'][int(r)] for r in path])) / float(curr_path_size)
                     paths[("%d:%d:%.2f" % (int(path[0]), int(path[-1]), avg_path_outdegree))] = [int(p) for p in path]
-                    nr_paths -= 1
-                    
-                    break
 
-        print(paths)
-        return paths
+                    n_paths -= 1
+                    if (n_paths < 1):
+                        break
+
+        print("Topology::generate_paths() : [INFO] collected %d paths from %d diff. sources" 
+            % (len(paths), len(sources)))
+
+        # pick nr_paths ar random from paths
+        keys = [k for k in paths]
+        random.shuffle(keys)
+        return defaultdict(list, ((k, paths[k]) for k in keys[0:nr_paths]))
 
     def get_paths(self, selected_path_list):
 
@@ -841,12 +836,14 @@ def parse_pop_level_map(rocketfuel_file):
 
     # the famed Topology object...
     topology_obj = Topology(topology)
-    # trim nodes w/ outdegrees > 20 in order to make the evaluation less 
-    # time consuming
-    topology_obj.trim_topology(18)
+    
+    # # trim nodes w/ outdegrees > 20 in order to make the evaluation less 
+    # # time consuming
+    # topology_obj.trim_topology(18)
+
     # annotate edges w/ iface numbers
     topology_obj.annotate_edges()
-
+    # 
     topology_obj.get_shortest_paths(force = True)
     topology_obj.get_pop_level_statistics(force = True)
 

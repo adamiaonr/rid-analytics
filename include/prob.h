@@ -91,7 +91,6 @@ class Prob {
         __float080 in_prob,
         std::vector<__float080> * in_fptree_prob,
         std::vector<std::vector<__float080> > & iface_probs,
-        std::vector<__float080> & event_num,
         std::vector<std::vector<__float080> > & out_fptree_probs);
 
     private:
@@ -111,10 +110,10 @@ class Prob {
         std::vector<std::vector<Prob::fp_data *> > * iface_fp_data, 
         std::vector<__float080> & iface_prob);
 
-    int calc_event_num(
-        std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
-        std::vector<std::vector<__float080> > iface_probs,
-        std::vector<__float080> & event_num);
+    // int calc_event_num(
+    //     std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
+    //     std::vector<std::vector<__float080> > iface_probs,
+    //     std::vector<__float080> & event_num);
 
     int calc_fptree_probs(
         std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,

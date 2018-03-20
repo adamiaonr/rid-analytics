@@ -10,19 +10,6 @@
 #define MAX_RID_ROUTER_IFACE_NUM    10
 #define MAX_RID_ROUTER_ENTRY_SIZE   30
 
-// modes for handling multiple matches in routers. this 
-// influences efficiency. there are 3 diff. modes:
-//  -# MMH_FLOOD    : forward over all matching ifaces
-//  -# MMH_RANDOM   : forward over 1 random iface
-//  -# MMH_FALLBACK : forward using the fallback address
-#define MMH_FLOOD           0x00
-#define MMH_RANDOM          0x01
-#define MMH_FALLBACK        0x02
-
-// modes for egress prefix tree probability calculation
-#define EGRESS_PTREE_PROB_MODE_LOCAL    0x00
-#define EGRESS_PTREE_PROB_MODE_GLOBAL   0x01
-
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -132,7 +119,6 @@ class RID_Router {
             __float080 ingress_prob,
             std::vector<__float080> * in_fptree_prob,
             std::vector<std::vector<__float080> > & iface_probs,
-            std::vector<__float080> & event_probs,
             std::vector<std::vector<__float080> > & out_fptree_probs);
 
     private:

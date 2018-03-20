@@ -13,11 +13,10 @@ from collections import defaultdict
 from collections import OrderedDict
 
 # custom imports
-import plot_base
-import plot_global
-import plot_cdn
-import plot_opportunistic
 import plot_utils
+import globalr
+import cdn
+import opportunistic
 
 if __name__ == "__main__":
 
@@ -58,13 +57,7 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    # extract the data from all files in the data dir
-    data = plot_utils.extract_data(args.data_dir)
-
-    if args.case == 'base':
-        plot_base.plot_efficiency(data, args.test_file)
-
-    elif args.case == 'global':
+    if args.case == 'global':
 
         if not args.subcase:
             sys.stderr.write("""%s: [ERROR] please supply a subcase for %s case\n""" % (sys.argv[0], args.case))
@@ -72,41 +65,11 @@ if __name__ == "__main__":
             sys.exit(1)
 
         if args.subcase == 'bf-sizes':
-            plot_global.plot_bf_sizes(data, args.test_file)
-        elif args.subcase == 'request-sizes':
-            plot_global.plot_request_sizes(data, args.test_file)
-        elif args.subcase == 'bf-sizes-fallbacks':
-            plot_global.plot_bf_sizes_fallbacks(data, args.test_file)
-        else:
-            sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
-            parser.print_help()
-            sys.exit(1)
-
-    elif args.case == 'cdn':
-
-        if not args.subcase:
-            sys.stderr.write("""%s: [ERROR] please supply a subcase for %s case\n""" % (sys.argv[0], args.case))
-            parser.print_help()
-            sys.exit(1)
-
-        if args.subcase == 'fallbacks':
-            plot_cdn.plot_fallbacks(data, args.test_file)
-        elif args.subcase == 'fallbacks-no-tps':
-            plot_cdn.plot_fallbacks_no_tps(data, args.test_file)
-        else:
-            sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
-            parser.print_help()
-            sys.exit(1)
-
-    elif args.case == 'opportunistic':
-
-        if not args.subcase:
-            sys.stderr.write("""%s: [ERROR] please supply a subcase for %s case\n""" % (sys.argv[0], args.case))
-            parser.print_help()
-            sys.exit(1)
-
-        if args.subcase == 'fallbacks':
-            plot_opportunistic.plot_fallbacks(data, args.test_file)
+            globalr.plot_bf_sizes(args.data_dir, args.test_file, args.output_dir)
+        elif args.subcase == 'tab-sizes':
+            globalr.plot_tab_sizes(args.data_dir, args.test_file, args.output_dir)
+        elif args.subcase == 'req-sizes':
+            globalr.plot_req_sizes(args.data_dir, args.test_file, args.output_dir)
         else:
             sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
             parser.print_help()

@@ -19,7 +19,12 @@ from convert_rocketfuel import *
 from collections import defaultdict
 from collections import OrderedDict
 
-def add_new_test(main_block, topology_obj, test_parameters, path_examples, test_dir):
+def add_new_test(
+    main_block, 
+    topology_obj, 
+    test_parameters, 
+    path_examples, 
+    test_dir):
 
     # a test run is composed by:
     #   1) a topology nr. (e.g. 4755)
@@ -76,18 +81,18 @@ def add_new_test(main_block, topology_obj, test_parameters, path_examples, test_
         _topology_obj = Topology(_topology)
         _topology_obj.set_shortest_paths(topology_obj.get_shortest_paths())
 
-        print("tp path : %s" % (path))
         _topology_obj.add_tp_route(path[-1], int([x for x in test_parameters['entry-sizes']][0]))
+        print("%s::add_new_test() : [INFO] added tp route : %s" % (sys.argv[0], path))
 
-        # add a secondary tp source, if required
-        if len(tps) > 0:
-            for tp in tps:
-                _topology_obj.add_tp_route(
-                    tp_src_id = -1, 
-                    tp_size = int(tp.split(":")[1]), 
-                    radius = int(tp.split(":")[2]), 
-                    n_tp_srcs = int(tp.split(":")[0]), 
-                    dst_id = path[0])
+        # add a secondary tp source, if required (??)
+        # if len(tps) > 0:
+        #     for tp in tps:
+        #         _topology_obj.add_tp_route(
+        #             tp_src_id = -1, 
+        #             tp_size = int(tp.split(":")[1]), 
+        #             radius = int(tp.split(":")[2]), 
+        #             n_tp_srcs = int(tp.split(":")[0]), 
+        #             dst_id = path[0])
 
         # add fp records
         for fp_record in test_parameters['fps']:
@@ -116,9 +121,39 @@ def add_new_test(main_block, topology_obj, test_parameters, path_examples, test_
     return 0
 
 def generate_test(
-    test_dir, topology_file, 
-    req_sizes, bf_sizes, entry_size_records, table_sizes, fps, tps, modes, path_sizes, selected_paths,
+    test_dir, 
+    topology_file, 
+    req_sizes, 
+    bf_sizes, 
+    entry_size_records, 
+    table_sizes, 
+    fps, 
+    tps, 
+    modes, 
+    path_sizes, 
+    selected_paths,
     add_suffixes):
+
+    # describe the test to be generated
+    print("%s::generate_test() : [INFO] test info:" % (sys.argv[0]))
+    print("\ttest dir: %s" % (str(test_dir)))
+    print("\ttopology file: %s" % (str(topology_file)))
+    print("\treq sizes: %s" % (str(req_sizes)))
+    print("\tbf sizes: %s" % (str(bf_sizes)))
+    print("\tentry sizes: %s" % (str(entry_size_records)))
+    print("\ttable sizes: %s" % (str(table_sizes)))
+    print("\tfalse pos. entries: %s" % (str(fps)))
+    print("\ttrue pos. entries: %s" % (str(tps)))
+    print("\tmodes: %s" % (str(modes)))
+    print("\tpath sizes: %s" % (str(path_sizes)))
+    print("\tselected paths: %s" % (str(selected_paths)))
+    print("\tsuffixes: %s" % (str(add_suffixes)))
+
+    # if test_dir doesn't contain 3 main folders, create them now
+    for folder in ['configs', 'results', 'topologies']:
+        p = os.path.join(test_dir, folder)
+        if not os.path.exists(p):
+            os.makedirs(p)
 
     main_block = et.Element("test_run")
 
@@ -136,6 +171,8 @@ def generate_test(
     else:
         path_examples = topology_obj.generate_paths(int(path_sizes.split(":")[0]), int(path_sizes.split(":")[1]))
 
+    print("%s::generate_test() : [INFO] generated %d path examples (n : %d, size : %d, topology : %d):" 
+        % (sys.argv[0], len(path_examples), int(path_sizes.split(":")[0]), int(path_sizes.split(":")[1]), topology_nr))
     print(path_examples)
 
     # build the test cases w/ good ol' nested for loops
@@ -148,7 +185,6 @@ def generate_test(
 
                 for p in entry_size_proportions:
                     entry_sizes[p.split(":", 1)[0]] = (float(p.split(":", 1)[1]) / 100.0)
-                print("entry-sizes = %s" % str(entry_sizes))
 
                 for table_size in table_sizes:
                     for mode in modes:
@@ -219,17 +255,13 @@ if __name__ == "__main__":
         "--add-fps", 
          help = """add fp announcements around some node n. syntax 
             is <n id>:<annc. size>:<size %%>:<annc. radius>. if <n id> == 'S' 
-            sets <n id> to the source of request. e.g. '--add-fp "S:2:10:1' """)
+            sets <n id> to the source of request. e.g. '--add-fp "S:2:50:2' """)
 
     parser.add_argument(
         "--modes", 
          help = """MM_MODE (0 for 'flood', 1 for 'random', or 2 for 'fallback'), 
             RES_MODE (0 for 'drop packets', 1 for 'resolve w/ fallback'), in that order, 
             separated by ':' and '|' e.g. '--modes 0:0|0:1'""")
-
-    # parser.add_argument(
-    #     "--pick", 
-    #      help = """e.g. '--pick long:median:36:42|short:median:5:78'""")
 
     parser.add_argument(
         "--path-sizes", 
@@ -277,15 +309,6 @@ if __name__ == "__main__":
     modes = []
     if args.modes:
         modes = args.modes.split("|")
-
-    # picks = defaultdict()
-    # if args.pick:
-
-    #     pick = args.pick.split("|")
-
-    #     for p in pick:
-    #         pp = p.split(":")
-    #         picks[("%s:%s" % (pp[0], pp[1]))] = (int(pp[2]), int(pp[3]))
 
     if not args.path_sizes:
         args.path_sizes = "1:4"

@@ -62,12 +62,12 @@ network topology passed as input.\nby adamiaonr@cmu.edu");
 
     cmds->defineOption(
             OPTION_MM_MODE,
-            "multiple match resolution mode. 0 for 'FLOOD', 1 for 'RANDOM', 2 for 'FALLBACK'. default is 'FLOOD'.",
+            "multiple match resolution mode. 0 for 'floo' (aka 'AML'), 1 for 'random' (RML), 2/3 for 'hard/soft fallback'. default is 'flood'.",
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
             OPTION_RESOLV_MODE,
-            "enable/disable error resolution. 0 for 'DISABLE', 1 for 'ENABLE'. default is 'DISABLE'.",
+            "enable/disable incorrect delivery resolution. 0 for 'off', 1 for 'on'. default is 'off'.",
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(
@@ -107,12 +107,19 @@ int main (int argc, char **argv) {
     int request_size = 0;       
     // bloom filter size (in bit)
     int bf_size = 0;
-    // code for modes:
-    //  - bits 0 to 1 : multiple matches, 00 'flood', 01 'random', 10 'fallback'
-    //  - bit 2 : resolution OFF (0) ON (1) 
+    // codes for mode:
+    //  - bits 0 and 1 : resolution type:
+    //      - 0 (00) : AML forwarding or flood
+    //      - 1 (01) : RML forwarding or 'random link'
+    //      - 2 (10) : 'soft fallback'
+    //      - 3 (11) : 'hard fallback'
+    //  - bit 2 : resolution on/off:
+    //      - 0 : OFF
+    //      - 1 : ON
+    //
+    // note : if mode is 00 and resolution is on, we 
+    //        use feedback resolution (i.e. go back to source, then origin server)
     int mode = 0;
-    // incorrect delivery handling mode
-    int resolv_mode = 0;
     // origin server location. default is '1'
     char origin_server[MAX_ARRAY_SIZE];
     strncpy(origin_server, "1", MAX_ARRAY_SIZE);
@@ -193,11 +200,11 @@ int main (int argc, char **argv) {
             mode = std::stoi(cmds->optionValue(OPTION_MM_MODE));
         }
 
+        // incorrect delivery resolution mode
         if (cmds->foundOption(OPTION_RESOLV_MODE)) {
-
             int resolv = std::stoi(cmds->optionValue(OPTION_RESOLV_MODE));
-            // left-shift the resolv bit by 3
-            mode |= (resolv << 3);
+            // left-shift the resolv bits by 3 and OR-it to mode
+            mode |= (resolv << 2);
         }
 
         if (cmds->foundOption(OPTION_ORIGIN_SERVER)) {
