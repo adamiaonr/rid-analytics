@@ -131,8 +131,8 @@ class Prob {
     int calc_out_fptree_prob(
         uint8_t i,
         Prob::fp_data * iface_fp_data,
-        std::vector<__float080> log_prob_fp_neq,
-        std::vector<__float080> log_prob_fp_smeq,
+        std::vector<uint8_t> * tree_bitmask,
+        std::vector<__float080> * in_fptree_prob,
         std::vector<std::vector<__float080> > & out_fptree_probs);
 
     void calc_log_prob_fp_neq(

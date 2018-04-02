@@ -222,9 +222,6 @@ int Prob::calc_lm_prob(
     for (int f = (int) (this->n - 1); f >= 0; f--)
         log_prob_fp_smeq[f] = log_prob_fp_smeq[f + 1] + log_prob_fp_neq[f];
 
-    if (!iface_complement)
-        calc_out_fptree_prob(i, iface_fp_data, log_prob_fp_neq, log_prob_fp_smeq, out_fptree_probs);
-
     for (int t = (int) this->n; t >= 0; t--) {
         for (int f = (int) this->n; f >= 0; f--) {
             _calc_lm_prob(
@@ -272,12 +269,18 @@ int Prob::calc_lm_probs(
 // short.
 // 
 // algorithm : 
-//  - P(T_{out,i} = t) is influenced by 2 events:
-//      1) a fp tree of size t - to which the request is stuck - continues on iface i
-//      2) the request falls on a 'fresh' fp tree of size t - due to a local FP 
-//         match - which starts on iface i.
-//         note: this only happens if the request didn't get stuck to a fp tree on 
-//         previous routers. 
+//  - P(T_{out,i} = 0):
+//      - iff iface_fp_data[i].tp_size > 0
+//      - P(T_{out,i} = 0) = P(|FP| = 0)
+//
+//  - P(T_{out,i} > t) is influenced by 2 events:
+//      1) a fp tree of size t - to which the request is stuck - continues on 
+//         iface i
+//      2) the request falls on a `fresh' fp tree of size t. 
+//         this can happen due to 2 sub-events:
+//          - 2.1 : request got into the router w/ no association w/ fp tree
+//          - 2.2 : request got into the router assoc. w/ fp tree, but iface i 
+//                  is not assoc. w/ fp tree
 //
 // time complexity : 
 //  - O(N) : 
@@ -287,27 +290,79 @@ int Prob::calc_lm_probs(
 int Prob::calc_out_fptree_prob(
     uint8_t i,
     Prob::fp_data * iface_fp_data,
-    std::vector<__float080> log_prob_fp_neq,
-    std::vector<__float080> log_prob_fp_smeq,
+    std::vector<uint8_t> * tree_bitmask,
+    std::vector<__float080> * in_fptree_prob,
     std::vector<std::vector<__float080> > & out_fptree_probs) {
+
+    // aux. arrays used in fp rate calculation:
+    //  - P(|FP| =/= f) = (1.0 - P(|FP| = f)) : prob of not having an fp match of size f
+    std::vector<__float080> log_prob_fp_neq(n, 0.0);
+    //  - P(|FP| <= f) : prob of fp match smaller than or equal to f
+    std::vector<__float080> log_prob_fp_smeq(n + 1, 0.0);
 
     // init all probs to 0.0
     for (uint8_t t = 0; t <= this->n; t++)
         out_fptree_probs[i][t] = 0.0;
 
-    // P(P_{out,i} > 0)
-    for (uint8_t t = 1; t <= this->n; t++) {
+    // we add the influence of events 2.1 and 2.2
+    //  - k = 0 : event 2.1
+    //  - k = 1 : event 2.2
+    for (int k = 0; k < 2; k++) {
 
-        // contribution of event 1
-        out_fptree_probs[i][t] = this->fptree_prob[0][i][t];
-        // contribution of event 2 : local FP match
-        // FIXME : isn't '* fptree_prob[0][i][0]' missing here? 
-        // i.e the multiplication by P(T_i = 0)...
-        out_fptree_probs[i][t] +=
-            this->fptree_prob[0][i][0]
-            * exp(log_prob_fp_smeq[t])              // not have a FP > t
-            * (1.0 - exp(log_prob_fp_neq[t - 1]));  // have a FP of size t
+        __float080 lt_ratio = 0.0;
+        __float080 subevent_prob = 0.0;
+
+        if (k == 0) {
+        
+            // 2.1) req. got into router w/ no assoc. w/ fp tree
+            subevent_prob = (*in_fptree_prob)[0];
+            // all entries count for fp prob calculation
+            lt_ratio = 1.0;
+
+        } else {
+
+            // 2.2) req. assoc. fp tree, but not iface i
+            subevent_prob = (1.0 - (*in_fptree_prob)[0]) * (this->fptree_prob[0][i][0]);
+            // only account w/ % of entries coming from local trees
+            lt_ratio = local_tree_ratio(iface_fp_data, tree_bitmask);
+        }
+
+        calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, lt_ratio);
+        for (int f = (int) (this->n - 1); f >= 0; f--)
+            log_prob_fp_smeq[f] = log_prob_fp_smeq[f + 1] + log_prob_fp_neq[f];
+
+        // P(T_{out,i} = 0)
+        if (iface_fp_data->tp_size > 0) {
+
+            // the req. can advance to the next router w/ t = 0 w/ prob P(|FP| = 0)
+            // this can happen if:
+            //  - iface i is not assoc. to fp tree
+            //      - cases 2.1 or 2.2 above
+            //  - P(FP = 0)
+            out_fptree_probs[i][0] += 
+                subevent_prob                   // i not associated w/ fp tree
+                * exp(log_prob_fp_smeq[0]);     // not have a FP > 0 (i.e. having only FP = 0)
+
+        } else {
+
+            // there's no way of having a req. advance to the next router
+            // without at least 1 fp match
+            out_fptree_probs[i][0] = 0.0;
+        }
+
+        // P(T_{out,i} > 0)
+        for (uint8_t t = 1; t <= this->n; t++) {
+
+            out_fptree_probs[i][t] +=
+                subevent_prob
+                * exp(log_prob_fp_smeq[t])              // not have a FP > t
+                * (1.0 - exp(log_prob_fp_neq[t - 1]));  // have a FP of size t
+        }
     }
+
+    // contribution of event 1
+    for (uint8_t t = 1; t <= this->n; t++)
+        out_fptree_probs[i][t] += this->fptree_prob[0][i][t];
 
     return 0;
 }
@@ -373,6 +428,7 @@ int Prob::calc_fptree_probs(
             this->fptree_prob[0][i][t] = (str[i] / ((str_total > 0.0) ? str_total : 1.0)) * (*in_fptree_prob)[t];
             // P(T_{~i} > 0) = P(T_in = t) - (srt[i][t] * P(T_in = t))
             this->fptree_prob[1][i][t] = ((*in_fptree_prob)[t] - this->fptree_prob[0][i][t]);
+
             // SUM {for all t > 0} [ srt[i][t] * P(T_in = t) ]
             //  - will be used in calc. of P(T_i = 0, B)
             cumulative_fptree_prob[0] += this->fptree_prob[0][i][t];
@@ -586,15 +642,14 @@ int Prob::calc_probs(
         iface_probs[i][1] *= in_prob;
     }
 
-    // // calc avg. nr. of events (LLM, NLM, SLM and MLM)
-    // // time complexity : O(I)
-    // if (calc_event_num(iface_fp_data, iface_probs, event_num) < 0)
-    //     return -1;
-
+    // calc P(T_{out,i} = t)
     // for joint event '& got into this router'
     for (uint8_t i = 0; i < this->iface_num; i++) {
+
+        calc_out_fptree_prob(i, (*iface_fp_data)[0][i], tree_bitmask, in_fptree_prob, out_fptree_probs);
+
         std::cout << "Prob::calc_out_fptree_prob() : P(T_{out," << (int) i << "} = t) :" << std::endl;
-        for (uint8_t t = 1; t <= this->n; t++) {
+        for (uint8_t t = 0; t <= this->n; t++) {
             out_fptree_probs[i][t] *= in_prob;
             std::cout << "\tP(T_{out," << (int) i << "} = " << (int) t << ") = " << out_fptree_probs[i][t] << std::endl;
         }
