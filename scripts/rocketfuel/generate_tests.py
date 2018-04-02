@@ -270,7 +270,10 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--selected-paths", 
-         help = """specify the paths to choose""")
+         help = """specify the paths to choose for scenarios (instead of randomly 
+            generating them). 
+            e.g. '--selected-paths 0:3|0:2' for 2 paths starting at node 0, and 
+            ending at nodes 3 and 2, respectively.""")
 
     parser.add_argument(
         "--add-suffix", 

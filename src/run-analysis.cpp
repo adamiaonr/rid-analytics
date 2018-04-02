@@ -62,7 +62,7 @@ network topology passed as input.\nby adamiaonr@cmu.edu");
 
     cmds->defineOption(
             OPTION_MM_MODE,
-            "multiple match resolution mode. 0 for 'floo' (aka 'AML'), 1 for 'random' (RML), 2/3 for 'hard/soft fallback'. default is 'flood'.",
+            "multiple match resolution mode. 0 for 'flood' (aka 'AML'), 1 for 'random' (RML), 2/3 for 'hard/soft fallback'. default is 'flood'.",
             ArgvParser::OptionRequiresValue);
 
     cmds->defineOption(

@@ -508,23 +508,26 @@ class Topology:
         random.shuffle(keys)
         return defaultdict(list, ((k, paths[k]) for k in keys[0:nr_paths]))
 
-    def get_paths(self, selected_path_list):
+    def get_paths(self, selected_paths):
 
-        paths = defaultdict()
-
+        paths = OrderedDict()
         stats = self.get_pop_level_statistics()
         shortest_paths = self.get_shortest_paths()
 
-        for selected_path in selected_path_list:
-
+        for selected_path in selected_paths:
             for path in [p.split(",") for p in shortest_paths[int(selected_path.split(":")[0])]]:
-
-                if int(path[-1]) == int(selected_path.split(":")[1]):
+                # stop when path[-1] is == selected_path[-1]
+                if int(path[-1]) == int(selected_path.split(":")[-1]):
                     avg_path_outdegree = float(sum([stats['outdegree-list'][int(r)] for r in path])) / float(len(path) - 1)
                     paths[("%d:%d:%.2f" % (int(path[0]), int(path[-1]), avg_path_outdegree))] = [int(p) for p in path]
                     break
 
-        print(paths)
+        print("Topology::get_paths() : [INFO] collected %d paths, as requested:" % (len(paths)))
+        for i, path in enumerate(paths):
+            print("\t[%d:%d] : %s" % (
+                int(selected_paths[i].split(":")[0]), int(selected_paths[i].split(":")[-1]), 
+                str(paths[path])))
+
         return paths
 
     def get_pop_level_statistics(self, force = False):

@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<test_run>
+    <topology file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/pop-level-maps/1337/edges.wt">1337</topology>
+    <test id="1337-192-10-01-10000000-0-0">
+        <table-size>10000000</table-size>
+        <modes>0-0</modes>
+        <bf-size>192</bf-size>
+        <add-suffixes>['S512']</add-suffixes>
+        <entry-sizes>01:1.00</entry-sizes>
+        <tps>[]</tps>
+        <fps>['S:5:100:2']</fps>
+        <req-size>10</req-size>
+        <topology-nr>1337</topology-nr>
+        <paths>
+            <path avg_outdegree="3.50" file="/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/1337-192-10-01-10000000-0-0-000-003-S512.scn" length="2">000,001,003</path>
+        </paths>
+        <results_dir>/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/</results_dir>
+    </test>
+</test_run>
