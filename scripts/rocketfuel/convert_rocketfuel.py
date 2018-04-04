@@ -24,9 +24,11 @@ DEFAULT_DIFF_DISTR_DIR = "/home/adamiaonr/workbench/rid-analytics/experiments/ex
 # FIXME : this algorithm is terribly inefficient...
 def get_fwd_dist(topology, shortest_paths, router):
 
-    # fwd_dist values
+    # fwd entry size distr. values
     fwd_dist = defaultdict(float)
+    # holds the nodes accessible via shortest paths, through each neighbor 
     iface_trees = defaultdict(set)
+
     # nr. of nodes in topology
     node_num = len(topology.nodes())
     neighbor_num = len(topology.neighbors(router))
@@ -38,9 +40,6 @@ def get_fwd_dist(topology, shortest_paths, router):
     # paths with the sequence "neighbor,router" in it.
     for i, neighbor in enumerate(topology.neighbors(router)):
         
-        # if (i + 1) == neighbor_num:
-        #     fwd_dist[neighbor] = float(node_num - 1) - float(len(visited_sources))
-        #     continue
         search_str = ("%03d,%03d" % (neighbor, router))
         
         for source in shortest_paths:
@@ -64,23 +63,56 @@ def get_fwd_dist(topology, shortest_paths, router):
 
     return fwd_dist, iface_trees
 
-def to_tree_bitmask(topology, iface_trees):
+def to_tree_bitmask(topology, iface_trees, entry_sizes):
 
-    # calculate nr. of bytes of the bitmask. note we can represent 8 nodes per 
-    # byte
-    nr_bytes = int(math.ceil(float(len(topology.nodes())) / 8.0))
-    # print("got %d bytes" % (nr_bytes))
-    # initialize tree bitmask to 0s
-    tree_bitmask = [0] * nr_bytes
+    # calculate nr. of bytes of the bitmask. 
+    # 8 nodes per byte
+    nr_bytes = int(math.ceil(float(len(topology.topology.nodes())) / 8.0))
 
-    for source in iface_trees:
-        byte_index = int((source / 8))
-        # print("source %d, byte index : %d" % (source, byte_index))
-        # print("source : %d, tree_bitmask[%d] = %d" % (source, byte_index, tree_bitmask[byte_index]))
-        tree_bitmask[byte_index] |= (1 << (source % 8))
-        # print("bit index = %d, tree_bitmask[%d] = %d" % ((source % 8), byte_index, tree_bitmask[byte_index]))
+    # initialize tree bitmasks
+    # we use 2, for convience (i.e. it's more intuitive to do 
+    # this in python than c++):
+    #   - tree_bitmasks[s], per each fwd. entry size
+    #   - tree_bitmask, union of all sizes
+    tree_bitmasks = defaultdict(list)
+    tree_bitmasks[0] = [0] * nr_bytes
 
-    return nr_bytes, binascii.hexlify(bytearray(tree_bitmask))
+    # 1) start w/ base sizes (i.e. info in entry sizes, which 
+    # is applicable to all nodes)
+    for s in entry_sizes:
+
+        if not (entry_sizes[s] > 0.0):
+            continue
+
+        tree_bitmasks[s] = [0] * nr_bytes
+        for source in iface_trees:
+            byte_index = int((source / 8))
+            # print("source %d, byte index : %d" % (source, byte_index))
+            # print("source : %d, tree_bitmask[%d] = %d" % (source, byte_index, tree_bitmask[byte_index]))
+            tree_bitmasks[s][byte_index] |= (1 << (source % 8))
+            # print("bit index = %d, tree_bitmask[%d] = %d" % ((source % 8), byte_index, tree_bitmask[byte_index]))
+            tree_bitmasks[0][byte_index] |= (1 << (source % 8))
+
+    # 2) add fp route contributions
+    for s in topology.fp_srcs:
+
+        srcs = topology.fp_srcs[s].intersection(set([src for src in iface_trees]))
+
+        if s not in tree_bitmasks:
+            tree_bitmasks[s] = [0] * nr_bytes
+
+        for src in srcs:
+            byte_index = int((src / 8))
+            tree_bitmasks[s][byte_index] |= (1 << (src % 8))
+            tree_bitmasks[0][byte_index] |= (1 << (src % 8))
+
+    # 3) add tp route contributions
+
+    # 4) 'hexlify' the treebitmasks
+    for s in tree_bitmasks:
+        tree_bitmasks[s] = binascii.hexlify(bytearray(tree_bitmasks[s]))
+
+    return nr_bytes, tree_bitmasks
 
 def load_request_entry_diff_distributions(req_size, topology_block, diff_distr_type = 'l', diff_distr_dir = DEFAULT_DIFF_DISTR_DIR):
 
@@ -140,9 +172,15 @@ def print_pop_level_statistics(rocketfuel_dir):
 class Topology:
 
     def __init__(self, topology):
+
         self.topology = topology
         self.shortest_paths = defaultdict(list)
         self.stats = defaultdict()
+
+        # tp and fp sources - added w/ add_fp_route() and add_tp_route() - 
+        # indexed by size
+        self.tp_srcs = defaultdict(set)
+        self.fp_srcs = defaultdict(set)
 
     def draw_pop_level_map(self, filename):
 
@@ -234,7 +272,7 @@ class Topology:
                 # find the shortest paths from neighbor to dst_id
                 for path in self.get_shortest_paths()[neighbor]:
 
-                    path = [int(p) for p in path.split(",")]
+                    path = [ int(p) for p in path.split(",") ]
 
                     # if the end of that path isn't src_id, continue
                     if path[-1] != dst_id:
@@ -246,6 +284,9 @@ class Topology:
                         continue
 
                     print("adding sec tp source : %d -> %d : %s (size : %d)" % (path[0], path[-1], str(path), tp_size))
+
+                    # add path[0] - i.e. the origin of the fp route - to the fp_srcs dict
+                    self.tp_srcs[tp_size].add(path[0])
 
                     # add a tp entry to the local iface of tp_src_id. this is basically 
                     # an edge with the same head and tail.
@@ -366,14 +407,13 @@ class Topology:
         # get neighbors within radius of src_id
         neighbors = self.get_neighbors_within_radius(src_id, radius)
 
-        # print("%d neighbors of %d : %s" % (radius, src_id, str(neighbors)))
         # iterate over neighbors of src_id
         for neighbor in neighbors:
 
             # find the path from neighbor to src_id
             for path in self.get_shortest_paths()[neighbor]:
 
-                path = [int(p) for p in path.split(",")]
+                path = [ int(p) for p in path.split(",") ]
 
                 # if the end of that path isn't src_id, continue
                 if path[-1] != src_id:
@@ -383,6 +423,9 @@ class Topology:
                 if ((len(path) - 1) < radius):
                     # print("%d -> %d : %s (%d : no radius)" % (path[0], path[-1], str(path), len(path) - 1))
                     continue
+
+                # add path[0] - i.e. the origin of the fp route - to the fp_srcs dict
+                self.fp_srcs[fp_size].add(path[0])
 
                 # print("adding fp route : %d -> %d : %s (%d)" % (path[0], path[-1], str(path), len(path) - 1))
 
@@ -564,33 +607,35 @@ class Topology:
 
     def convert_to_scn(self, entry_sizes, table_size = 100000000, req_size = 5, scn_filename = 'topology.scn'):
 
+        # add <topology> block (main block of .scn file)
         topology_block = et.Element("topology")
 
-        # get shortest path list and determine a ttl value for the 
-        # topology (2 * longest path, as in http://www.map.meteoswiss.ch/map-doc/ftp-probleme.htm)
+        # get shortest path list
         shortest_paths = self.get_shortest_paths()
-
+        # determine a ttl value for the topology 
+        # 2 * longest path, as in http://www.map.meteoswiss.ch/map-doc/ftp-probleme.htm
         ttl = 0
         for source in shortest_paths:
             for path in shortest_paths[source]:
-
                 path_length = (len(path.split(",")) - 1)
                 if ttl < path_length:
                     ttl = path_length
 
+        # add <ttl> block
         ttl_block = et.SubElement(topology_block, "ttl").text = str(ttl)
-
-        # load |F\R| distributions
+        # load |F\R| distributions from .fdist files & add <f_r_dist diff> blocks,
+        # one per possible |F\R| value
         load_request_entry_diff_distributions(req_size, topology_block)
-        # fwd table size
+        # add <fwd_table_size> block
         fwd_table_size_block = et.SubElement(topology_block, "fwd_table_size").text = str(table_size)
 
-        # cycle through each node in the topology. we then write 5 diff. types of 
-        # blocks: 
+        # cycle through each node in the topology. 
+        # we then write 5 diff. types of blocks: 
         #   - <router id=""> block
         #   - <link local="" remote="" rrouter=""> block
         #   - <fwd_size_dist size="">x.xx</fwd_size_dist> block
         #   - <fwd_dist iface="y">x.xx</fwd_dist>
+        #   - <tree_bitmask len="" size=""> ... </tree_bitmask>
         #   - <tp iface="y">x</tp>
         for router in self.topology.nodes():
 
@@ -599,10 +644,12 @@ class Topology:
             # add <router id=""> block
             router_block = et.SubElement(topology_block, "router", id = str(router))
 
-            # get the fwd_dist values for the router's ifaces
+            # get: 
+            #   - the fwd entry size distr. values for each of the ifaces in router
+            #   - the set of nodes accessible via each of the router's neighbors
             fwd_dist, iface_trees = get_fwd_dist(self.topology, shortest_paths, router)
 
-            # add <link> blocks, one for each neighbor of router
+            # add <link> blocks, one per each neighbor of router
             for i, neighbor_router in enumerate(self.topology.neighbors(router)):
 
                 # extract the attributes of the link
@@ -624,12 +671,11 @@ class Topology:
                     remote  = str(remote_iface), 
                     rrouter = str(neighbor_router))
 
-                # add <fwd_size_dist> blocks, indicating the distribution of 
-                # forwarding entry sizes at each link.
-
-                # check for 'fp' entries in the link
+                # add <fwd_size_dist> blocks : distribution of forwarding entry sizes at each link
                 fwd_size_dist = defaultdict(float)
                 fwd_size_dist_total = 0.0
+
+                # check for 'fp' entries in the link
                 if 'fp' in edge:
                     fp_records = edge['fp'].split("|")
                     for fp_record in fp_records:
@@ -640,7 +686,7 @@ class Topology:
                 for i in xrange(req_size):
                     if str(i + 1) in entry_sizes:
                         fwd_size_dist[i + 1] += float(entry_sizes[str(i + 1)])
-                        fwd_size_dist_total += float(entry_sizes[str(i + 1)])
+                        fwd_size_dist_total  += float(entry_sizes[str(i + 1)])
 
                 for i in xrange(req_size):
                     fwd_size_dist_block_text = "0.00"
@@ -649,26 +695,33 @@ class Topology:
                     fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = fwd_size_dist_block_text
 
                 # add <tp> block (if edge has 'tp' attribute)
-                # <tp iface="2">1</tp>
                 if ('tp' in edge): 
                     for tp_record in edge['tp'].split("|"):
                         if int(tp_record.split(':')[0]) == router:
                             tp_block = et.SubElement(router_block, "tp", iface = tp_record.split(':')[1]).text = tp_record.split(':')[2]
 
-                # add tree_bitmask
+                # add <tree_bitmask> blocks, one per entry size (only entry sizes for which % > 0)
                 if (neighbor_router == router):
-                    nr_bytes, tree_bitmask = to_tree_bitmask(self.topology, [router])
-                    tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
 
+                    # adding local iface
+
+                    nr_bytes, tree_bitmasks = to_tree_bitmask(self, [router], entry_sizes)
+
+                    # - tree bitmask per fwd entry size
+                    for s in tree_bitmasks:
+                        tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", len = str(nr_bytes), size = str(s)).text = tree_bitmasks[s]
+    
+                    # mark local iface as added
                     added_local_iface = True
                 
                 else:
-                    nr_bytes, tree_bitmask = to_tree_bitmask(self.topology, list(iface_trees[neighbor_router]))
-                    tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
+                    # adding any other iface
+                    nr_bytes, tree_bitmasks = to_tree_bitmask(self, list(iface_trees[neighbor_router]), entry_sizes)
 
+                    for s in tree_bitmasks:
+                        tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", len = str(nr_bytes), size = str(s)).text = tree_bitmasks[s]
 
-            # add a special local link (represents local delivery), if not added 
-            # already
+            # add a special local link (represents local delivery), if not added already
             if not added_local_iface:
                 link_block = et.SubElement(router_block, "link", 
                     local   = str(0), 
@@ -683,15 +736,16 @@ class Topology:
 
                     fwd_size_dist_block = et.SubElement(link_block, "fwd_size_dist", size = str(i + 1)).text = fwd_size_dist_block_text
 
-                nr_bytes, tree_bitmask = to_tree_bitmask(self.topology, [router])
-                tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", size = str(nr_bytes)).text = tree_bitmask
+                nr_bytes, tree_bitmasks = to_tree_bitmask(self, [router], entry_sizes)
+                for s in tree_bitmasks:
+                    tree_bitmask_block = et.SubElement(link_block, "tree_bitmask", len = str(nr_bytes), size = str(s)).text = tree_bitmasks[s]
 
             # add <fwd_dist> blocks for each iface
             # if the local iface isn't calculated in get_fwd_dist() (e.g. that 
-            # only happens if the link (router, router) has been added), add it 
-            # now.
+            # only happens if the link (router, router) has been added), add it now.
             if not added_local_iface:
                 fwd_dist_block = et.SubElement(router_block, "fwd_dist", iface = str(0)).text = ("%.4f" % (fwd_dist[router]))
+
             # finally, the ifaces pointing to each neighboring router
             for neighbor_router in self.topology.neighbors(router):
 

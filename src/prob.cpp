@@ -25,7 +25,7 @@ int count_set_bits(int number) {
 void Prob::calc_log_prob_fp_neq(
     Prob::fp_data * iface_fp_data,
     std::vector<__float080> & log_prob_fp_neq,
-    __float080 lt_ratio) {
+    std::vector<__float080> lt_ratios) {
 
     // as a precaution, reset log_prob_fp_neq to 0.0
     std::fill(log_prob_fp_neq.begin(), log_prob_fp_neq.end(), 0.0);
@@ -33,7 +33,7 @@ void Prob::calc_log_prob_fp_neq(
     for (uint8_t f = 0; f < log_prob_fp_neq.size(); f++) {
 
         // total nr. of entries w/ size f
-        __float080 num_entries = iface_fp_data->num_entries * iface_fp_data->f_distr[f] * lt_ratio;
+        __float080 num_entries = iface_fp_data->num_entries * iface_fp_data->f_distr[f] * lt_ratios[f];
         // std::cout << "Prob::calc_log_prob_fp_neq() : num_entries[" << f << "] = " 
         //     << num_entries << " (out of " << iface_fp_data->num_entries << ")" << std::endl;
 
@@ -61,38 +61,45 @@ void Prob::calc_log_prob_fp_neq(
 }
 
 int count_shared_trees(
+    int t,
     Prob::fp_data * iface_fp_data,
-    std::vector<uint8_t> * tree_bitmask) {
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks) {
 
     int count = 0;
-    for (unsigned int k = 0; k < (*tree_bitmask).size(); k++)
-        count += count_set_bits((int) (((*tree_bitmask)[k]) & (iface_fp_data->tree_bitmask[k])));
+    for (unsigned int k = 0; k < (*tree_bitmasks)[t].size(); k++)
+        count += count_set_bits((int) (((*tree_bitmasks)[t][k]) & (iface_fp_data->tree_bitmasks[t][k])));
 
     return count;
 }
 
-__float080 local_tree_ratio(
+void local_tree_ratios(
     Prob::fp_data * iface_fp_data,
-    std::vector<uint8_t> * tree_bitmask) {
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks,
+    std::vector<__float080> & lt_ratios) {
 
-    // 1) count trees in iface
-    int trees = 0, shared_trees = 0;
-    for (unsigned int k = 0; k < (*tree_bitmask).size(); k++) {
-        trees += count_set_bits((int) iface_fp_data->tree_bitmask[k]);
-        shared_trees += count_set_bits((int) (((*tree_bitmask)[k]) & (iface_fp_data->tree_bitmask[k])));
+    std::map<int, std::vector<uint8_t> >::iterator itr;
+    for (itr = (*tree_bitmasks).begin(); itr != (*tree_bitmasks).end(); itr++) {
+
+        // isolate the tree size
+        int t = itr->first;
+        // skip 'union' of tree bitmasks
+        if (t == 0) continue;
+        // count trees & shared trees which pass through iface
+        int trees = 0, shared_trees = 0;
+        for (unsigned int k = 0; k < (*tree_bitmasks)[t].size(); k++) {
+            trees += count_set_bits((int) iface_fp_data->tree_bitmasks[t][k]);
+            shared_trees += count_set_bits((int) (((*tree_bitmasks)[t][k]) & (iface_fp_data->tree_bitmasks[t][k])));
+        }
+
+        lt_ratios[t - 1] = (__float080) (trees - shared_trees) / (__float080) (trees);
+        std::cout << "\t [# trees] : " << trees
+            << "\n\t [# shared trees] : " << shared_trees
+            << "\n\t [lt ratios[" << (t) << "]] : " << lt_ratios[t - 1] << std::endl;
     }
-
-    __float080 lt_ratio = (__float080) (trees - shared_trees) / (__float080) (trees);
-    std::cout << "\t [# trees] : " << trees
-        << "\n\t [# shared trees] : " << shared_trees
-        << "\n\t [lt ratio] : " << lt_ratio << std::endl;
-
-    return lt_ratio;
 }
 
 void _calc_lm_prob(
-    int f, 
-    int t,
+    int f, int t,
     Prob::fp_data * iface_fp_data,
     std::vector<__float080> * log_prob_fp_neq,
     std::vector<__float080> * log_prob_fp_smeq,
@@ -127,7 +134,7 @@ void _calc_lm_prob(
 
             } else {
 
-                if (iface_fp_data->on_fptree && t > 0) {
+                if (iface_fp_data->on_fptree[t] && t > 0) {
 
                     (*lmp)[f] = 0.0;
                 
@@ -161,7 +168,8 @@ int Prob::calc_lm_prob(
     if (iface_fp_data->num_entries < 1.0) { (*lmp)[0] = 1.0; return 0; }
 
     // fill P(|FP| =/= f) = (1.0 - P(|FP| = f)), for all f
-    calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, 1.0);
+    std::vector<__float080> lt_ratios = std::vector<__float080>(n, 1.0);
+    calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, lt_ratios);
     // calc P(|FP| <= f), for all f
     for (int f = (int) (this->n - 1); f >= 0; f--)
         log_prob_fp_smeq[f] = log_prob_fp_smeq[f + 1] + log_prob_fp_neq[f];
@@ -181,8 +189,7 @@ int Prob::calc_lm_prob(
 int Prob::calc_lm_prob(
     uint8_t i, 
     Prob::fp_data * iface_fp_data,
-    std::vector<uint8_t> * tree_bitmask,
-    std::vector<std::vector<__float080> > & out_fptree_probs,
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks,
     bool iface_complement) {
 
     // either 'i' or '~i (complement)' largest match probs
@@ -205,11 +212,12 @@ int Prob::calc_lm_prob(
 
     // calc the ratio of trees which can origin FP trees locally at the router
     std::cout << "Prob::calc_lm_prob(iface) : [INFO] lt ratio iface  " << (iface_complement ? "~" : "") << (int) i << " :" << std::endl;
-    __float080 lt_ratio = local_tree_ratio(iface_fp_data, tree_bitmask);
+    std::vector<__float080> lt_ratios(n, 0.0);
+    local_tree_ratios(iface_fp_data, tree_bitmasks, lt_ratios);
 
     std::cout << "Prob::calc_lm_prob(iface) : [INFO] iface " << (iface_complement ? "~" : "") << ((int) i) << " stats :"
-        << "\n\t [n, m, k] : " << this->n << ", " << this->m << ", " << this->k
-        << "\n\t [# entries] : " << iface_fp_data->num_entries << " (" << (iface_fp_data->num_entries * lt_ratio) << ")";
+        << "\n\t [n, m, k] : " << this->n << ", " << this->m << ", " << this->k << ")";
+        // << "\n\t [# entries] : " << iface_fp_data->num_entries << " (" << (iface_fp_data->num_entries * lt_ratio) << ")";
     //     << "\t\n [lmp size] : " << (*lmp).size()
     //     << "\t\n [f_distr] : ";
     // for(uint8_t f = 0; f < this->n; f++) 
@@ -217,7 +225,7 @@ int Prob::calc_lm_prob(
     std::cout << std::endl;
 
     // fill P(|FP| =/= f) = (1.0 - P(|FP| = f)), for all f
-    calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, lt_ratio);
+    calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, lt_ratios);
     // calc P(|FP| <= f), for all f
     for (int f = (int) (this->n - 1); f >= 0; f--)
         log_prob_fp_smeq[f] = log_prob_fp_smeq[f + 1] + log_prob_fp_neq[f];
@@ -237,27 +245,18 @@ int Prob::calc_lm_prob(
 
 int Prob::calc_lm_probs(
     std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
-    std::vector<uint8_t> * tree_bitmask,
-    std::vector<std::vector<__float080> > & out_fptree_probs) {
-
-    // if (this->has_lm_prob) {
-    //     std::cout << "Prob::calc_lm_probs() : [INFO] pre-calculated lm_cond_prob table available. skipping." << std::endl;
-    //     return 0;
-    // }
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks) {
 
     for (uint8_t i = 0; i < this->iface_num; i++) {
 
         // time complexity : O(N^2 * I)
-        calc_lm_prob(i, (*iface_fp_data)[0][i], tree_bitmask, out_fptree_probs);       // iface i
+        calc_lm_prob(i, (*iface_fp_data)[0][i], tree_bitmasks);       // iface i
         // time complexity : O(N^2 * I)
-        calc_lm_prob(i, (*iface_fp_data)[1][i], tree_bitmask, out_fptree_probs, true); // iface ~i
+        calc_lm_prob(i, (*iface_fp_data)[1][i], tree_bitmasks, true); // iface ~i
 
         print_lm_prob(i);
         print_lm_prob(i, true);
     }
-
-    // mark lm probs as calculated
-    this->has_lm_prob = true;
 
     return 0;
 }
@@ -290,7 +289,7 @@ int Prob::calc_lm_probs(
 int Prob::calc_out_fptree_prob(
     uint8_t i,
     Prob::fp_data * iface_fp_data,
-    std::vector<uint8_t> * tree_bitmask,
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks,
     std::vector<__float080> * in_fptree_prob,
     std::vector<std::vector<__float080> > & out_fptree_probs) {
 
@@ -307,9 +306,10 @@ int Prob::calc_out_fptree_prob(
     // we add the influence of events 2.1 and 2.2
     //  - k = 0 : event 2.1
     //  - k = 1 : event 2.2
+    std::vector<__float080> lt_ratios;
+
     for (int k = 0; k < 2; k++) {
 
-        __float080 lt_ratio = 0.0;
         __float080 subevent_prob = 0.0;
 
         if (k == 0) {
@@ -317,17 +317,18 @@ int Prob::calc_out_fptree_prob(
             // 2.1) req. got into router w/ no assoc. w/ fp tree
             subevent_prob = (*in_fptree_prob)[0];
             // all entries count for fp prob calculation
-            lt_ratio = 1.0;
+            lt_ratios = std::vector<__float080>(n, 1.0);
 
         } else {
 
             // 2.2) req. assoc. fp tree, but not iface i
             subevent_prob = (1.0 - (*in_fptree_prob)[0]) * (this->fptree_prob[0][i][0]);
             // only account w/ % of entries coming from local trees
-            lt_ratio = local_tree_ratio(iface_fp_data, tree_bitmask);
+            lt_ratios = std::vector<__float080>(n, 0.0);
+            local_tree_ratios(iface_fp_data, tree_bitmasks, lt_ratios);
         }
 
-        calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, lt_ratio);
+        calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, lt_ratios);
         for (int f = (int) (this->n - 1); f >= 0; f--)
             log_prob_fp_smeq[f] = log_prob_fp_smeq[f + 1] + log_prob_fp_neq[f];
 
@@ -395,25 +396,34 @@ int Prob::calc_out_fptree_prob(
 //  - O(N * I)
 int Prob::calc_fptree_probs(
     std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
-    std::vector<uint8_t> * tree_bitmask,
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks,
     std::vector<__float080> * in_fptree_prob) {
 
-    // (1) calculate str[i] : shared tree ratios for iface i
+    // (1) calculate str[i][t] : shared tree ratios for iface i, size t
     __float080 str_total = 0.0;
-    std::vector<__float080> str(this->iface_num, 0.0);
+    std::vector< std::vector<__float080> > str(this->iface_num, std::vector<__float080>(this->n + 1, 0.0));
 
     for (uint8_t i = 0; i < this->iface_num; i++) {
         // don't consider blocked ifaces
         if ((*iface_fp_data)[0][i]->is_blocked) continue;
-        // count shared trees w/ bitmask on iface i
-        str[i] = (__float080) count_shared_trees((*iface_fp_data)[0][i], tree_bitmask);
-        // keep track of total # of shared trees
-        str_total += str[i];
+
+        std::map<int, std::vector<uint8_t> >::iterator itr;
+        for (itr = (*tree_bitmasks).begin(); itr != (*tree_bitmasks).end(); itr++) {
+
+            int t = itr->first;
+            if (t == 0) continue;
+
+            // count shared trees w/ bitmask on iface i
+            str[i][t] = (__float080) count_shared_trees(t, (*iface_fp_data)[0][i], tree_bitmasks);
+            // keep track of total # of shared trees
+            str_total += str[i][t];
+        }
     }
 
     std::cout << "Prob::calc_fptree_probs() : shared tree ratios :" << std::endl;
     for (uint8_t i = 0; i < this->iface_num; i++)
-        std::cout << "\tstr[" << (int) i << "] = " << str[i] / ((str_total > 0.0) ? str_total : 1.0) << std::endl;
+        for (uint8_t t = 1; t < (this->n + 1); t++)
+            std::cout << "\tstr[" << (int) i << "][" << (int) t << "] = " << str[i][t] / ((str_total > 0.0) ? str_total : 1.0) << std::endl;
 
     // (2) calc P(T_i = t), for all {i,t} pairs
     for (uint8_t i = 0; i < this->iface_num; i++) {
@@ -425,7 +435,7 @@ int Prob::calc_fptree_probs(
         for (uint8_t t = 1; t < (this->n + 1); t++) {
 
             // P(T_i > 0) = srt[i][t] * P(T_in = t)
-            this->fptree_prob[0][i][t] = (str[i] / ((str_total > 0.0) ? str_total : 1.0)) * (*in_fptree_prob)[t];
+            this->fptree_prob[0][i][t] = (str[i][t] / ((str_total > 0.0) ? str_total : 1.0)) * (*in_fptree_prob)[t];
             // P(T_{~i} > 0) = P(T_in = t) - (srt[i][t] * P(T_in = t))
             this->fptree_prob[1][i][t] = ((*in_fptree_prob)[t] - this->fptree_prob[0][i][t]);
 
@@ -615,7 +625,7 @@ int Prob::calc_iface_prob(
 //  - overall, O()
 int Prob::calc_probs(
     std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
-    std::vector<uint8_t> * tree_bitmask,    // tree bitmask from prev router
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks,    // tree bitmasks from prev router
     __float080 in_prob,
     std::vector<__float080> * in_fptree_prob,
     std::vector<std::vector<__float080> > & iface_probs,
@@ -623,14 +633,14 @@ int Prob::calc_probs(
 
     // calc P(P_i = p) and P(P_{~i} = p)
     // time complexity : O(N * I)
-    if (calc_fptree_probs(iface_fp_data, tree_bitmask, in_fptree_prob) < 0)
+    if (calc_fptree_probs(iface_fp_data, tree_bitmasks, in_fptree_prob) < 0)
         return -1;
     // if (calc_fptree_probs(iface_fp_data, tree_bitmask, in_fptree_prob, true) < 0)
     //     return -1;
 
     // calc P(L_i = l | P_i = p) and P(L_{~i} = l | P_{~i} = p)
     // time complexity : O(N^2 * I)
-    if (calc_lm_probs(iface_fp_data, tree_bitmask, out_fptree_probs) < 0) 
+    if (calc_lm_probs(iface_fp_data, tree_bitmasks) < 0) 
         return -1;
 
     // calc P(iface = i)
@@ -646,7 +656,7 @@ int Prob::calc_probs(
     // for joint event '& got into this router'
     for (uint8_t i = 0; i < this->iface_num; i++) {
 
-        calc_out_fptree_prob(i, (*iface_fp_data)[0][i], tree_bitmask, in_fptree_prob, out_fptree_probs);
+        calc_out_fptree_prob(i, (*iface_fp_data)[0][i], tree_bitmasks, in_fptree_prob, out_fptree_probs);
 
         std::cout << "Prob::calc_out_fptree_prob() : P(T_{out," << (int) i << "} = t) :" << std::endl;
         for (uint8_t t = 0; t <= this->n; t++) {

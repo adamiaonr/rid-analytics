@@ -36,8 +36,6 @@ class Prob {
             tp_size = 0;
             num_entries = 0.0;
             entry_prop = 0.0;
-
-            on_fptree = false;
             is_blocked = false;
         }
         ~fp_data() {}
@@ -49,8 +47,8 @@ class Prob {
         std::vector<__float080> f_distr;    // distr. of entry sizes
         std::vector<__float080> f_r_distr;  // |f\r| distr.
 
-        std::vector<uint8_t> tree_bitmask;  // bitmask of iface
-        bool on_fptree;
+        std::map<int, std::vector<uint8_t> > tree_bitmasks;  // bitmasks of iface
+        std::vector<bool> on_fptree;
         bool is_blocked;                    // is the iface blocked?
     };
 
@@ -87,7 +85,7 @@ class Prob {
 
     int calc_probs(
         std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
-        std::vector<uint8_t> * tree_bitmask,    // tree bitmask from prev router
+        std::map<int, std::vector<uint8_t> > * tree_bitmasks,    // tree bitmask from prev router
         __float080 in_prob,
         std::vector<__float080> * in_fptree_prob,
         std::vector<std::vector<__float080> > & iface_probs,
@@ -97,14 +95,12 @@ class Prob {
 
     int calc_lm_probs(
         std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
-        std::vector<uint8_t> * tree_bitmask,
-        std::vector<std::vector<__float080> > & out_fptree_probs);
+        std::map<int, std::vector<uint8_t> > * tree_bitmasks);
 
     int calc_lm_prob(
         uint8_t i, 
         Prob::fp_data * iface_fp_data,
-        std::vector<uint8_t> * tree_bitmask,
-        std::vector<std::vector<__float080> > & out_fptree_probs, 
+        std::map<int, std::vector<uint8_t> > * tree_bitmasks,
         bool iface_complement = false);
     int calc_lm_prob(
         uint8_t i, 
@@ -125,20 +121,20 @@ class Prob {
 
     int calc_fptree_probs(
         std::vector<std::vector<Prob::fp_data *> > * iface_fp_data,
-        std::vector<uint8_t> * tree_bitmask,
+        std::map<int, std::vector<uint8_t> > * tree_bitmasks,
         std::vector<__float080> * in_fptree_prob);
 
     int calc_out_fptree_prob(
         uint8_t i,
         Prob::fp_data * iface_fp_data,
-        std::vector<uint8_t> * tree_bitmask,
+        std::map<int, std::vector<uint8_t> > * tree_bitmasks,
         std::vector<__float080> * in_fptree_prob,
         std::vector<std::vector<__float080> > & out_fptree_probs);
 
     void calc_log_prob_fp_neq(
         Prob::fp_data * iface_fp_data,
         std::vector<__float080> & log_prob_fp_neq,
-        __float080 lt_ratio = 1.0);
+        std::vector<__float080> lt_ratios);
     void print_lm_prob(uint8_t i, bool iface_complement = false);
 
     // basic units of prob calculation:

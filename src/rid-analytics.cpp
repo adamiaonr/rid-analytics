@@ -314,37 +314,46 @@ int RID_Analytics::build_network(std::string nw_filename) {
             // *** extract the tree bitmask : a bitmask which indicates which
             // *** sources are reachable from this iface 
             // ***
-            pugi::xml_node tree_bitmask_block = link.child("tree_bitmask");
-            std::string tree_bitmask_str = std::string(tree_bitmask_block.text().as_string());
+            std::map<int, std::vector<uint8_t> > tree_bitmasks;
 
-            std::vector<uint8_t> tree_bitmask;
-            for (unsigned int i = 0; i < tree_bitmask_str.size(); ) {
+            for (pugi::xml_node tree_bitmask_block = link.child("tree_bitmask"); 
+                tree_bitmask_block; 
+                tree_bitmask_block = tree_bitmask_block.next_sibling("tree_bitmask")) {
 
-                uint8_t higher_bits = (uint8_t) ((tree_bitmask_str[i] >= 'a') ? (tree_bitmask_str[i] - 'a' + 10) : (tree_bitmask_str[i] - '0'));
-                // std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
-                //     << router_id << "][" << link.attribute("local").as_int() << "] : "
-                //     << "\n\tstr (H4): " << tree_bitmask_str[i]
-                //     << "\n\tint (H4): " << (int) higher_bits << std::endl;
+                std::string tree_bitmask_str = std::string(tree_bitmask_block.text().as_string());
+                std::vector<uint8_t> tree_bitmask;
 
-                i++;
+                for (unsigned int i = 0; i < tree_bitmask_str.size(); ) {
 
-                uint8_t lower_bits = (uint8_t) ((tree_bitmask_str[i] >= 'a') ? (tree_bitmask_str[i] - 'a' + 10) : (tree_bitmask_str[i] - '0'));
-                // std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
-                //     << router_id << "][" << link.attribute("local").as_int() << "] : "
-                //     << "\n\tstr (L4): " << tree_bitmask_str[i]
-                //     << "\n\tint (L4): " << (int) lower_bits
-                //     << "\n\tint (H4L4): " << (int) (((higher_bits << 4) & 0xF0) | (lower_bits & 0x0F)) << std::endl;
+                    uint8_t higher_bits = (uint8_t) ((tree_bitmask_str[i] >= 'a') ? (tree_bitmask_str[i] - 'a' + 10) : (tree_bitmask_str[i] - '0'));
+                    // std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
+                    //     << router_id << "][" << link.attribute("local").as_int() << "] : "
+                    //     << "\n\tstr (H4): " << tree_bitmask_str[i]
+                    //     << "\n\tint (H4): " << (int) higher_bits << std::endl;
 
-                i++;
+                    i++;
 
-                tree_bitmask.push_back(((higher_bits << 4) & 0xF0) | (lower_bits & 0x0F));
+                    uint8_t lower_bits = (uint8_t) ((tree_bitmask_str[i] >= 'a') ? (tree_bitmask_str[i] - 'a' + 10) : (tree_bitmask_str[i] - '0'));
+                    // std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
+                    //     << router_id << "][" << link.attribute("local").as_int() << "] : "
+                    //     << "\n\tstr (L4): " << tree_bitmask_str[i]
+                    //     << "\n\tint (L4): " << (int) lower_bits
+                    //     << "\n\tint (H4L4): " << (int) (((higher_bits << 4) & 0xF0) | (lower_bits & 0x0F)) << std::endl;
+
+                    i++;
+
+                    tree_bitmask.push_back(((higher_bits << 4) & 0xF0) | (lower_bits & 0x0F));
+                }
+
+                unsigned int tb_size = tree_bitmask_block.attribute("size").as_uint();
+                tree_bitmasks[tb_size] = tree_bitmask;
+
+                std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
+                    << router_id << "][" << link.attribute("local").as_int() << "] : ";
+                for (unsigned int i = 0; i < tree_bitmasks[tb_size].size(); i++)
+                    std::cout << "[" << (int) tree_bitmasks[tb_size][i] << "] ";
+                std::cout << std::endl;
             }
-
-            std::cout << "RID_Analytics::build_network() : [INFO] tree_bitmask["
-                << router_id << "][" << link.attribute("local").as_int() << "] : ";
-            for (unsigned int i = 0; i < tree_bitmask.size(); i++)
-                std::cout << "[" << (int) tree_bitmask[i] << "] ";
-            std::cout << std::endl;
             
             std::string adjacent_router_id = std::string(link.attribute("rrouter").value());
 
@@ -370,7 +379,7 @@ int RID_Analytics::build_network(std::string nw_filename) {
                 link.attribute("local").as_int(),
                 fwd_dist[link.attribute("local").as_uint()],
                 &size_dist,
-                &tree_bitmask,   // NEW
+                &tree_bitmasks,
                 adjacent_router, 
                 link.attribute("remote").as_int());
         }
@@ -668,9 +677,7 @@ int RID_Analytics::make_fwd_decision(
         // finally, we continue with the request path get the next hop router by iface
         RID_Router::nw_address next_hop = router->get_next_hop(i);
         // set the path's tree bitmask (by extracting the bitmask from the router's iface)
-        next_state->set_tree_bitmask(
-            router->get_tree_bitmask(i), 
-            router->get_tree_bitmask_size(i));
+        next_state->set_tree_bitmasks(router->get_tree_bitmasks(i));
 
         // this can still happen (or can it?)
         // FIXME: this subtle condition is the one that actually terminates the run. 
@@ -712,7 +719,7 @@ int RID_Analytics::run_rec(
     std::vector<__float080> * in_fptree_prob = prev_state->get_in_fptree_prob();
     // tree bitmask of the path tells us which sources are accessible over 
     // the followed path.
-    std::vector<uint8_t> * tree_bitmask = prev_state->get_tree_bitmask();
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks = prev_state->get_tree_bitmasks();
 
     // run the forward() operation on this router & collect: 
     //  - iface probs
@@ -722,7 +729,7 @@ int RID_Analytics::run_rec(
     std::vector<std::vector<__float080> > out_fptree_probs(iface_num, std::vector<__float080> (this->request_size + 1, 0.0));
     router->forward(
         in_iface,           // INPUTS
-        tree_bitmask,
+        tree_bitmasks,
         in_prob,
         in_fptree_prob,
         iface_probs,        // OUTPUTS
@@ -775,13 +782,17 @@ void RID_Analytics::run(
     for (uint8_t p = 1; p <= this->request_size; p++)
         init_state->set_in_fptree_prob(p, 0.0);
 
-    // we first supply an empty tree bitmask (the size must be extracted from 
-    // the first router)
-    int tree_bitmask_size = this->start_router->get_tree_bitmask_size(0);
-    std::vector<uint8_t> tree_bitmask(tree_bitmask_size, 0);
-    init_state->set_tree_bitmask(&tree_bitmask, tree_bitmask_size);
-    // the initial ttl is set to the distance from starting router to the 
-    // origin server
+    // we first supply an empty tree bitmask for the path
+    std::map<int, std::vector<uint8_t> > tree_bitmasks =
+        (*this->start_router->get_tree_bitmasks(0));
+    // fill the path tree bitmask w/ 0s
+    std::map<int, std::vector<uint8_t> >::iterator itr;
+    for (itr = tree_bitmasks.begin(); itr != tree_bitmasks.end(); itr++)
+        std::fill(itr->second.begin(), itr->second.end(), 0x00);
+
+    // set the path tree bitmask on path state
+    init_state->set_tree_bitmasks(&tree_bitmasks);
+    // set initial ttl to dist. from starting router to the origin server
     init_state->set_ttl(4);
 
     // we always start at the ingress iface, so that we don't have a local 

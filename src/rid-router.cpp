@@ -35,6 +35,8 @@ int RID_Router::init(
     this->fwd_table = std::vector<RID_Router::fwd_table_row>(iface_num);
     // blocked ifaces initialized to false
     this->blocked_ifaces = std::vector<bool>(iface_num, false);
+    // initialize iface on fp tree of size t array
+    this->iface_on_fptree = std::vector< std::vector<bool> >(this->iface_num, std::vector<bool>(req_size, false));
 
     // initialize router's probability module
     this->prob_mod = new Prob((__float080) this->bf_size, (__float080) this->req_size, this->iface_num);
@@ -63,7 +65,7 @@ int RID_Router::add_fwd_table_entry(
     int i, 
     __float080 iface_proportion, 
     std::map<int, __float080> * f_distr,
-    std::vector<uint8_t> * tree_bitmask,
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks,
     RID_Router * next_hop_router,
     int next_hop_iface) {
 
@@ -90,9 +92,8 @@ int RID_Router::add_fwd_table_entry(
             this->fwd_table[i].f_bitmask |= (1 << f);
     }
 
-    // allocate memory for and fill the tree bitmask, containing the 
-    // source trees included in this iface
-    this->fwd_table[i].tree_bitmask = *tree_bitmask;
+    // copy the map of tree bitmasks into the router's iface
+    this->fwd_table[i].tree_bitmasks = (*tree_bitmasks);
 
     // next hop information: remote router pointer and iface
     this->fwd_table[i].next_hop.router = next_hop_router;
@@ -115,7 +116,7 @@ Prob::fp_data * RID_Router::get_fp_data(
         iface_fp_data->f_distr = router->fwd_table[i].f_distr;
         iface_fp_data->f_r_distr = router->fwd_table[i].f_r_distr;
         iface_fp_data->entry_prop = router->fwd_table[i].iface_proportion;
-        iface_fp_data->tree_bitmask = router->fwd_table[i].tree_bitmask;
+        iface_fp_data->tree_bitmasks = router->fwd_table[i].tree_bitmasks;
         iface_fp_data->on_fptree = router->iface_on_fptree[i];
         iface_fp_data->is_blocked = router->blocked_ifaces[i];
 
@@ -123,7 +124,11 @@ Prob::fp_data * RID_Router::get_fp_data(
 
         iface_fp_data->f_distr = std::vector<__float080>(this->req_size, 0.0);
         iface_fp_data->f_r_distr = std::vector<__float080>(this->req_size, 0.0);
-        iface_fp_data->tree_bitmask = std::vector<uint8_t>(this->fwd_table[0].tree_bitmask.size(), 0);
+        iface_fp_data->tree_bitmasks = router->fwd_table[i].tree_bitmasks;
+        // clear iface fp data's tree bitmask
+        std::map<int, std::vector<uint8_t> >::iterator itr;
+        for (itr = iface_fp_data->tree_bitmasks.begin(); itr != iface_fp_data->tree_bitmasks.end(); itr++)
+            std::fill(itr->second.begin(), itr->second.end(), 0x00);
 
         // sum all the fp data, for all ifaces other than i
         __float080 num_valid_ifaces = 0.0;
@@ -154,17 +159,28 @@ Prob::fp_data * RID_Router::get_fp_data(
                 std::plus<__float080>());
 
             // fill the bitmask of ~i in the old fashioned way...
-            for (unsigned int j = 0; j < router->fwd_table[k].tree_bitmask.size(); j++)
-                iface_fp_data->tree_bitmask[j] |= router->fwd_table[k].tree_bitmask[j];
+            for (itr = iface_fp_data->tree_bitmasks.begin(); itr != iface_fp_data->tree_bitmasks.end(); itr++) {
+                int tb_size = itr->first;
+                for (unsigned int j = 0; j < router->fwd_table[k].tree_bitmasks[tb_size].size(); j++)
+                    itr->second[j] |= router->fwd_table[k].tree_bitmasks[tb_size][j];
+            }
 
             iface_fp_data->entry_prop += router->fwd_table[k].iface_proportion;
-            iface_fp_data->on_fptree |= router->iface_on_fptree[k];
+
+            iface_fp_data->on_fptree = std::vector<bool>(this->req_size, false);
+            for (unsigned int j = 0; j < this->req_size; j++) {
+                // std::cout << "RID_Router::get_fp_data() : [INFO] " << 
+                //     "\n\ton_fptree[~" << (int) i << "][" << j << "] : " << iface_fp_data->on_fptree[j] << 
+                //     "\n\ton_fptree[" << (int) k << "][" << j << "] : " << router->iface_on_fptree[k][j] << std::endl;
+                iface_fp_data->on_fptree[j] = (iface_fp_data->on_fptree[j] || router->iface_on_fptree[k][j]);
+                // std::cout << "RID_Router::get_fp_data() : [INFO] " << 
+                //     "\n\ton_fptree[~" << (int) i << "][" << j << "] : " << iface_fp_data->on_fptree[j] << std::endl;
+            }
 
             num_valid_ifaces++;
         }
 
-        // normalize the iface_fp_data->f_distr and iface_fp_data->f_r_distr
-        // vectors
+        // normalize the iface_fp_data->f_distr and iface_fp_data->f_r_distr vectors
         for (uint8_t k; k < iface_fp_data->f_distr.size(); k++)
             iface_fp_data->f_distr[k] /= num_valid_ifaces;
         for (uint8_t k; k < iface_fp_data->f_r_distr.size(); k++)
@@ -176,7 +192,7 @@ Prob::fp_data * RID_Router::get_fp_data(
 
 int RID_Router::forward(
     uint8_t ingress_iface,
-    std::vector<uint8_t> * tree_bitmask,
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks,
     __float080 in_prob,
     std::vector<__float080> * in_fptree_prob,
     std::vector<std::vector<__float080> > & iface_probs,
@@ -187,12 +203,10 @@ int RID_Router::forward(
         "\n\tinto : " << this->get_id() << "[" << (int) ingress_iface << "]" << std::endl;
 
     // check which ifaces are eligible to be on prefix trees (of any size)
-    this->iface_on_fptree.clear();
-    for (uint8_t i = 0; i < this->iface_num; i++)
-        this->iface_on_fptree.push_back(is_iface_on_fptree(i, tree_bitmask));
-
-    // // pre-calculate fptree iface probabilities
-    // calc_iface_on_fptree_probs();
+    for (uint8_t i = 0; i < this->iface_num; i++) {
+        std::fill(this->iface_on_fptree[i].begin(), this->iface_on_fptree[i].end(), false);
+        is_iface_on_fptree(i, tree_bitmasks);
+    }
 
     // mark blocked ifaces for basic loop prevention
     // don't forward over ifaces w/ no entries associated w/ them
@@ -239,7 +253,7 @@ int RID_Router::forward(
 
     if (this->prob_mod->calc_probs(
         &(iface_fp_data),
-        tree_bitmask,
+        tree_bitmasks,
         in_prob,
         in_fptree_prob, 
         iface_probs, 
@@ -274,23 +288,29 @@ int RID_Router::forward(
 //
 // why is this useful? 
 //
-bool RID_Router::is_iface_on_fptree(int i, std::vector<uint8_t> * tree_bitmask) {
+void RID_Router::is_iface_on_fptree(
+    int i, 
+    std::map<int, std::vector<uint8_t> > * tree_bitmasks) {
 
     std::cout << "RID_Router::is_iface_on_fptree() : [INFO] is " << i << " on prefix tree?";
 
-    for (uint8_t t = 0; t < this->fwd_table[i].tree_bitmask.size(); t++) {
+    std::map<int, std::vector<uint8_t> >::iterator itr;
+    for (itr = (*tree_bitmasks).begin(); itr != (*tree_bitmasks).end(); itr++) {
 
-        uint8_t iface_tree_bitmask = this->fwd_table[i].tree_bitmask[t];
+        int t = itr->first;
+        if (t == 0) continue;
+    
+        for (uint8_t k = 0; k < this->fwd_table[i].tree_bitmasks[t].size(); k++) {
 
-        std::cout << "\n\t tree_bitmask vs. iface_tree_bitmask : " 
-            << (int) (*tree_bitmask)[t] << " <-> " << (int) iface_tree_bitmask;
+            uint8_t iface_tree_bitmask = this->fwd_table[i].tree_bitmasks[t][k];
+            std::cout << "\n\t tree_bitmask vs. iface_tree_bitmask : " 
+                << (int) (*tree_bitmasks)[k][t] << " <-> " << (int) iface_tree_bitmask
+                << std::endl;
 
-        if ((*tree_bitmask)[t] & iface_tree_bitmask) {
-            std::cout << "\n\t IT IS!" << std::endl;
-            return true;
+            if ((*tree_bitmasks)[k][t] & iface_tree_bitmask) {
+                std::cout << "\n\t IT IS!" << std::endl;
+                this->iface_on_fptree[i][t] = true;
+            }
         }
     }
-
-    std::cout << "\n\t IT'S NOT..." << std::endl;
-    return false;
 }

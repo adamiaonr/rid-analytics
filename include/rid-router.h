@@ -54,8 +54,7 @@ class RID_Router {
             // nr. of prefixes associated with this iface
             uint64_t num_entries;
             // bitmasks of source trees included in this iface
-            std::vector<uint8_t> tree_bitmask;
-            int tree_bitmask_size;
+            std::map<int, std::vector<uint8_t> > tree_bitmasks;
             // pointer to an RID router (including the ingress iface on the 
             // other end)
             RID_Router::nw_address next_hop;
@@ -96,14 +95,16 @@ class RID_Router {
             int iface, 
             __float080 iface_proportion, 
             std::map<int, __float080> * f_distr,
-            std::vector<uint8_t> * tree_bitmask,
+            std::map<int, std::vector<uint8_t> > * tree_bitmask,
             RID_Router * next_hop_router,
             int next_hop_iface);
 
         RID_Router::nw_address get_next_hop(uint8_t i) { return this->fwd_table[i].next_hop; }
                 
-        int get_tree_bitmask_size(uint8_t i) { return this->fwd_table[i].tree_bitmask.size(); }
-        std::vector<uint8_t> * get_tree_bitmask(uint8_t i) { return &(this->fwd_table[i].tree_bitmask); }
+        int get_tree_bitmask_size(uint8_t i) { return this->fwd_table[i].tree_bitmasks[0].size(); }
+        std::vector<uint8_t> * get_tree_bitmask(uint8_t i) { return &(this->fwd_table[i].tree_bitmasks[0]); }
+        std::map<int, std::vector<uint8_t> > * get_tree_bitmasks(uint8_t i) { return &(this->fwd_table[i].tree_bitmasks); };
+
         std::vector<bool> * get_blocked_ifaces() { return &(this->blocked_ifaces); }
 
         std::vector<uint8_t> * get_tp_sizes() { return &(this->tp_sizes); };
@@ -115,7 +116,7 @@ class RID_Router {
 
         int forward(
             uint8_t ingress_iface,
-            std::vector<uint8_t> * tree_bitmask,
+            std::map<int, std::vector<uint8_t> > * tree_bitmasks,
             __float080 ingress_prob,
             std::vector<__float080> * in_fptree_prob,
             std::vector<std::vector<__float080> > & iface_probs,
@@ -123,7 +124,7 @@ class RID_Router {
 
     private:
 
-        bool is_iface_on_fptree(int iface, std::vector<uint8_t> * tree_bitmask);
+        void is_iface_on_fptree(int i, std::map<int, std::vector<uint8_t> > * tree_bitmasks);
         Prob::fp_data * get_fp_data(RID_Router * router, uint8_t i, bool iface_complement = false);
 
         // router id follows the format <tree_index>.<height>.<width>
@@ -143,8 +144,8 @@ class RID_Router {
         std::vector<uint8_t> tp_sizes;
         // keep track of interfaces over which a router CAN'T forward packets
         std::vector<bool> blocked_ifaces;
-        // is iface i a continuation of a prefix tree?
-        std::vector<bool> iface_on_fptree;
+        // is iface i a continuation of a prefix tree of size t?
+        std::vector< std::vector<bool> > iface_on_fptree;
         // probability module
         Prob * prob_mod;
 };
