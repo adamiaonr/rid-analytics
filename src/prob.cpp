@@ -91,7 +91,8 @@ void local_tree_ratios(
             shared_trees += count_set_bits((int) (((*tree_bitmasks)[t][k]) & (iface_fp_data->tree_bitmasks[t][k])));
         }
 
-        lt_ratios[t - 1] = (__float080) (trees - shared_trees) / (__float080) (trees);
+        if (trees > 0)
+            lt_ratios[t - 1] = (__float080) (trees - shared_trees) / (__float080) (trees);
         std::cout << "\t [# trees] : " << trees
             << "\n\t [# shared trees] : " << shared_trees
             << "\n\t [lt ratios[" << (t) << "]] : " << lt_ratios[t - 1] << std::endl;
@@ -236,7 +237,7 @@ int Prob::calc_lm_prob(
                 f, t, 
                 iface_fp_data, 
                 &log_prob_fp_neq, &log_prob_fp_smeq,
-                &((*lmp)[i][t]));   // is this gonna work?
+                &((*lmp)[i][t]));
         }
     }
 
