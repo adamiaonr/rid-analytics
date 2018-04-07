@@ -1,0 +1,5 @@
+dummy:0, IN -> dummy:1, IN 2.58208
+dummy:0, IN -> dummy:4, IN 2.58208
+dummy:1, IN -> dummy:2, IN 2.58208
+dummy:1, IN -> dummy:3, IN 2.58208
+dummy:1, IN -> dummy:4, IN 2.58208

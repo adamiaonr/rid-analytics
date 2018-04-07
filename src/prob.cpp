@@ -213,8 +213,9 @@ int Prob::calc_lm_prob(
 
     // calc the ratio of trees which can origin FP trees locally at the router
     std::cout << "Prob::calc_lm_prob(iface) : [INFO] lt ratio iface  " << (iface_complement ? "~" : "") << (int) i << " :" << std::endl;
-    std::vector<__float080> lt_ratios(n, 0.0);
-    local_tree_ratios(iface_fp_data, tree_bitmasks, lt_ratios);
+    // std::vector<__float080> lt_ratios(n, 0.0);
+    // local_tree_ratios(iface_fp_data, tree_bitmasks, lt_ratios);
+    std::vector<__float080> lt_ratios = std::vector<__float080>(n, 1.0);
 
     std::cout << "Prob::calc_lm_prob(iface) : [INFO] iface " << (iface_complement ? "~" : "") << ((int) i) << " stats :"
         << "\n\t [n, m, k] : " << this->n << ", " << this->m << ", " << this->k << ")";
@@ -278,7 +279,7 @@ int Prob::calc_lm_probs(
 //         iface i
 //      2) the request falls on a `fresh' fp tree of size t. 
 //         this can happen due to 2 sub-events:
-//          - 2.1 : request got into the router w/ no association w/ fp tree
+//          - 2.1 : request got into the router w/ no association w/ fp tree (P(T_in = 0))
 //          - 2.2 : request got into the router assoc. w/ fp tree, but iface i 
 //                  is not assoc. w/ fp tree
 //
@@ -325,8 +326,8 @@ int Prob::calc_out_fptree_prob(
             // 2.2) req. assoc. fp tree, but not iface i
             subevent_prob = (1.0 - (*in_fptree_prob)[0]) * (this->fptree_prob[0][i][0]);
             // only account w/ % of entries coming from local trees
-            lt_ratios = std::vector<__float080>(n, 0.0);
-            local_tree_ratios(iface_fp_data, tree_bitmasks, lt_ratios);
+            lt_ratios = std::vector<__float080>(n, 1.0);
+            // local_tree_ratios(iface_fp_data, tree_bitmasks, lt_ratios);
         }
 
         calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, lt_ratios);
@@ -364,7 +365,7 @@ int Prob::calc_out_fptree_prob(
 
     // contribution of event 1
     for (uint8_t t = 1; t <= this->n; t++)
-        out_fptree_probs[i][t] += this->fptree_prob[0][i][t];
+        out_fptree_probs[i][t] += (1.0 - (*in_fptree_prob)[0]) * this->fptree_prob[0][i][t];
 
     return 0;
 }
@@ -531,20 +532,13 @@ int Prob::calc_iface_prob(
         //          - P(T_i > 0) = 0.0
         //
         //        this can happen iff a TP match and no FP matches happened 
-        //        in the previous router
-        //        in this case, the calculation of P(L_i|T_i = 0) accounts w/ 
-        //        *all* the entries in iface i
+        //        in the previous router.
         //        
-        //  - B : say the req. comes into the router associated w/ a tree of 
-        //        some size t (t > 0).
+        //  - B : say the req. comes into the router associated w/ a tree of some size t (t > 0).
         //        in this this case iface i can either be associated or not 
         //        associated w/ a fp tree of size t > 0, yielding:
         //          - P(T_i = 0) = 1.0 - SUM {for all t > 0} [ srt[i][t] * P(T_in = t) ]
         //          - P(T_i > 0) = srt[i][t] * P(T_in = t)
-        //
-        //        furthermore, in this case, the calculation of P(L_i|T_i = 0) 
-        //        only accounts w/ the % of entries in i which belong to 
-        //        *local* trees.
         //         
         // finally, P(L_i, T_i = 0) = 
         //      P(T_in = 0) * (P(L_i | T_i = 0, A) * P(T_i = 0, A))         // event A
@@ -562,7 +556,7 @@ int Prob::calc_iface_prob(
         for (uint8_t t = 1; t < (this->n + 1); t++) {
 
             // - P(L_i = l, T_i = t)
-            __float080 joint_prob = (this->lm_cond_prob[i][t][f] * this->fptree_prob[0][i][t]);
+            __float080 joint_prob = (1.0 - (*in_fptree_prob)[0]) * (this->lm_cond_prob[i][t][f] * this->fptree_prob[0][i][t]);
             // add joint P(L_i = l, T_i = t) to marginal P(L_i = l)
             lm_marg_prob[i][f] += joint_prob;
 
@@ -575,7 +569,8 @@ int Prob::calc_iface_prob(
 
             // - P(L_{~i} = l, T_{~i} = t)
             joint_prob = 
-                    this->lm_complement_cond_prob[i][t][f]      // P(L_{~i} = l | T_{~i} = t)
+                    (1.0 - (*in_fptree_prob)[0])
+                    * this->lm_complement_cond_prob[i][t][f]    // P(L_{~i} = l | T_{~i} = t)
                     * this->fptree_prob[1][i][t];               // P(T_{~i} = t)
             // add the joint P(L_{~i} = l, T_{~i} = t) to marginal P(L_{~i} = l)
             lm_complement_marg_prob[i][f] += joint_prob;
@@ -654,9 +649,11 @@ int Prob::calc_probs(
     }
 
     // calc P(T_{out,i} = t)
-    // for joint event '& got into this router'
+    // for joint event '& got into this router
     for (uint8_t i = 0; i < this->iface_num; i++) {
 
+        // std::fill(out_fptree_probs[i].begin(), out_fptree_probs[i].end(), 0.0);
+        // out_fptree_probs[i][0] = 1.0;
         calc_out_fptree_prob(i, (*iface_fp_data)[0][i], tree_bitmasks, in_fptree_prob, out_fptree_probs);
 
         std::cout << "Prob::calc_out_fptree_prob() : P(T_{out," << (int) i << "} = t) :" << std::endl;
