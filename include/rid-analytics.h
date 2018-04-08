@@ -82,7 +82,7 @@ class RID_Analytics {
 
         int handle_llm(
             RID_Router * router, 
-            std::vector<__float080> iface_probs, 
+            std::vector<std::vector<__float080> > & iface_probs, 
             std::vector<__float080> & events, 
             Path_State * prev_state);
         int handle_ttl_drop(RID_Router * router, __float080 prob, Path_State * prev_state);

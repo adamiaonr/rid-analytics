@@ -410,6 +410,10 @@ void RID_Analytics::add_outcome(
             code = "sff";
             break;
 
+        case OUTCOME_SOFT_FALLBACK_AID_FWD:
+            code = "sffid";
+            break;
+
         case OUTCOME_HARD_FALLBACK_DELIVERY:
             code = "hfd";
             break;
@@ -494,7 +498,7 @@ void RID_Analytics::add_fwd(
 
 int RID_Analytics::handle_llm(
     RID_Router * router,
-    std::vector<__float080> iface_probs,
+    std::vector<std::vector<__float080> > & iface_probs,
     std::vector<__float080> & events,
     Path_State * prev_state) {
 
@@ -502,29 +506,22 @@ int RID_Analytics::handle_llm(
     std::cout << "RID_Analytics::handle_llm() : analyzing LLM event" 
         << std::endl;
 
-    __float080 prob = 0.0;
-    // FIXME : this contradicts fig. 6 of the paper:
-    //  - in modes other than 'flood', '>=' matches to the local iface should 
-    //    be considered, not just 'strict' ('>') matches
-    if (this->mode == MMH_FLOOD) {
-        prob = iface_probs[1];
-    } else {
-        prob = iface_probs[0];
-    }
-
     // update the events array
-    events[EVENT_LLM] = prob;
+    events[EVENT_LLM] = iface_probs[0][1];
+
+    // don't continue if prob of llm is 0.0
+    if (iface_probs[0][1] == 0.0) return 0;
     
     // assess correctness of local delivery
     if (this->tp_sizes[router->get_id()][0] > 0) {
 
         // add record of correct delivery
-        add_outcome(router, OUTCOME_CORRECT_DELIVERY, prob, prev_state->get_length());
+        add_outcome(router, OUTCOME_CORRECT_DELIVERY, iface_probs[0][1], prev_state->get_length());
 
     } else {
 
         // add record of incorrect delivery
-        add_outcome(router, OUTCOME_INCORRECT_DELIVERY, prob, prev_state->get_length());
+        add_outcome(router, OUTCOME_INCORRECT_DELIVERY, iface_probs[0][1], prev_state->get_length());
 
         // handling incorrect deliveries if resolution is on
         if (this->mode & 0x04) {
@@ -533,7 +530,7 @@ int RID_Analytics::handle_llm(
                 add_outcome(
                     router, 
                     OUTCOME_FEEDBACK_DELIVERY, 
-                    prob, 
+                    iface_probs[0][1], 
                     prev_state->get_length() + get_origin_distance(this->start_router));
 
             } else if ((this->mode & 0x03) == HARD_FALLBACK) {
@@ -541,16 +538,35 @@ int RID_Analytics::handle_llm(
                 add_outcome(
                     router, 
                     OUTCOME_HARD_FALLBACK_DELIVERY, 
-                    prob, 
+                    iface_probs[0][0], 
                     prev_state->get_length() + get_origin_distance(router));
 
             } else if ((this->mode & 0x03) == SOFT_FALLBACK) {
 
-                add_outcome(
-                    router, 
-                    OUTCOME_SOFT_FALLBACK_FWD, 
-                    prob, 
-                    prev_state->get_length());
+                // add a fwd decision, sending the request towards the 
+                // origin
+                for (int i = 1; i < router->get_iface_num(); i++) {
+                    if (on_path_to_origin(router, i, std::stoi(this->origin_server->get_id()))) {
+
+                        // add notice of soft fallback
+                        add_outcome(
+                            router, 
+                            OUTCOME_SOFT_FALLBACK_AID_FWD, 
+                            iface_probs[0][0], 
+                            prev_state->get_length());
+
+                        // add the prob of strictly hitting iface 0 to 
+                        // iface_probs[i][1]
+                        // FIXME : this doesn't sound right...
+                        // FIXME : you can actually take care of this below...
+                        iface_probs[i][1] += iface_probs[0][0];
+
+                        // add a +1 latency penalty for each incorrect delivery 
+                        // followed by a soft fallback
+
+                        break;
+                    }
+                }
             }
         }
     }
@@ -588,7 +604,7 @@ int RID_Analytics::make_fwd_decision(
     // array to save avg. nr of events
     std::vector<__float080> events(EVENT_NUM, 0.0);
     // handle LLM events (iface 0)
-    handle_llm(router, iface_probs[0], events, prev_state);
+    handle_llm(router, iface_probs, events, prev_state);
     // handle other events (iface > 0)
     for (int i = 1; i < router->get_iface_num(); i++) {
 

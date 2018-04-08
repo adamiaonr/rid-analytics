@@ -81,18 +81,18 @@ def add_new_test(
         _topology_obj = Topology(_topology)
         _topology_obj.set_shortest_paths(topology_obj.get_shortest_paths())
 
+        # add tp route of shortest size
         _topology_obj.add_tp_route(path[-1], int([x for x in test_parameters['entry-sizes']][0]))
         print("%s::add_new_test() : [INFO] added tp route : %s" % (sys.argv[0], path))
 
-        # add a secondary tp source, if required (??)
-        # if len(tps) > 0:
-        #     for tp in tps:
-        #         _topology_obj.add_tp_route(
-        #             tp_src_id = -1, 
-        #             tp_size = int(tp.split(":")[1]), 
-        #             radius = int(tp.split(":")[2]), 
-        #             n_tp_srcs = int(tp.split(":")[0]), 
-        #             dst_id = path[0])
+        # add a secondary tp source, if required
+        for tp in test_parameters['tps']:
+            _topology_obj.add_tp_route(
+                tp_src_id = -1, 
+                tp_size = int(tp.split(":")[1]), 
+                radius = int(tp.split(":")[2]), 
+                n_tp_srcs = int(tp.split(":")[0]), 
+                dst_id = path[0])
 
         # add fp records
         for fp_record in test_parameters['fps']:

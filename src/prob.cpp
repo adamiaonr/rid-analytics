@@ -135,20 +135,28 @@ void _calc_lm_prob(
 
             } else {
 
-                if (iface_fp_data->on_fptree[t] && t > 0) {
+                // the prob of this event can be calculated as:
+                //  * not having fps larger than f : log_prob_fp_smeq[f]
+                //  * AND having a fp of size f : 1.0 - exp(log_prob_fp_neq[f - 1])
+                (*lmp)[f] = 
+                    exp((*log_prob_fp_smeq)[f]) 
+                    * (1.0 - exp((*log_prob_fp_neq)[f - 1])) 
+                    * ((iface_fp_data->num_entries > 0) ? 1.0 : 0.0);
 
-                    (*lmp)[f] = 0.0;
+                // if (iface_fp_data->on_fptree[t] && t > 0) {
+
+                //     (*lmp)[f] = 0.0;
                 
-                } else {
+                // } else {
 
-                    // the prob of this event can be calculated as:
-                    //  * not having fps larger than f : log_prob_fp_smeq[f]
-                    //  * AND having a fp of size f : 1.0 - exp(log_prob_fp_neq[f - 1])
-                    (*lmp)[f] = 
-                        exp((*log_prob_fp_smeq)[f]) 
-                        * (1.0 - exp((*log_prob_fp_neq)[f - 1])) 
-                        * ((iface_fp_data->num_entries > 0) ? 1.0 : 0.0);
-                }
+                //     // the prob of this event can be calculated as:
+                //     //  * not having fps larger than f : log_prob_fp_smeq[f]
+                //     //  * AND having a fp of size f : 1.0 - exp(log_prob_fp_neq[f - 1])
+                //     (*lmp)[f] = 
+                //         exp((*log_prob_fp_smeq)[f]) 
+                //         * (1.0 - exp((*log_prob_fp_neq)[f - 1])) 
+                //         * ((iface_fp_data->num_entries > 0) ? 1.0 : 0.0);
+                // }
             }
         }
     }
@@ -402,7 +410,7 @@ int Prob::calc_fptree_probs(
     std::vector<__float080> * in_fptree_prob) {
 
     // (1) calculate str[i][t] : shared tree ratios for iface i, size t
-    __float080 str_total = 0.0;
+    std::vector<__float080> str_total(this->n + 1, 0.0);
     std::vector< std::vector<__float080> > str(this->iface_num, std::vector<__float080>(this->n + 1, 0.0));
 
     for (uint8_t i = 0; i < this->iface_num; i++) {
@@ -418,14 +426,14 @@ int Prob::calc_fptree_probs(
             // count shared trees w/ bitmask on iface i
             str[i][t] = (__float080) count_shared_trees(t, (*iface_fp_data)[0][i], tree_bitmasks);
             // keep track of total # of shared trees
-            str_total += str[i][t];
+            str_total[t] += str[i][t];
         }
     }
 
     std::cout << "Prob::calc_fptree_probs() : shared tree ratios :" << std::endl;
     for (uint8_t i = 0; i < this->iface_num; i++)
         for (uint8_t t = 1; t < (this->n + 1); t++)
-            std::cout << "\tstr[" << (int) i << "][" << (int) t << "] = " << str[i][t] / ((str_total > 0.0) ? str_total : 1.0) << std::endl;
+            std::cout << "\tstr[" << (int) i << "][" << (int) t << "] = " << str[i][t] / ((str_total[t] > 0.0) ? str_total[t] : 1.0) << std::endl;
 
     // (2) calc P(T_i = t), for all {i,t} pairs
     for (uint8_t i = 0; i < this->iface_num; i++) {
@@ -437,7 +445,7 @@ int Prob::calc_fptree_probs(
         for (uint8_t t = 1; t < (this->n + 1); t++) {
 
             // P(T_i > 0) = srt[i][t] * P(T_in = t)
-            this->fptree_prob[0][i][t] = (str[i][t] / ((str_total > 0.0) ? str_total : 1.0)) * (*in_fptree_prob)[t];
+            this->fptree_prob[0][i][t] = (str[i][t] / ((str_total[t] > 0.0) ? str_total[t] : 1.0)) * (*in_fptree_prob)[t];            
             // P(T_{~i} > 0) = P(T_in = t) - (srt[i][t] * P(T_in = t))
             this->fptree_prob[1][i][t] = ((*in_fptree_prob)[t] - this->fptree_prob[0][i][t]);
 

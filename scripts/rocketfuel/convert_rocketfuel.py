@@ -259,8 +259,7 @@ class Topology:
     #   - add entries of size tp_size on links in shortest path
     def add_tp_route(self, tp_src_id, tp_size = 1, radius = -1, n_tp_srcs = 1, dst_id = -1):
 
-        # if tp_src_id isn't defined, we pick n_tp_srcs of the neighbors at 
-        # radius hops from dst_id
+        # if tp_src_id isn't defined, we pick n_tp_srcs of the neighbors at radius hops from dst_id
         if tp_src_id == -1:
             
             neighbors = self.get_neighbors_within_radius(dst_id, radius)
@@ -283,7 +282,7 @@ class Topology:
                         print("%d -> %d : %s (%d : no radius)" % (path[0], path[-1], str(path), len(path) - 1))
                         continue
 
-                    print("adding sec tp source : %d -> %d : %s (size : %d)" % (path[0], path[-1], str(path), tp_size))
+                    print("adding secondary tp source : %d -> %d : %s (size : %d)" % (path[0], path[-1], str(path), tp_size))
 
                     # add path[0] - i.e. the origin of the fp route - to the fp_srcs dict
                     self.tp_srcs[tp_size].add(path[0])

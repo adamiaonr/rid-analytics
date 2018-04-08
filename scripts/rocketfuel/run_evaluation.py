@@ -86,6 +86,8 @@ if __name__ == "__main__":
         params['mm-mode'] = test.find('modes').text.split("-", 1)[0]
         params['resolution-mode'] = test.find('modes').text.split("-", 1)[1]
 
+        params['suffix'] = test.find('add-suffixes').text.lstrip("'[").rstrip("]'")
+
         # we use a thread pool to run tests in parallel
         pool = mp.Pool(mp.cpu_count())
         tasks = []
@@ -99,6 +101,9 @@ if __name__ == "__main__":
             params['output-label'] = ("%s-%s-%s" % ( 
                 test_id,
                 params['start-router'], params['origin-server']))
+
+            if params['suffix']:
+                params['output-label'] += ("-%s" % (params['suffix']))
 
             tasks.append((
                 params['scn-file'], 

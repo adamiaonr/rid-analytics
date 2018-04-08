@@ -111,8 +111,8 @@ int main (int argc, char **argv) {
     //  - bits 0 and 1 : resolution type:
     //      - 0 (00) : AML forwarding or flood
     //      - 1 (01) : RML forwarding or 'random link'
-    //      - 2 (10) : 'soft fallback'
-    //      - 3 (11) : 'hard fallback'
+    //      - 2 (10) : 'hard fallback'
+    //      - 3 (11) : 'soft fallback'
     //  - bit 2 : resolution on/off:
     //      - 0 : OFF
     //      - 1 : ON

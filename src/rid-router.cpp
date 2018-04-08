@@ -304,10 +304,10 @@ void RID_Router::is_iface_on_fptree(
 
             uint8_t iface_tree_bitmask = this->fwd_table[i].tree_bitmasks[t][k];
             std::cout << "\n\t tree_bitmask vs. iface_tree_bitmask : " 
-                << (int) (*tree_bitmasks)[k][t] << " <-> " << (int) iface_tree_bitmask
+                << (int) (*tree_bitmasks)[t][k] << " <-> " << (int) iface_tree_bitmask
                 << std::endl;
 
-            if ((*tree_bitmasks)[k][t] & iface_tree_bitmask) {
+            if ((*tree_bitmasks)[t][k] & iface_tree_bitmask) {
                 std::cout << "\n\t IT IS!" << std::endl;
                 this->iface_on_fptree[i][t] = true;
             }

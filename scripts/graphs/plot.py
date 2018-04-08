@@ -75,6 +75,22 @@ if __name__ == "__main__":
             parser.print_help()
             sys.exit(1)
 
+    if args.case == 'cdn':
+
+        if not args.subcase:
+            sys.stderr.write("""%s: [ERROR] please supply a subcase for %s case\n""" % (sys.argv[0], args.case))
+            parser.print_help()
+            sys.exit(1)
+
+        if args.subcase == 'no-tps':
+            cdn.plot_no_tps(args.data_dir, args.test_file, args.output_dir)
+        elif args.subcase == 'tps':
+            cdn.plot_tps(args.data_dir, args.test_file, args.output_dir)
+        else:
+            sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
+            parser.print_help()
+            sys.exit(1)
+
     else:
         sys.stderr.write("""%s: [ERROR] please supply a valid case\n""" % sys.argv[0]) 
         parser.print_help()

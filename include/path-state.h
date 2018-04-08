@@ -8,6 +8,7 @@
 #define OUTCOME_INCORRECT_DELIVERY      (int) 0x01
 #define OUTCOME_HARD_FALLBACK_DELIVERY  (int) 0x02
 #define OUTCOME_SOFT_FALLBACK_FWD       (int) 0x0A
+#define OUTCOME_SOFT_FALLBACK_AID_FWD   (int) 0x0B
 #define OUTCOME_FEEDBACK_DELIVERY       (int) 0x03
 #define OUTCOME_PACKET_DROP             (int) 0x04
 #define OUTCOME_TTL_DROP                (int) 0x05
