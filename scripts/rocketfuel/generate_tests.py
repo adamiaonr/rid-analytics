@@ -40,7 +40,7 @@ def add_new_test(
         test_parameters['topology-nr'], 
         test_parameters['bf-size'],
         test_parameters['req-size'],
-        [int(x) for x in test_parameters['entry-sizes']][0],
+        [ int(x) for x in test_parameters['entry-sizes'] ][0],
         test_parameters['table-size'],
         test_parameters['modes']))
 
@@ -64,7 +64,8 @@ def add_new_test(
 
         # save the scenario info about the particular test
         path = path_examples[path_key]
-        
+        print("\n%s::add_new_test() : [INFO] NEW PATH : %s\n" % (sys.argv[0], path))
+
         # generate the .scn filename for this scenario
         scn_filename = ""
         if len(add_suffixes) > 0:
@@ -74,40 +75,49 @@ def add_new_test(
             scn_filename = ("configs/%s-%03d-%03d.scn" % (test_id, path[0], path[-1]))                
         scn_filename = os.path.join(test_dir, scn_filename)
 
-        new_path_block = et.SubElement(paths_block, "path", length = str(len(path) - 1), avg_outdegree = path_key.split(":")[-1], file = scn_filename).text = str(','.join(("%03d" % (x)) for x in path))
+        new_path_block = et.SubElement(
+            paths_block, "path", 
+            length = str(len(path) - 1), 
+            avg_outdegree = path_key.split(":")[-1], 
+            file = scn_filename).text = str(','.join(("%03d" % (x)) for x in path))
 
-        # add true positives
+        ## add true positives
+
+        # FIXME : this looks wasteful... 
+        # why do we create _topology, _topology_obj, when
+        # we already have topology_obj ?
         _topology = topology_obj.topology.copy()
-        _topology_obj = Topology(_topology)
-        _topology_obj.set_shortest_paths(topology_obj.get_shortest_paths())
+        _topology_obj = Topology(_topology) 
+        _topology_obj.set_shortest_paths(topology_obj.get_shortest_paths()) 
 
-        # add tp route of shortest size
+        # add primary tp routes to origin server (i.e. path[-1])
+        # print("%s::add_new_test() : [INFO] adding tp route : %s" % (sys.argv[0], path))
         _topology_obj.add_tp_route(path[-1], int([x for x in test_parameters['entry-sizes']][0]))
-        print("%s::add_new_test() : [INFO] added tp route : %s" % (sys.argv[0], path))
-
-        # add a secondary tp source, if required
+        # add a secondary tp source and tp routes, if required
         for tp in test_parameters['tps']:
             _topology_obj.add_tp_route(
-                tp_src_id = -1, 
-                tp_size = int(tp.split(":")[1]), 
-                radius = int(tp.split(":")[2]), 
-                n_tp_srcs = int(tp.split(":")[0]), 
-                dst_id = path[0])
+                tp_src_id   = -1, 
+                tp_size     = int(tp.split(":")[1]), 
+                radius      = int(tp.split(":")[2]), 
+                n_srcs      = int(tp.split(":")[0]), 
+                annc_to     = path[0],
+                avoid_path  = path)
 
-        # add fp records
+        # additional fp routes
         for fp_record in test_parameters['fps']:
 
             fp_record = fp_record.split(":")
-            if fp_record[0] == 'S':
 
+            if fp_record[0] == 'S':
                 _topology_obj.add_fp_route(
-                    src_id = path[0],
+                    src_id  = path[0],
                     fp_size = int(fp_record[1]),
                     fp_size_proportion = int(fp_record[2]),
-                    radius = int(fp_record[3]))
+                    radius  = int(fp_record[3]),
+                    avoid_path = path)
 
             else:
-                print("not adding additional fp sources")
+                print("not adding additional fp routes")
 
         # now save the actual .scn file
         _topology_obj.convert_to_scn(
@@ -326,5 +336,8 @@ if __name__ == "__main__":
 
     generate_test(
         args.test_dir, args.topology_file, 
-        req_sizes, bf_sizes, entry_size_records, table_sizes, fps, tps, modes, args.path_sizes, selected_paths,
+        req_sizes, bf_sizes, entry_size_records, table_sizes, 
+        fps, tps, 
+        modes, 
+        args.path_sizes, selected_paths,
         add_suffixes)

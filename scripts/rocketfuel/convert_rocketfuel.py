@@ -45,7 +45,7 @@ def get_fwd_dist(topology, shortest_paths, router):
         for source in shortest_paths:
 
             if source in visited_sources:
-                continue;
+                continue
 
             for path in shortest_paths[source]:
 
@@ -211,36 +211,52 @@ class Topology:
         if (len(self.shortest_paths) > 0) and (force == False):
             return self.shortest_paths
 
-        self.shortest_paths = defaultdict(list)
+        dsts = defaultdict(set)
 
-        # compute shortest paths from every node to every other node. the paths 
-        # are stored as strings, sequences of node ids, separated by ','. the structure 
-        # of the returned dictionary is:
+        # compute shortest paths from each node to every other node.
+        # paths are stored as strings, sequences of node ids, separated by ','. 
+        # the structure of the returned dictionary is:
         #
-        #   - [source 1] -> [ 
-        #                   "<source 1>,<path node 1>,<path node 2>, ... ,<node 0>",
-        #                   "<source 1>,<path node 1>,<path node 2>, ... ,<node 1>",
+        #   - [src 1] -> [ 
+        #                   "<src 1>,<path node 1>,<path node 2>, ... ,<node 0>",
+        #                   "<src 1>,<path node 1>,<path node 2>, ... ,<node 1>",
         #                   (...),
-        #                   "<source 1>,<path node 1>, ... ,<node n>"
+        #                   "<src 1>,<path node 1>, ... ,<node n>"
         #                   ]
         #
-        #   - [source 2] -> [ 
-        #                   "<source 2>,<path node 1>,<path node 2>, ... ,<node 0>",
-        #                   "<source 2>,<path node 1>,<path node 2>, ... ,<node 1>",
+        #   - [src 2] -> [ 
+        #                   "<src 2>,<path node 1>,<path node 2>, ... ,<node 0>",
+        #                   "<src 2>,<path node 1>,<path node 2>, ... ,<node 1>",
         #                   (...),
-        #                   "<source 2>,<path node 1>, ... ,<node n>"
+        #                   "<src 2>,<path node 1>, ... ,<node n>"
         #                   ]
         #   - (...)
+        #
+        self.shortest_paths = defaultdict(list)
+
         for source in self.topology.nodes():
 
             routes = nx.single_source_shortest_path(self.topology, source)
 
+            if source not in dsts:
+                dsts[source] = set([])
+
             for dst, route in routes.iteritems():
-                # we transform the list of nodes in the route into a string, which 
-                # then allows for more convenient search on get_iface_distr()
-                route = ','.join(("%03d" % (node)) for node in route)
-                self.shortest_paths[source].append(route)
-            # print(shortest_paths[source])
+
+                if not ((source in self.shortest_paths) and (dst in dsts[source])):
+                    self.shortest_paths[source].append(','.join(("%03d" % (node)) for node in route))
+                    dsts[source].add(dst)
+
+                # we assume routes are symmetric :
+                #   - i.e., the shortest path between a -> b, is the same as b -> a
+                #   - to force it, we add the route from dst to source as 
+                #     the inverted _route
+                if dst not in dsts:
+                    dsts[dst] = set([])
+
+                if not ((dst in self.shortest_paths) and (source in dsts[dst])):
+                    self.shortest_paths[dst].append(','.join(("%03d" % (node)) for node in reversed(route)))
+                    dsts[dst].add(source)
 
         return self.shortest_paths
 
@@ -257,29 +273,42 @@ class Topology:
     # algorithm:
     #   - find all shortest paths in topology originated on tp_src_id 
     #   - add entries of size tp_size on links in shortest path
-    def add_tp_route(self, tp_src_id, tp_size = 1, radius = -1, n_tp_srcs = 1, dst_id = -1):
+    def add_tp_route(self, tp_src_id, tp_size = 1, radius = -1, n_srcs = 1, annc_to = -1, avoid_path = []):
 
-        # if tp_src_id isn't defined, we pick n_tp_srcs of the neighbors at radius hops from dst_id
+        # if tp_src_id isn't defined, we pick n_srcs among the radius-hop neighbors of annc_to
         if tp_src_id == -1:
-            
-            neighbors = self.get_neighbors_within_radius(dst_id, radius)
+
+            # extract neighbors of annc_to at radius hops from it
+            neighbors = self.get_neighbors_within_radius(annc_to, radius)
+            # select n_srcs neighbors
             for neighbor in neighbors:
 
-                if n_tp_srcs < 1:
+                if n_srcs < 1:
                     return 0
 
-                # find the shortest paths from neighbor to dst_id
+                # find the shortest paths from neighbor to annc_to by inspecting
+                # the shortest paths which:
+                #   - depart from neighbor
+                #   - end in annc_to
+                #
+                # this is guaranteed to be the shortest path from annc_to to neighbor, since
+                # shortest paths are symmetric, i.e. path(neighbor > annc_to) = path(annc_to > neighbor)
                 for path in self.get_shortest_paths()[neighbor]:
 
                     path = [ int(p) for p in path.split(",") ]
 
-                    # if the end of that path isn't src_id, continue
-                    if path[-1] != dst_id:
+                    # if the end of that path isn't annc_to, continue
+                    if path[-1] != annc_to:
                         continue
 
                     # if neighbor is below radius hops, abort
                     if ((len(path) - 1) < radius):
                         print("%d -> %d : %s (%d : no radius)" % (path[0], path[-1], str(path), len(path) - 1))
+                        continue
+
+                    # if neighbor is in avoid_path, continue
+                    if neighbor in avoid_path:
+                        print("potential tp src in avoid path : %d vs. [%s]. aborting." % (neighbor, avoid_path))
                         continue
 
                     print("adding secondary tp source : %d -> %d : %s (size : %d)" % (path[0], path[-1], str(path), tp_size))
@@ -364,16 +393,17 @@ class Topology:
                         # the tp info is a tuple of the form <router>:<outgoing iface>:<size> 
                         self.topology.add_edge(src, dst, tp = edge_tps_str.rstrip("|"))
 
-                    n_tp_srcs -= 1
+                    n_srcs -= 1
                     break
 
             return 0
 
         print("Topology::add_tp_route() : [INFO] adding tp routes towards %s" % (str(tp_src_id)))
+        
         # get all shortest path starting at tp_src
         routes = self.get_shortest_paths()[tp_src_id]
+        
         # add a tp entry to the *local* iface of tp_src
-        # this is basically an edge with the same head and tail
         self.topology.add_edge(tp_src_id, tp_src_id, 
             type = 'internal', 
             e1 = ("%d:%d"       % (tp_src_id, 0)), 
@@ -383,7 +413,9 @@ class Topology:
         # iterate through the links in the path, add tp information to them
         for route in routes:
 
-            path = [int(n) for n in route.split(",")]
+            path = [ int(n) for n in route.split(",") ]
+            # print("Topology::add_tp_route() : [INFO] adding tp route %s" % (str(path)))
+
             for i in xrange(len(path) - 1):
                 # get src and dst ends of the edge
                 src, dst = path[i], path[i + 1]
@@ -401,7 +433,7 @@ class Topology:
 
         return 0
 
-    def add_fp_route(self, src_id, fp_size = 2, fp_size_proportion = 10, radius = 1):
+    def add_fp_route(self, src_id, fp_size = 2, fp_size_proportion = 10, radius = 1, avoid_path = []):
 
         # get neighbors within radius of src_id
         neighbors = self.get_neighbors_within_radius(src_id, radius)
@@ -423,10 +455,15 @@ class Topology:
                     # print("%d -> %d : %s (%d : no radius)" % (path[0], path[-1], str(path), len(path) - 1))
                     continue
 
+                # if neighbor is in avoid_path, continue
+                if neighbor in avoid_path:
+                    print("potential fp src in avoid path : %d vs. [%s]. aborting." % (neighbor, avoid_path))
+                    continue
+
                 # add path[0] - i.e. the origin of the fp route - to the fp_srcs dict
                 self.fp_srcs[fp_size].add(path[0])
 
-                # print("adding fp route : %d -> %d : %s (%d)" % (path[0], path[-1], str(path), len(path) - 1))
+                print("adding fp route : %d -> %d : %s (%d)" % (path[0], path[-1], str(path), len(path) - 1))
 
                 # add a fp entry to the local iface of neighbor. this is basically 
                 # an edge with the same head and tail
@@ -533,6 +570,7 @@ class Topology:
             for path in [p.split(",") for p in shortest_paths[source]]:
 
                 curr_path_size = (len(path) - 1)
+
                 if curr_path_size == path_size:
                     sources.add(source)
                     avg_path_outdegree = float(sum([stats['outdegree-list'][int(r)] for r in path])) / float(curr_path_size)
