@@ -46,6 +46,7 @@ def read_data(data_dir, file_types = ['outcomes'], filters = {}):
         # FIXME: comment this after testing
         if file_label.split("-")[0] not in ['1221', '3257', '3356', '7018']:
             continue 
+
         # apply filters
         if 'topology' in filters:
             if file_label.split("-")[0] != filters['topology']:
@@ -150,15 +151,12 @@ def plot_no_tps(data_dir, test_dir, output_dir):
                             label[2] = 'incorr. del.'
 
                     # bars hold avg. latency
-                    cd_lat      = float(_data.loc[_data['type'] == 'cd']['avg-latency'])
-                    sffid_lat = 0.0
-                    df = _data.loc[_data['type'] == 'sffid']
-                    if not df.empty:
-                        sffid_lat   = float(df['avg-latency'])
+                    print(_data.loc[_data['type'] == 'cd']['avg-latency'])
+                    cd_lat = float(_data.loc[_data['type'] == 'cd']['avg-latency'])
 
                     ax2.bar(
                         pos, 
-                        cd_lat + sffid_lat,
+                        cd_lat,
                         color = topology_colors[t], linewidth = 0.5, width = bar_width, label = label[0])
 
                     # lines hold avg. # of deliveries
@@ -274,14 +272,10 @@ def plot_tps(data_dir, test_dir, output_dir):
 
                     # bars hold avg. latency
                     cd_lat      = float(_data.loc[_data['type'] == 'cd']['avg-latency'])
-                    sffid_lat = 0.0
-                    df = _data.loc[_data['type'] == 'sffid']
-                    if not df.empty:
-                        sffid_lat   = float(df['avg-latency'])
 
                     ax2.bar(
                         pos, 
-                        cd_lat + sffid_lat,
+                        cd_lat,
                         color = topology_colors[t], linewidth = 0.5, width = bar_width, label = label[0])
 
                     # lines hold avg. # of deliveries

@@ -124,7 +124,7 @@ def extract_tp_path(scn_file, initial_router):
 
     return tp_root
 
-def verify(test_dir):
+def verify_paths(test_dir):
 
     for test_file in sorted(glob.glob(os.path.join(test_dir, '*.test'))):
     
@@ -163,6 +163,141 @@ def verify(test_dir):
                     print("\tanncd: %s" % (tp_paths['anncd']))
                     print("\ttrue: %s"  % (tp_paths['true']))
 
+def verify_tps(test_dir):
+
+    for test_file in sorted(glob.glob(os.path.join(test_dir, '*.test'))):
+    
+        # FIXME: the <test_run> element is useless
+        test_run = et.parse(test_file)
+        # verify each test within the test run
+        for test in test_run.findall('test'):
+
+            infractions = defaultdict(list)
+            for path in test.find('paths').findall('path'):
+
+                p = [ int(x) for x in path.text.split(",") ]
+
+                scn_file = path.get('file')
+                topology = et.ElementTree(file = scn_file)
+                topology = topology.getroot()
+
+                for r in topology.findall('router'):
+
+                    tps = defaultdict(list)
+                    for tp in r.findall('tp'):
+                        tps[int(tp.text)].append(tp)
+
+                    for tp_size in tps:
+                        if len(tps[tp_size]) != 1:
+                            infractions[("%s-%d-%d:" % (test.get('id'), p[0], p[-1]))].append(("\t%d : %d tps of size %d" % (int(r.get('id')), len(tps[tp_size]), tp_size)))
+
+            for infraction in infractions:
+                print("%s" % (infraction))
+                for s in infractions[infraction]:
+                    print("%s" % (s))
+
+# def remove_from_bitmask(router, iface, size, dst):
+
+#     byte_pos = int(dst / 8)
+#     bit_pos  = int(dst % 8)
+
+#     for l in router.findall('link'): 
+
+#         if int(l.get('local')) != iface:
+#             continue
+
+#         for tb in l.findall('tree_bitmask'):
+
+#             if int(tb.get('size')) == size:
+
+
+def fix_tps(test_dir, size = 1):
+
+    for test_file in sorted(glob.glob(os.path.join(test_dir, '*.test'))):
+    
+        # FIXME: the <test_run> element is useless
+        test_run = et.parse(test_file)
+        # verify each test within the test run
+        for test in test_run.findall('test'):
+
+            infractions = defaultdict(list)
+            for path in test.find('paths').findall('path'):
+
+                scn_file = path.get('file')
+                topology = et.ElementTree(file = scn_file)
+                topology = topology.getroot()
+
+                altered = False
+
+                for r in topology.findall('router'):
+
+                    # if # of tps > 1, remove the 'extra' tp
+                    tps = len(r.findall('tp'))
+                    if tps > 1:
+
+                        _path = [ int(x) for x in path.text.split(",") ]
+
+                        print("@test : %s" % (scn_file.split("/")[-1].rstrip('.scn')))
+                        print("@router : %d" % (int(r.get('id'))))
+
+                        # if the curr router is in the tp path from 
+                        # src to dst, remove the 'extra' tp accordingly
+                        if int(r.get('id')) in _path:
+
+                            # find which is the 'correct' next router
+                            r_pos = [i for i, x in enumerate(_path) if x == int(r.get('id'))][0]
+                            next_router = _path[r_pos + 1]
+                            print("%d -> %d in %s" % (_path[r_pos], _path[r_pos + 1], _path))
+
+                            # find the iface which points to next_router
+                            next_router_iface = 0
+                            for l in r.findall('link'):
+
+                                if int(l.get('rrouter')) == next_router:
+                                    next_router_iface = int(l.get('local'))
+                                    break
+
+                            print("%d[%d] -> %d in %s" % (_path[r_pos], next_router_iface, _path[r_pos + 1], _path))
+
+                            # remove the tps which don't point towards 
+                            for tp in r.findall('tp'):
+
+                                if int(tp.text) != size:
+                                    continue
+
+                                if int(tp.get('iface')) != next_router_iface:
+                                    print("will remove %d:%d:%d (vs. %d:%d:%d)" % (int(r.get('id')), int(tp.get('iface')), int(tp.text), int(r.get('id')), next_router_iface, size))
+                                    r.remove(tp)
+                                    # remove_from_bitmask(r, iface, int(tp.get('iface')))
+                                    altered = True
+
+                        # else, just remove all but one of them
+                        else:
+
+                            tps = defaultdict(list)
+                            for tp in r.findall('tp'):
+                                tps[int(tp.text)].append(tp)
+
+                            if size in tps:
+
+                                tp_num = len(tps[size])
+                                for tp in tps[size]:
+
+                                    if tp_num > 1:
+                                        print("will remove %d:%d" % (int(r.get('id')), int(tp.get('iface'))))
+                                        r.remove(tp)
+                                        tp_num = tp_num - 1
+                                        altered = True
+                                    
+                                    else:
+                                        break
+
+                # finally, overwrite the .scn file
+                if altered:
+                    xmlstr = minidom.parseString(et.tostring(topology).replace('    ', '').replace('\t', '').replace('\r', '').replace('\n', '')).toprettyxml()
+                    with open(scn_file, "w") as f:
+                        f.write(xmlstr)
+
 if __name__ == "__main__":
 
     # use an ArgumentParser for a nice CLI
@@ -177,6 +312,10 @@ if __name__ == "__main__":
         "--test-dir", 
          help = """dir on which to save .test and .scn files""")
 
+    parser.add_argument(
+        "--case", 
+         help = """verification or 'fix' case""")
+
     args = parser.parse_args()
 
     if not args.test_dir:
@@ -184,4 +323,17 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    verify(args.test_dir)
+    if args.case == 'verify-tps':
+        verify_tps(args.test_dir)
+
+    elif args.case == 'fix-tps':
+        fix_tps(args.test_dir)
+        verify_tps(args.test_dir)
+
+    elif args.case == 'verify-paths':
+        verify_paths(args.test_dir)
+
+    else:
+        sys.stderr.write("""%s: [ERROR] please supply a valid case""" % (sys.argv[0]))
+        parser.print_help()
+        sys.exit(1)

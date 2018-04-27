@@ -75,7 +75,7 @@ if __name__ == "__main__":
             parser.print_help()
             sys.exit(1)
 
-    if args.case == 'cdn':
+    elif args.case == 'cdn':
 
         if not args.subcase:
             sys.stderr.write("""%s: [ERROR] please supply a subcase for %s case\n""" % (sys.argv[0], args.case))
@@ -90,6 +90,10 @@ if __name__ == "__main__":
             sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
             parser.print_help()
             sys.exit(1)
+
+    elif args.case == 'opportunistic':
+
+        opportunistic.plot(args.data_dir, args.test_file, args.output_dir)
 
     else:
         sys.stderr.write("""%s: [ERROR] please supply a valid case\n""" % sys.argv[0]) 

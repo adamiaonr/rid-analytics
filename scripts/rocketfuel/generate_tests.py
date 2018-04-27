@@ -142,7 +142,8 @@ def generate_test(
     modes, 
     path_sizes, 
     selected_paths,
-    add_suffixes):
+    add_suffixes,
+    test_file = ''):
 
     # describe the test to be generated
     print("%s::generate_test() : [INFO] test info:" % (sys.argv[0]))
@@ -165,11 +166,17 @@ def generate_test(
         if not os.path.exists(p):
             os.makedirs(p)
 
-    main_block = et.Element("test_run")
-
     # extract the topology nr.
     topology_nr = int(topology_file.split("/")[-2])
-    topology_nr_block = et.SubElement(main_block, "topology", file = topology_file).text = ("%d" % (topology_nr))
+
+    # if an existing test file has been given, load it and add the test to it
+    if test_file:
+        _xmlfile = et.parse(test_file)
+        main_block = _xmlfile.getroot()
+    else:
+        test_file = os.path.join(test_dir, ("configs/%d.test" % (topology_nr)))
+        main_block = et.Element("test_run")
+        topology_nr_block = et.SubElement(main_block, "topology", file = topology_file).text = ("%d" % (topology_nr))
 
     # build the basic topology (no .scn file yet), and generate path examples
     topology_obj = parse_pop_level_map(topology_file)
@@ -213,8 +220,8 @@ def generate_test(
 
                         add_new_test(main_block, topology_obj, test_parameters, path_examples, test_dir)
 
-    xmlstr = minidom.parseString(et.tostring(main_block)).toprettyxml(indent="    ")
-    with open(os.path.join(test_dir, ("configs/%d.test" % (topology_nr))), "w") as f:
+    xmlstr = minidom.parseString(et.tostring(main_block).replace('\t', '').replace('\r', '').replace('\n', '')).toprettyxml()
+    with open(test_file, "w") as f:
         f.write(xmlstr)
 
     return 0
@@ -289,6 +296,11 @@ if __name__ == "__main__":
         "--add-suffix", 
          help = """add an extra suffix to the results and .scn file.""")
 
+    parser.add_argument(
+        "--test-file", 
+         help = """add an extra test to an existing test file.
+         e.g. '--test-file "~/experiments/examples/rocketfuel/tests/configs/1337.test"'""")
+
     args = parser.parse_args()
 
     if args.print_stats:
@@ -334,10 +346,15 @@ if __name__ == "__main__":
     if args.add_suffix:
         add_suffixes = args.add_suffix.split(":")
 
+    test_file = ""
+    if args.test_file:
+        test_file = args.test_file
+
     generate_test(
         args.test_dir, args.topology_file, 
         req_sizes, bf_sizes, entry_size_records, table_sizes, 
         fps, tps, 
         modes, 
         args.path_sizes, selected_paths,
-        add_suffixes)
+        add_suffixes,
+        test_file = test_file)
