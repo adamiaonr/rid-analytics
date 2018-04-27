@@ -93,9 +93,9 @@ void local_tree_ratios(
 
         if (trees > 0)
             lt_ratios[t - 1] = (__float080) (trees - shared_trees) / (__float080) (trees);
-        std::cout << "\t [# trees] : " << trees
-            << "\n\t [# shared trees] : " << shared_trees
-            << "\n\t [lt ratios[" << (t) << "]] : " << lt_ratios[t - 1] << std::endl;
+        // std::cout << "\t [# trees] : " << trees
+        //     << "\n\t [# shared trees] : " << shared_trees
+        //     << "\n\t [lt ratios[" << (t) << "]] : " << lt_ratios[t - 1] << std::endl;
     }
 }
 
@@ -220,19 +220,19 @@ int Prob::calc_lm_prob(
     }
 
     // calc the ratio of trees which can origin FP trees locally at the router
-    std::cout << "Prob::calc_lm_prob(iface) : [INFO] lt ratio iface  " << (iface_complement ? "~" : "") << (int) i << " :" << std::endl;
+    // std::cout << "Prob::calc_lm_prob(iface) : [INFO] lt ratio iface  " << (iface_complement ? "~" : "") << (int) i << " :" << std::endl;
     // std::vector<__float080> lt_ratios(n, 0.0);
     // local_tree_ratios(iface_fp_data, tree_bitmasks, lt_ratios);
     std::vector<__float080> lt_ratios = std::vector<__float080>(n, 1.0);
 
-    std::cout << "Prob::calc_lm_prob(iface) : [INFO] iface " << (iface_complement ? "~" : "") << ((int) i) << " stats :"
-        << "\n\t [n, m, k] : " << this->n << ", " << this->m << ", " << this->k << ")";
+    // std::cout << "Prob::calc_lm_prob(iface) : [INFO] iface " << (iface_complement ? "~" : "") << ((int) i) << " stats :"
+    //     << "\n\t [n, m, k] : " << this->n << ", " << this->m << ", " << this->k << ")";
         // << "\n\t [# entries] : " << iface_fp_data->num_entries << " (" << (iface_fp_data->num_entries * lt_ratio) << ")";
     //     << "\t\n [lmp size] : " << (*lmp).size()
     //     << "\t\n [f_distr] : ";
     // for(uint8_t f = 0; f < this->n; f++) 
     //     std::cout << "[" << (int) f << "] = " << iface_fp_data->f_distr[f] << ", ";
-    std::cout << std::endl;
+    // std::cout << std::endl;
 
     // fill P(|FP| =/= f) = (1.0 - P(|FP| = f)), for all f
     calc_log_prob_fp_neq(iface_fp_data, log_prob_fp_neq, lt_ratios);
@@ -264,8 +264,8 @@ int Prob::calc_lm_probs(
         // time complexity : O(N^2 * I)
         calc_lm_prob(i, (*iface_fp_data)[1][i], tree_bitmasks, true); // iface ~i
 
-        print_lm_prob(i);
-        print_lm_prob(i, true);
+        // print_lm_prob(i);
+        // print_lm_prob(i, true);
     }
 
     return 0;
@@ -430,10 +430,10 @@ int Prob::calc_fptree_probs(
         }
     }
 
-    std::cout << "Prob::calc_fptree_probs() : shared tree ratios :" << std::endl;
-    for (uint8_t i = 0; i < this->iface_num; i++)
-        for (uint8_t t = 1; t < (this->n + 1); t++)
-            std::cout << "\tstr[" << (int) i << "][" << (int) t << "] = " << str[i][t] / ((str_total[t] > 0.0) ? str_total[t] : 1.0) << std::endl;
+    // std::cout << "Prob::calc_fptree_probs() : shared tree ratios :" << std::endl;
+    // for (uint8_t i = 0; i < this->iface_num; i++)
+    //     for (uint8_t t = 1; t < (this->n + 1); t++)
+    //         std::cout << "\tstr[" << (int) i << "][" << (int) t << "] = " << str[i][t] / ((str_total[t] > 0.0) ? str_total[t] : 1.0) << std::endl;
 
     // (2) calc P(T_i = t), for all {i,t} pairs
     for (uint8_t i = 0; i < this->iface_num; i++) {
@@ -459,21 +459,21 @@ int Prob::calc_fptree_probs(
         this->fptree_prob[0][i][0] = 1.0 - cumulative_fptree_prob[0];
         this->fptree_prob[1][i][0] = (__float080) ((float) 1.0 - (float) cumulative_fptree_prob[1]);
 
-        std::cout << "Prob::calc_fptree_probs() : P(T[" << (int) i << "] = 0) = 1.0 - " 
-            << cumulative_fptree_prob[0] << " = " << (this->fptree_prob[0][i][0]) << std::endl;
-        std::cout << "Prob::calc_fptree_probs() : P(T[~" << (int) i << "] = 0) = 1.0 - " 
-            << cumulative_fptree_prob[1] << " = " << (this->fptree_prob[1][i][0]) << std::endl;
+        // std::cout << "Prob::calc_fptree_probs() : P(T[" << (int) i << "] = 0) = 1.0 - " 
+        //     << cumulative_fptree_prob[0] << " = " << (this->fptree_prob[0][i][0]) << std::endl;
+        // std::cout << "Prob::calc_fptree_probs() : P(T[~" << (int) i << "] = 0) = 1.0 - " 
+        //     << cumulative_fptree_prob[1] << " = " << (this->fptree_prob[1][i][0]) << std::endl;
     }
 
-    std::cout << "Prob::calc_fptree_probs() : P(T_i = t) :" << std::endl;
-    for (uint8_t i = 0; i < this->iface_num; i++)
-        for (uint8_t t = 0; t < (this->n + 1); t++)
-            std::cout << "\tP(T[" << (int) i << "] = " << (int) t << "]) = " << this->fptree_prob[0][i][t] << std::endl;
+    // std::cout << "Prob::calc_fptree_probs() : P(T_i = t) :" << std::endl;
+    // for (uint8_t i = 0; i < this->iface_num; i++)
+    //     for (uint8_t t = 0; t < (this->n + 1); t++)
+    //         std::cout << "\tP(T[" << (int) i << "] = " << (int) t << "]) = " << this->fptree_prob[0][i][t] << std::endl;
 
-    std::cout << "Prob::calc_fptree_probs() : P(T_{~i} = t) :" << std::endl;
-    for (uint8_t i = 0; i < this->iface_num; i++)
-        for (uint8_t t = 0; t < (this->n + 1); t++)
-            std::cout << "\tP(T[~" << (int) i << "] = " << (int) t << "]) = " << this->fptree_prob[1][i][t] << std::endl;
+    // std::cout << "Prob::calc_fptree_probs() : P(T_{~i} = t) :" << std::endl;
+    // for (uint8_t i = 0; i < this->iface_num; i++)
+    //     for (uint8_t t = 0; t < (this->n + 1); t++)
+    //         std::cout << "\tP(T[~" << (int) i << "] = " << (int) t << "]) = " << this->fptree_prob[1][i][t] << std::endl;
 
     return 0;
 }
@@ -518,9 +518,6 @@ int Prob::calc_iface_prob(
     std::vector<__float080> * in_fptree_prob,
     std::vector<__float080> & iface_prob) {
 
-    //  - P(L_i = l) and P(L_{~i} = l)
-    std::vector<std::vector<__float080> > lm_marg_prob((this->iface_num), std::vector<__float080> ((this->n + 1), 0.0));
-    std::vector<std::vector<__float080> > lm_complement_marg_prob((this->iface_num), std::vector<__float080> ((this->n + 1), 0.0));
     //  - P(L_i | T_i = 0, A) and P(L_~i | T_~i = 0, A)
     std::vector<std::vector<__float080> > event_a(2, std::vector<__float080> ((this->n + 1), 0.0));
     calc_lm_prob(i, 0, (*iface_fp_data)[0][i], &event_a[0]);
@@ -569,11 +566,11 @@ int Prob::calc_iface_prob(
             lm_marg_prob[i][f] += joint_prob;
 
             // print if P(L_i = l, T_i = t) > 0.0
-            if (joint_prob > 0.0) {
-                std::cout << "\t[" << (int) t << "] +" 
-                    << (joint_prob) << " (" << this->lm_cond_prob[i][t][f] << " x " << this->fptree_prob[0][i][t] << ")"
-                    << " to P(L_" << (int) i << " = " << (int) f << ") = " << lm_marg_prob[i][f] << std::endl;
-            }
+            // if (joint_prob > 0.0) {
+            //     std::cout << "\t[" << (int) t << "] +" 
+            //         << (joint_prob) << " (" << this->lm_cond_prob[i][t][f] << " x " << this->fptree_prob[0][i][t] << ")"
+            //         << " to P(L_" << (int) i << " = " << (int) f << ") = " << lm_marg_prob[i][f] << std::endl;
+            // }
 
             // - P(L_{~i} = l, T_{~i} = t)
             joint_prob = 
@@ -583,35 +580,63 @@ int Prob::calc_iface_prob(
             // add the joint P(L_{~i} = l, T_{~i} = t) to marginal P(L_{~i} = l)
             lm_complement_marg_prob[i][f] += joint_prob;
             // print if P(L_{~i} = l, T_{~i} = t) > 0.0
-            if (joint_prob > 0.0) {
-                std::cout << "\t[" << (int) t << "] +" 
-                    << (joint_prob) << " (" << this->lm_complement_cond_prob[i][t][f] << " x " << this->fptree_prob[1][i][t] << ")"
-                    << " to P(L_{~" << (int) i << "} = " << f << ") = " << lm_complement_marg_prob[i][f] << std::endl;
-            }
+            // if (joint_prob > 0.0) {
+            //     std::cout << "\t[" << (int) t << "] +" 
+            //         << (joint_prob) << " (" << this->lm_complement_cond_prob[i][t][f] << " x " << this->fptree_prob[1][i][t] << ")"
+            //         << " to P(L_{~" << (int) i << "} = " << f << ") = " << lm_complement_marg_prob[i][f] << std::endl;
+            // }
         }
     }
 
-    std::cout << "Prob::calc_iface_prob() : P(L_" << (int) i << " = l) :" << std::endl; 
-    for (int f = 0; f < this->n + 1; f++)
-        std::cout << "\tP(L_" << (int) i << " = " << (int) f << ") = " << lm_marg_prob[i][f] << std::endl;
+    // std::cout << "Prob::calc_iface_prob() : P(L_" << (int) i << " = l) :" << std::endl; 
+    // for (int f = 0; f < this->n + 1; f++)
+    //     std::cout << "\tP(L_" << (int) i << " = " << (int) f << ") = " << lm_marg_prob[i][f] << std::endl;
 
-    std::cout << "Prob::calc_iface_prob() : P(L_{~" << (int) i << "} = l) :" << std::endl; 
-    for (int f = 0; f < this->n + 1; f++)
-        std::cout << "\tP(L_{~" << (int) i << "} = " << (int) f << ") = " << lm_complement_marg_prob[i][f] << std::endl;
+    // std::cout << "Prob::calc_iface_prob() : P(L_{~" << (int) i << "} = l) :" << std::endl; 
+    // for (int f = 0; f < this->n + 1; f++)
+    //     std::cout << "\tP(L_{~" << (int) i << "} = " << (int) f << ") = " << lm_complement_marg_prob[i][f] << std::endl;
 
 
     // 2) calc P(L_i >= L_{~i})
     for (int f = this->n; f >= 0; f--) {
 
+        // 2.1) for P(L_i > L_{~i})
         __float080 prob_strict = 0.0;
+        // 2.2) for P(L_i >= L_{~i})
         __float080 prob_total = 0.0;
-        for (uint8_t k = 0; k < f; k++)
+        // 2.3) for P(L_i >= L_{~i} AND L_i > L_0), i.e. excluding local matches
+        __float080 prob_non_local = 0.0;
+
+        for (uint8_t k = 0; k < f; k++) {
+            
+            // P(L_i > L_{~i})
             prob_strict += (lm_marg_prob[i][f] * lm_complement_marg_prob[i][k]);
 
+            // P((L_i > L_{~i}) AND (L_i > L_0))
+            // FIXME : this will increase the computational complexity to M^3
+            for (uint8_t j = 0; j < k; j++)
+                prob_non_local += (lm_marg_prob[i][f] * lm_complement_marg_prob[i][k]) * lm_marg_prob[0][j];
+        }
+
+        // add the contribution of P(L_i == L_{~i}) to P(L_i >= L_{~i})
         prob_total = prob_strict + (lm_marg_prob[i][f] * lm_complement_marg_prob[i][f]);
+        // add the contribution of P(L_i == L_{~i}) to P((L_i >= L_{~i}) AND (L_i > L_0))
+        for (uint8_t j = 0; j < f; j++)
+            prob_non_local += (lm_marg_prob[i][f] * lm_complement_marg_prob[i][f]) * (lm_marg_prob[0][j]);
+
+        // std::cout << "Prob::calc_iface_prob() : P(L_" << (int) i << " >  L~{" << (int) i << "} : " << f << ") = " << prob_strict << std::endl;
+        // std::cout << "Prob::calc_iface_prob() : P(L_" << (int) i << " >= L~{" << (int) i << "} : " << f << ") = " << prob_total  << std::endl;
+        // std::cout << "Prob::calc_iface_prob() : P(L_" << (int) i << " >= L~{" << (int) i << "}/0 : " << f << ") = " << prob_non_local  << std::endl;
 
         iface_prob[0] += prob_strict;
         iface_prob[1] += prob_total;
+
+        // FIXME: interesting to know the diff. between iface_prob[1] and iface_prob[2]
+        // iface_prob[2] should be always smaller than iface_prob[1] and greater than iface_prob[0]
+        iface_prob[2] += prob_non_local;
+
+        if ((iface_prob[2] < iface_prob[0]) && (i > 0))
+            std::cout << "Prob::calc_iface_prob() : [ERROR] P(L_i > L_{~i}) > P(L_i > L_{~i}/0)" << std::endl;            
     }
 
     return 0;
@@ -649,11 +674,17 @@ int Prob::calc_probs(
 
     // calc P(iface = i)
     // time complexity : O(N^2 * I)
+
+    //  - P(L_i = l) and P(L_{~i} = l)
+    this->lm_marg_prob = std::vector<std::vector<__float080> >((this->iface_num), std::vector<__float080> ((this->n + 1), 0.0));
+    this->lm_complement_marg_prob = std::vector<std::vector<__float080> >((this->iface_num), std::vector<__float080> ((this->n + 1), 0.0));
+
     for (uint8_t i = 0; i < this->iface_num; i++) {
         calc_iface_prob(i, iface_fp_data, in_fptree_prob, iface_probs[i]);
         // for joint event '& got into this router'
         iface_probs[i][0] *= in_prob;
         iface_probs[i][1] *= in_prob;
+        iface_probs[i][2] *= in_prob;
     }
 
     // calc P(T_{out,i} = t)
@@ -664,12 +695,16 @@ int Prob::calc_probs(
         // out_fptree_probs[i][0] = 1.0;
         calc_out_fptree_prob(i, (*iface_fp_data)[0][i], tree_bitmasks, in_fptree_prob, out_fptree_probs);
 
-        std::cout << "Prob::calc_out_fptree_prob() : P(T_{out," << (int) i << "} = t) :" << std::endl;
+        // std::cout << "Prob::calc_out_fptree_prob() : P(T_{out," << (int) i << "} = t) :" << std::endl;
         for (uint8_t t = 0; t <= this->n; t++) {
             out_fptree_probs[i][t] *= in_prob;
-            std::cout << "\tP(T_{out," << (int) i << "} = " << (int) t << ") = " << out_fptree_probs[i][t] << std::endl;
+            // std::cout << "\tP(T_{out," << (int) i << "} = " << (int) t << ") = " << out_fptree_probs[i][t] << std::endl;
         }
     }
+
+    // clear the marginal probability placeholder vectors
+    this->lm_marg_prob.clear();
+    this->lm_complement_marg_prob.clear();
 
     return 0;
 }

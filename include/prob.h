@@ -142,6 +142,10 @@ class Prob {
     std::vector<std::vector<std::vector<__float080> > > lm_cond_prob;
     //  - P(L_(~i) = l | P_(~i) = p)
     std::vector<std::vector<std::vector<__float080> > > lm_complement_cond_prob;
+
+    std::vector<std::vector<__float080> > lm_marg_prob;
+    std::vector<std::vector<__float080> > lm_complement_marg_prob;
+
     //  - P(P_i = p) and P(P_(~i) = p)
     std::vector<std::vector<std::vector<__float080> > > fptree_prob;
 

@@ -261,7 +261,7 @@ int RID_Router::forward(
 
     std::cout << "RID_Router::forward() : [INFO] iface probs :" << std::endl;
     for(uint8_t i = 0; i < this->iface_num; i++)
-        std::cout << "\tP(I = " << (int) i << ") = " << iface_probs[i][0] << " : " << iface_probs[i][1] << std::endl;
+        std::cout << "\tP(I = " << (int) i << ") = " << iface_probs[i][0] << " : " << iface_probs[i][1] << " : " << iface_probs[i][2] << std::endl;
 
     return 0;
 }
@@ -292,7 +292,7 @@ void RID_Router::is_iface_on_fptree(
     int i, 
     std::map<int, std::vector<uint8_t> > * tree_bitmasks) {
 
-    std::cout << "RID_Router::is_iface_on_fptree() : [INFO] is " << i << " on prefix tree?";
+    // std::cout << "RID_Router::is_iface_on_fptree() : [INFO] is " << i << " on prefix tree?";
 
     std::map<int, std::vector<uint8_t> >::iterator itr;
     for (itr = (*tree_bitmasks).begin(); itr != (*tree_bitmasks).end(); itr++) {
@@ -303,12 +303,12 @@ void RID_Router::is_iface_on_fptree(
         for (uint8_t k = 0; k < this->fwd_table[i].tree_bitmasks[t].size(); k++) {
 
             uint8_t iface_tree_bitmask = this->fwd_table[i].tree_bitmasks[t][k];
-            std::cout << "\n\t tree_bitmask vs. iface_tree_bitmask : " 
-                << (int) (*tree_bitmasks)[t][k] << " <-> " << (int) iface_tree_bitmask
-                << std::endl;
+            // std::cout << "\n\t tree_bitmask vs. iface_tree_bitmask : " 
+            //     << (int) (*tree_bitmasks)[t][k] << " <-> " << (int) iface_tree_bitmask
+            //     << std::endl;
 
             if ((*tree_bitmasks)[t][k] & iface_tree_bitmask) {
-                std::cout << "\n\t IT IS!" << std::endl;
+                // std::cout << "\n\t IT IS!" << std::endl;
                 this->iface_on_fptree[i][t] = true;
             }
         }
