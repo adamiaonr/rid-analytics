@@ -132,7 +132,7 @@ Prob::fp_data * RID_Router::get_fp_data(
 
         // sum all the fp data, for all ifaces other than i
         __float080 num_valid_ifaces = 0.0;
-        for (uint8_t k = 0; k < router->iface_num; k++) {
+        for (uint8_t k = 1; k < router->iface_num; k++) {
 
             // don't consider iface i, or blocked ifaces
             if ((k == i) || (router->fwd_table[k].num_entries < 1)) continue;

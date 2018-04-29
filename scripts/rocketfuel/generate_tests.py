@@ -93,6 +93,7 @@ def add_new_test(
         # add primary tp routes to origin server (i.e. path[-1])
         # print("%s::add_new_test() : [INFO] adding tp route : %s" % (sys.argv[0], path))
         _topology_obj.add_tp_route(path[-1], int([x for x in test_parameters['entry-sizes']][0]))
+        
         # add a secondary tp source and tp routes, if required
         for tp in test_parameters['tps']:
             _topology_obj.add_tp_route(
@@ -107,7 +108,6 @@ def add_new_test(
         for fp_record in test_parameters['fps']:
 
             fp_record = fp_record.split(":")
-
             if fp_record[0] == 'S':
                 _topology_obj.add_fp_route(
                     src_id  = path[0],
