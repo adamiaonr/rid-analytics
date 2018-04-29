@@ -614,36 +614,51 @@ int Prob::calc_iface_prob(
             //   2    1    1
             //   1    0    0
             __float080 _p = (lm_marg_prob[i][f] * lm_complement_marg_prob[i][k]);
-            for (uint8_t j = 0; j < f; j++)
-                prob[0] += _p * lm_marg_prob[0][j];
 
-            // b) L_i == L_0 > L_{i}
-            // [ i ][~i ][ 0 ]
-            //   2    0    2
-            //   2    1    2
-            //   1    0    1
-            prob[1] += (_p * lm_marg_prob[0][f]);
+            if (i > 0) {
+
+                for (uint8_t j = 0; j < f; j++)
+                    prob[0] += _p * lm_marg_prob[0][j];
+
+                // b) L_i == L_0 > L_{i}
+                // [ i ][~i ][ 0 ]
+                //   2    0    2
+                //   2    1    2
+                //   1    0    1
+                prob[1] += (_p * lm_marg_prob[0][f]);
+
+            } else {
+                prob[0] += _p;
+            }
         }
 
         // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " > L~{" << (int) i << "} >= L_0 [" << f << "] = " << prob[0] << std::endl;
         // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} =  L_0 [" << f << "] = " << prob[1] << std::endl;
 
         __float080 __p = (lm_marg_prob[i][f] * lm_complement_marg_prob[i][f]);
-        for (uint8_t k = 0; k < f; k++) {
-            // c) L_i == L_{~i} > L_0
-            // [ i ][~i ][ 0 ]
-            //   2    2    0
-            //   2    2    1
-            //   1    1    0
-            prob[2] += (__p * lm_marg_prob[0][k]);
-        }
 
-        // d) L_i == L_{~i} == L_0
-        // [ i ][~i ][ 0 ]
-        //   2    2    2
-        //   1    1    1
-        //   0    0    0
-        prob[3] = (__p  * lm_marg_prob[0][f]);
+        if (i > 0) {
+
+            for (uint8_t k = 0; k < f; k++) {
+                // c) L_i == L_{~i} > L_0
+                // [ i ][~i ][ 0 ]
+                //   2    2    0
+                //   2    2    1
+                //   1    1    0
+                prob[2] += (__p * lm_marg_prob[0][k]);
+            }
+
+            // d) L_i == L_{~i} == L_0
+            // [ i ][~i ][ 0 ]
+            //   2    2    2
+            //   1    1    1
+            //   0    0    0
+            prob[3] = (__p  * lm_marg_prob[0][f]);
+
+        } else {
+
+            prob[3] = __p;
+        }
 
         // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} >  L_0 [" << f << "] = " << prob[2] << std::endl;
         // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} =  L_0)[" << f << "] = " << prob[3] << std::endl;
