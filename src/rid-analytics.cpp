@@ -507,21 +507,21 @@ int RID_Analytics::handle_llm(
         << std::endl;
 
     // update the events array
-    events[EVENT_LLM] = iface_probs[0][1];
+    events[EVENT_LLM] = iface_probs[0][2];
 
     // don't continue if prob of llm is 0.0
-    if (iface_probs[0][1] == 0.0) return 0;
+    if (iface_probs[0][2] == 0.0) return 0;
     
     // assess correctness of local delivery
     if (this->tp_sizes[router->get_id()][0] > 0) {
 
         // add record of correct delivery
-        add_outcome(router, OUTCOME_CORRECT_DELIVERY, iface_probs[0][1], prev_state->get_length());
+        add_outcome(router, OUTCOME_CORRECT_DELIVERY, iface_probs[0][2], prev_state->get_length());
 
     } else {
 
         // add record of incorrect delivery
-        add_outcome(router, OUTCOME_INCORRECT_DELIVERY, iface_probs[0][1], prev_state->get_length());
+        add_outcome(router, OUTCOME_INCORRECT_DELIVERY, iface_probs[0][2], prev_state->get_length());
 
         // handling incorrect deliveries if resolution is on
         if (this->mode & 0x04) {
@@ -531,7 +531,7 @@ int RID_Analytics::handle_llm(
                 add_outcome(
                     router, 
                     OUTCOME_FEEDBACK_DELIVERY, 
-                    iface_probs[0][1], 
+                    iface_probs[0][2], 
                     prev_state->get_length() + get_origin_distance(this->start_router));
 
             } else if ((this->mode & 0x03) == HARD_FALLBACK) {
@@ -543,33 +543,6 @@ int RID_Analytics::handle_llm(
                     prev_state->get_length() + get_origin_distance(router));
 
             }
-            // else if ((this->mode & 0x03) == SOFT_FALLBACK) {
-
-            //     // add a fwd decision, sending the request towards the 
-            //     // origin
-            //     for (int i = 1; i < router->get_iface_num(); i++) {
-            //         if (on_path_to_origin(router, i, std::stoi(this->origin_server->get_id()))) {
-
-            //             // add notice of soft fallback
-            //             add_outcome(
-            //                 router, 
-            //                 OUTCOME_SOFT_FALLBACK_AID_FWD, 
-            //                 iface_probs[0][0], 
-            //                 prev_state->get_length());
-
-            //             // add the prob of strictly hitting iface 0 to 
-            //             // iface_probs[i][1]
-            //             // FIXME : this doesn't sound right...
-            //             // FIXME : you can actually take care of this below...
-            //             iface_probs[i][1] += iface_probs[0][0];
-
-            //             // add a +1 latency penalty for each incorrect delivery 
-            //             // followed by a soft fallback
-
-            //             break;
-            //         }
-            //     }
-            // }
         }
     }
 
