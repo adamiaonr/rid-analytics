@@ -530,7 +530,7 @@ int RID_Analytics::handle_llm(
 
                 add_outcome(
                     router, 
-                    OUTCOME_FEEDBACK_DELIVERY, 
+                    OUTCOME_FEEDBACK_DELIVERY,
                     iface_probs[0][2], 
                     prev_state->get_length() + get_origin_distance(this->start_router));
 
@@ -539,7 +539,7 @@ int RID_Analytics::handle_llm(
                 add_outcome(
                     router, 
                     OUTCOME_HARD_FALLBACK_DELIVERY, 
-                    iface_probs[0][0], 
+                    iface_probs[0][0],
                     prev_state->get_length() + get_origin_distance(router));
 
             }
@@ -568,6 +568,38 @@ int RID_Analytics::handle_ttl_drop(
     return 0;
 }
 
+int RID_Analytics::add_fwd_decision(
+    RID_Router * router,
+    Path_State * prev_state,
+    std::vector<std::vector<__float080> > out_fptree_probs,
+    int iface,
+    __float080 path_prob,
+    int latency_incr,
+    std::vector<RID_Analytics::fwd_decision> & fwd_decisions) {
+
+    Path_State * next_state = new Path_State(router, this->request_size);
+
+    next_state->set_length(prev_state->get_length() + latency_incr);
+    next_state->set_in_fptree_prob(&out_fptree_probs[iface], this->request_size);
+    next_state->set_path_prob(path_prob);
+    next_state->set_in_iface_prob(path_prob);
+    next_state->set_ttl(prev_state->get_ttl() - 1);
+
+    RID_Router::nw_address next_hop = router->get_next_hop(iface);
+    next_state->set_tree_bitmasks(router->get_tree_bitmasks(iface));
+
+    std::cout << "RID_Analytics::add_fwd_decision() : [INFO] saving fwd decision :"
+        << "\n\tout[" << router->get_id() << "][" << iface << "] -> in[" << next_hop.router->get_id() << "][" << (int) next_hop.iface << "]"
+        << "\n\tpath prob = " << path_prob
+        << "\n\tpath length = " << prev_state->get_length() + latency_incr
+        << "\n\tttl = " << (int) next_state->get_ttl() << std::endl;
+
+    RID_Analytics::fwd_decision fd = {router, next_hop.router, iface, next_hop.iface, next_state};
+    fwd_decisions.push_back(fd);
+
+    return 0;
+}
+
 int RID_Analytics::make_fwd_decision(
     RID_Router * router,
     Path_State * prev_state,
@@ -576,15 +608,29 @@ int RID_Analytics::make_fwd_decision(
     std::vector<std::vector<__float080> > out_fptree_probs,
     std::vector<RID_Analytics::fwd_decision> & fwd_decisions) {
 
+    // IMPORTANT: here's what the 3 values in iface_probs[i][] carry
+    //  - iface_probs[i][0] : P(L_i >  L_{~i}), i.e. the probability of an 'exclusive'
+    //                        match at iface i.
+    //                        this should be used for Single Match (SM) events
+    //  - iface_probs[i][1] : P(L_i >= L_{~i}), Multiple Match (MM) situations which 
+    //                        *DO NOT* involve the choice of iface 0.
+    //                        this is useful when evaluating the probability of 
+    //                        'fallback' events, in which we want to distinguish 
+    //                        MM situations which involve / not involve local 
+    //                        matches.
+    //  - iface_probs[i][2] : P(L_i >= L_{~i}), multiple match situations which 
+    //                        consider the involvement of iface 0.
+    //                        this should be the maximum value of all iface[i][].
+
     // array to save avg. nr of events
     std::vector<__float080> events(EVENT_NUM, 0.0);
+
     // handle LLM events (iface 0)
     handle_llm(router, iface_probs, events, prev_state);
 
     // FIXME: special vars for soft fallback handling
     __float080 max_prob[3] = {0.0, 0.0, 0.0};
     int origin_iface = 0;
-
     // handle other events (iface > 0)
     for (int i = 1; i < router->get_iface_num(); i++) {
 
@@ -594,10 +640,8 @@ int RID_Analytics::make_fwd_decision(
         // check if the packet's ttl goes below 0 : if it does, end the path here
         // without adding a forwarding decision
         if ((prev_state->get_ttl() - 1) < 0) { 
-
             if (iface_probs[i][2] > 0.0)
                 handle_ttl_drop(router, iface_probs[i][2], prev_state);
-
             continue;
         }
 
@@ -605,19 +649,25 @@ int RID_Analytics::make_fwd_decision(
         __float080 path_prob = 0.0;
         if (this->mode == MMH_FLOOD) {
 
+            // MMH_FLOOD uses P(L_i >= L_{~i}), w/ local matches
             path_prob = iface_probs[i][2];
-            // update event array
+            // SM event only considers P(L_i > L_{~i})
             events[EVENT_SLM] += iface_probs[i][0];
+            // MM event refers to P(L_i == L_{~i}), as such we do:
+            //  P(L_i >= L_{~i}) - P(L_i > L_{~i})
             // FIXME : this will be used to calculate the avg. nr. of links 
             // used in 'flood' mode
             events[EVENT_MLM] += iface_probs[i][2] - iface_probs[i][0];
 
         } else if ((this->mode & 0x03) == HARD_FALLBACK) {
 
-            // always SLM prob
+            // any SM event on iface i - occurs w/ probability P(L_i > L_{~i}) - 
+            // should be forwarded normally over iface i
             path_prob = iface_probs[i][0];
             events[EVENT_SLM] += iface_probs[i][0];
 
+            // MM events should be automatically forwarded 
+            // over the iface which points towards the origin
             if (on_path_to_origin(router, i, std::stoi(this->origin_server->get_id()))) {
 
                 // add 'hard fallback delivery' outcome w/ P(L_i == L_{~i})
@@ -729,52 +779,13 @@ int RID_Analytics::make_fwd_decision(
 
         // in case a fwd decision isn't updated above, add a new fwd decision
         if ((!updated) && (max_prob[1] > 0.0)) {
-
-            Path_State * next_state = new Path_State(router, this->request_size);
-
-            next_state->set_length(prev_state->get_length() + 1);
-            next_state->set_in_fptree_prob(&out_fptree_probs[origin_iface], this->request_size);
-            next_state->set_path_prob(max_prob[1]);
-            next_state->set_in_iface_prob(max_prob[1]);
-            next_state->set_ttl(prev_state->get_ttl() - 1);
-
-            RID_Router::nw_address next_hop = router->get_next_hop(origin_iface);
-            next_state->set_tree_bitmasks(router->get_tree_bitmasks(origin_iface));
-
-            std::cout << "RID_Analytics::make_fwd_decision() : [INFO] saving fwd decision :"
-                << "\n\tout[" << router->get_id() << "][" << origin_iface << "] -> in[" << next_hop.router->get_id() << "][" << (int) next_hop.iface << "]"
-                << "\n\tpath prob = " << max_prob[1]
-                << "\n\tpath length = " << prev_state->get_length() + 1
-                << "\n\tttl = " << (int) next_state->get_ttl() << std::endl;
-
-            RID_Analytics::fwd_decision fd = {router, next_hop.router, origin_iface, next_hop.iface, next_state};
-            fwd_decisions.push_back(fd);
+            add_fwd_decision(router, prev_state, out_fptree_probs, origin_iface, max_prob[1], 1, fwd_decisions);
         }
 
         // handle the case of having the request incorrectly delivered and 
         // recovered w/ a soft fallback (w/ +2 latency penalty)
         if ((!(this->tp_sizes[router->get_id()][0] > 0)) && ((max_prob[2] - max_prob[1]) > 0.0) && (iface_probs[0][1] > 0.0)) {
-
-            Path_State * next_state = new Path_State(router, this->request_size);
-
-            // note the +2 penalty : +1 to account w/ the incorrect delivery
-            next_state->set_length(prev_state->get_length() + 2);
-            next_state->set_in_fptree_prob(&out_fptree_probs[origin_iface], this->request_size);
-            next_state->set_path_prob(max_prob[2] - max_prob[1]);
-            next_state->set_in_iface_prob(max_prob[2] - max_prob[1]);
-            next_state->set_ttl(prev_state->get_ttl() - 1);
-
-            RID_Router::nw_address next_hop = router->get_next_hop(origin_iface);
-            next_state->set_tree_bitmasks(router->get_tree_bitmasks(origin_iface));
-
-            std::cout << "RID_Analytics::make_fwd_decision() : [INFO] saving fwd decision :"
-                << "\n\tout[" << router->get_id() << "][" << origin_iface << "] -> in[" << next_hop.router->get_id() << "][" << (int) next_hop.iface << "]"
-                << "\n\tpath prob = " << max_prob[2] - max_prob[1]
-                << "\n\tpath length = " << prev_state->get_length() + 2
-                << "\n\tttl = " << (int) next_state->get_ttl() << std::endl;
-
-            RID_Analytics::fwd_decision fd = {router, next_hop.router, origin_iface, next_hop.iface, next_state};
-            fwd_decisions.push_back(fd);
+            add_fwd_decision(router, prev_state, out_fptree_probs, origin_iface, max_prob[2] - max_prob[1], 2, fwd_decisions);
         }
     }
 

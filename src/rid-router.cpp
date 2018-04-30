@@ -181,9 +181,9 @@ Prob::fp_data * RID_Router::get_fp_data(
         }
 
         // normalize the iface_fp_data->f_distr and iface_fp_data->f_r_distr vectors
-        for (uint8_t k; k < iface_fp_data->f_distr.size(); k++)
+        for (uint8_t k = 0; k < iface_fp_data->f_distr.size(); k++)
             iface_fp_data->f_distr[k] /= num_valid_ifaces;
-        for (uint8_t k; k < iface_fp_data->f_r_distr.size(); k++)
+        for (uint8_t k = 0; k < iface_fp_data->f_r_distr.size(); k++)
             iface_fp_data->f_r_distr[k] /= num_valid_ifaces;
     }
 

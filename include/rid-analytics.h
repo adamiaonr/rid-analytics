@@ -87,6 +87,15 @@ class RID_Analytics {
             Path_State * prev_state);
         int handle_ttl_drop(RID_Router * router, __float080 prob, Path_State * prev_state);
 
+        int add_fwd_decision(
+            RID_Router * router,
+            Path_State * prev_state,
+            std::vector<std::vector<__float080> > out_fptree_probs,
+            int iface,
+            __float080 path_prob,
+            int latency_incr,
+            std::vector<RID_Analytics::fwd_decision> & fwd_decisions);
+
         int make_fwd_decision(
             RID_Router * router,
             Path_State * prev_state,

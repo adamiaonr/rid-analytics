@@ -10,7 +10,7 @@
 #define OPTION_SCN_FILE             (char *) "scn-file"
 #define OPTION_DATA_DIR             (char *) "data-dir"
 #define OPTION_OUTPUT_LABEL         (char *) "output-label"
-#define OPTION_VERBOSE              (char *) "verbose"
+// #define OPTION_VERBOSE              (char *) "verbose"
 
 // eval parameters can be specified directly through the CLI and overwrite any 
 // parameters set in .scn files
@@ -80,11 +80,11 @@ network topology passed as input.\nby adamiaonr@cmu.edu");
             "id of starting router. default is '0'.",
             ArgvParser::OptionRequiresValue);
 
-    cmds->defineOption(
-            OPTION_VERBOSE,
-            "print stats during the model run. default: not verbose",
-            ArgvParser::NoOptionAttribute);
-    cmds->defineOptionAlternative(OPTION_VERBOSE, "v");
+    // cmds->defineOption(
+    //         OPTION_VERBOSE,
+    //         "print stats during the model run. default: not verbose",
+    //         ArgvParser::NoOptionAttribute);
+    // cmds->defineOptionAlternative(OPTION_VERBOSE, "v");
 
     return cmds;
 }
@@ -100,8 +100,8 @@ int main (int argc, char **argv) {
     char data_dir[MAX_ARRAY_SIZE];
     // output file name for this run
     char output_label[MAX_ARRAY_SIZE];
-    // verbose mode (no verbosity by default)
-    bool verbose = false;
+    // // verbose mode (no verbosity by default)
+    // bool verbose = false;
     // evaluation parameters
     // request size (also largest possible |F|) in # of URL parameters
     int request_size = 0;       
@@ -217,9 +217,9 @@ int main (int argc, char **argv) {
             strncpy(start_router, (char *) cmds->optionValue(OPTION_START_ROUTER).c_str(), MAX_ARRAY_SIZE);
         }
 
-        if (cmds->foundOption(OPTION_VERBOSE)) {
-            verbose = true;
-        }
+        // if (cmds->foundOption(OPTION_VERBOSE)) {
+        //     verbose = true;
+        // }
     }
 
     printf("rid-analytics : request_size = %d, bf_size = %d\n", request_size, bf_size);

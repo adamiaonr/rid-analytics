@@ -663,9 +663,9 @@ int Prob::calc_iface_prob(
         // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} >  L_0 [" << f << "] = " << prob[2] << std::endl;
         // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} =  L_0)[" << f << "] = " << prob[3] << std::endl;
 
-        iface_prob[0] += prob[0];               // P(L_i > L_{~i})  : SINGLE MATCH
-        iface_prob[1] += (prob[0] + prob[2]);   // P(L_i >= L_{~i}) : MULTIPLE MATCH (w/ no local matches)
-        iface_prob[2] += (prob[0] + prob[1] + prob[2] + prob[3]); // P(L_i >= L_{~i}) : MULTIPLE MATCH (w/ local matches)
+        iface_prob[0] += prob[0];                                   // P(L_i >  L_{~i}) : SINGLE MATCH ONLY
+        iface_prob[1] += (prob[0] + prob[2]);                       // P(L_i >= L_{~i}) : MULTIPLE MATCH (NO LOCAL MATCHES)
+        iface_prob[2] += (prob[0] + prob[1] + prob[2] + prob[3]);   // P(L_i >= L_{~i}) : MULTIPLE MATCH (W/ LOCAL MATCHES)
 
         // for (int k = 0; k < 3; k++)
         //     std::cout << "Prob::calc_iface_prob() : iface_prob[" << (int) k << "] = " << iface_prob[k] << std::endl;
