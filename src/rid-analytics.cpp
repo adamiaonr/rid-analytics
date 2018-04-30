@@ -732,6 +732,8 @@ int RID_Analytics::make_fwd_decision(
         if (next_hop.router == router || i == in_iface) {
             std::cout << "RID_Analytics::make_fwd_decision() : [INFO] "
                 << "found magic stopping condition" << std::endl;
+
+            delete next_state;
             continue;
         }
 

@@ -59,7 +59,9 @@ RID_Router::RID_Router(
     this->init(router_id, fwd_table_size, iface_num, req_size, bf_size, mode);
 }
 
-RID_Router::~RID_Router() {}
+RID_Router::~RID_Router() {
+    delete this->prob_mod;
+}
 
 int RID_Router::add_fwd_table_entry(
     int i, 
@@ -260,8 +262,16 @@ int RID_Router::forward(
         out_fptree_probs) < 0) return -1;
 
     std::cout << "RID_Router::forward() : [INFO] iface probs :" << std::endl;
-    for(uint8_t i = 0; i < this->iface_num; i++)
+    for (uint8_t i = 0; i < this->iface_num; i++)
         std::cout << "\tP(I = " << (int) i << ") = " << iface_probs[i][0] << " : " << iface_probs[i][1] << " : " << iface_probs[i][2] << std::endl;
+
+    for (uint8_t i = 0; i < iface_fp_data[0].size(); i++) {
+        delete iface_fp_data[0][i];
+    }
+
+    for (uint8_t i = 0; i < iface_fp_data[0].size(); i++) {
+        delete iface_fp_data[1][i];
+    }
 
     return 0;
 }

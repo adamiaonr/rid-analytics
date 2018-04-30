@@ -245,6 +245,7 @@ int main (int argc, char **argv) {
 
     // clean up after yourself...
     delete rid_analytics_env;
+    delete cmds;
 
     return 0;
 }
