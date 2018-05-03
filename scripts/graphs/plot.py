@@ -70,6 +70,8 @@ if __name__ == "__main__":
             globalr.plot_tab_sizes(args.data_dir, args.test_file, args.output_dir)
         elif args.subcase == 'req-sizes':
             globalr.plot_req_sizes(args.data_dir, args.test_file, args.output_dir)
+        elif args.subcase == 'tab-req-size-tradeoff':
+            globalr.plot_table_req_size_tradeoff(args.data_dir, args.test_file, args.output_dir)
         else:
             sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
             parser.print_help()

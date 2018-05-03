@@ -73,6 +73,65 @@ def read_data(data_dir, file_types = ['outcomes', 'events']):
 
     return data
 
+def plot_table_req_size_tradeoff(data_dir, test_dir, output_dir):
+    
+    data = read_data(data_dir, ['events'])
+
+    rs_keys = sorted(list(data['events']['req-size'].unique()))
+    ts_keys = sorted(list(data['events']['tab-size'].unique()))
+
+    linestyles = ['-','--']
+    markers = ['o', '^', 'v', 's']
+
+    # use the classic plot style
+    plt.style.use('classic')
+
+    # fig
+    fig = plt.figure(figsize=(5, 3.5))
+    # (1) avg. nr. of used links
+    ax1 = fig.add_subplot(111)
+    ax1.xaxis.grid(True)
+    ax1.yaxis.grid(True)
+
+    pos = 0.0
+    for t, ts in enumerate(ts_keys):
+
+        _data = data['events'].loc[data['events']['tab-size'] == ts]
+        ts_series = []
+        for rs in rs_keys:
+
+            __data = _data.loc[_data['req-size'] == rs]
+            ts_series.append((__data['mlm'].values + __data['slm'].values) / 4.0)
+
+        print(int(math.log10(int(ts))))
+        print(np.arange(0, len(ts_series), 1))
+        print(ts_series)
+        ax1.plot(
+            np.arange(5, len(ts_series) + 5, 1),
+            ts_series,
+            linewidth = 1.0, color = 'black', linestyle = '-', markersize = 5, marker = markers[t], 
+            label = '10^' + str(int(math.log10(int(ts)))))
+
+    # ax1.plot(
+    #     np.arange(5, len(ts_series) + 5, 1),
+    #     [4.0] * len(ts_series),
+    #     linewidth = 1.0, color = 'black', linestyle = '--')
+
+    # legend
+    ax1.legend(fontsize = 10, ncol = 1, loc = 'lower right', title = 'table size')
+
+    # axis labels
+    ax1.set_xlabel("request size")
+    ax1.set_ylabel("link usage")
+
+    ax1.set_xlim(-0.25 + 5, len(rs_keys) - 0.75 + 5)
+    ax1.set_yscale("log", nonposy = 'clip')
+    ax1.set_ylim(0.7, 200)
+    # ax1.set_yticks([10**(x) for x in np.arange(0, 3, 1)])
+
+    plt.savefig(os.path.join(output_dir, "global-table-req-size-tradeoff.pdf"), bbox_inches='tight', format = 'pdf')
+
+
 def plot_req_sizes(data_dir, test_dir, output_dir):
 
     # get data
