@@ -316,6 +316,10 @@ if __name__ == "__main__":
         "--case", 
          help = """verification or 'fix' case""")
 
+    parser.add_argument(
+        "--size", 
+         help = """size of tp verification or fix (default: 1)""")
+
     args = parser.parse_args()
 
     if not args.test_dir:
@@ -327,7 +331,12 @@ if __name__ == "__main__":
         verify_tps(args.test_dir)
 
     elif args.case == 'fix-tps':
-        fix_tps(args.test_dir)
+
+        size = 1
+        if args.size:
+            size = int(args.size)
+
+        fix_tps(args.test_dir, size = size)
         verify_tps(args.test_dir)
 
     elif args.case == 'verify-paths':
