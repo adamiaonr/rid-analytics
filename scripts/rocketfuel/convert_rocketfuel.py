@@ -151,7 +151,7 @@ def print_pop_level_statistics(rocketfuel_dir):
             topology_obj = parse_pop_level_map(filename)
             stats[topology_id] = topology_obj.get_pop_level_statistics()
 
-    table = PrettyTable(['as id', '# nodes', '# links', 'min. outdegree', 'median outdegree', 'max. outdegree', 'median length', 'max. length'])
+    table = PrettyTable(['as id', '# nodes', '# links', 'min. outdegree', 'median outdegree', 'mean outdegree', 'max. outdegree', 'median length', 'max. length'])
 
     for topology_id in stats:
         table.add_row([
@@ -160,6 +160,7 @@ def print_pop_level_statistics(rocketfuel_dir):
             stats[topology_id]['links'],
             stats[topology_id]['min-outdegree'],
             stats[topology_id]['med-outdegree'],
+            stats[topology_id]['mean-outdegree'],
             stats[topology_id]['max-outdegree'],
             (np.median(stats[topology_id]['path-lengths']) - 1),
             (stats[topology_id]['path-lengths'][0] - 1)
@@ -637,6 +638,7 @@ class Topology:
 
         self.stats['min-outdegree'] = np.min(degree_sequence)
         self.stats['med-outdegree'] = np.median(degree_sequence)
+        self.stats['mean-outdegree'] = np.mean(degree_sequence)
         self.stats['max-outdegree'] = np.max(degree_sequence)
 
         return self.stats
