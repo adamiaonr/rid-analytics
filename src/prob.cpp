@@ -355,6 +355,9 @@ int Prob::calc_out_fptree_prob(
                 subevent_prob                   // i not associated w/ fp tree
                 * exp(log_prob_fp_smeq[0]);     // not have a FP > 0 (i.e. having only FP = 0)
 
+            // std::cout << "Prob::calc_out_fptree_prob() : P[" 
+            //     << (int) i << "](T_out = 0) = " << exp(log_prob_fp_smeq[0]) << std::endl;
+
         } else {
 
             // there's no way of having a req. advance to the next router

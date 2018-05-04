@@ -534,15 +534,16 @@ int RID_Analytics::handle_llm(
                     iface_probs[0][2], 
                     prev_state->get_length() + get_origin_distance(this->start_router));
 
-            } else if ((this->mode & 0x03) == HARD_FALLBACK) {
+            } 
+            // else if ((this->mode & 0x03) == HARD_FALLBACK) {
 
-                add_outcome(
-                    router, 
-                    OUTCOME_HARD_FALLBACK_DELIVERY, 
-                    iface_probs[0][0],
-                    prev_state->get_length() + get_origin_distance(router));
+            //     add_outcome(
+            //         router, 
+            //         OUTCOME_HARD_FALLBACK_DELIVERY, 
+            //         iface_probs[0][0],
+            //         prev_state->get_length() + get_origin_distance(router));
 
-            }
+            // }
         }
     }
 
@@ -659,28 +660,8 @@ int RID_Analytics::make_fwd_decision(
             // used in 'flood' mode
             events[EVENT_MLM] += iface_probs[i][2] - iface_probs[i][0];
 
-        } else if ((this->mode & 0x03) == HARD_FALLBACK) {
-
-            // any SM event on iface i - occurs w/ probability P(L_i > L_{~i}) - 
-            // should be forwarded normally over iface i
-            path_prob = iface_probs[i][0];
-            events[EVENT_SLM] += iface_probs[i][0];
-
-            // MM events should be automatically forwarded 
-            // over the iface which points towards the origin
-            if (on_path_to_origin(router, i, std::stoi(this->origin_server->get_id()))) {
-
-                // add 'hard fallback delivery' outcome w/ P(L_i == L_{~i})
-                add_outcome(
-                    router, 
-                    OUTCOME_HARD_FALLBACK_DELIVERY, 
-                    (iface_probs[i][1] - iface_probs[i][0]), 
-                    prev_state->get_length() + get_origin_distance(router));
-
-                events[EVENT_MLM] += (iface_probs[i][1] - iface_probs[i][0]);
-            }
-
-        } else if ((this->mode & 0x03) == SOFT_FALLBACK) {
+        } else if (((this->mode & 0x03) == HARD_FALLBACK)
+            || ((this->mode & 0x03) == SOFT_FALLBACK)) {
 
             // as an approximation for the MM event probability, 
             // we use the iface which outputs the max. value of iface_probs[i][1]
@@ -755,9 +736,9 @@ int RID_Analytics::make_fwd_decision(
 
             if (fwd_decisions[k].out_iface == origin_iface) {
 
+                // update fwd_decision on fwd decision vector
                 fwd_decisions[k].state->set_path_prob(max_prob[1]);
                 fwd_decisions[k].state->set_in_iface_prob(max_prob[1]);
-                // update fwd_decision on fwd decision vector
                 std::cout << "RID_Analytics::make_fwd_decision() : [INFO] updating fwd decision :"
                     << "\n\tout[" << router->get_id() << "][" << origin_iface << "] -> in[" << fwd_decisions[k].next_router->get_id() << "][" << (int) fwd_decisions[k].in_iface << "]"
                     << "\n\tpath prob = " << max_prob[1]
@@ -786,13 +767,51 @@ int RID_Analytics::make_fwd_decision(
 
         // handle the case of having the request incorrectly delivered and 
         // recovered w/ a soft fallback (w/ +2 latency penalty)
-        if ((!(this->tp_sizes[router->get_id()][0] > 0)) && ((max_prob[2] - max_prob[1]) > 0.0) && (iface_probs[0][1] > 0.0)) {
+        if ((!(this->tp_sizes[router->get_id()][0] > 0)) && ((max_prob[2] - max_prob[1]) > 0.0) && (iface_probs[0][2] > 0.0)) {
             add_fwd_decision(router, prev_state, out_fptree_probs, origin_iface, max_prob[2] - max_prob[1], 2, fwd_decisions);
+        }
+
+    } else if ((this->mode & 0x03) == HARD_FALLBACK) {
+
+        if ((prev_state->get_in_iface_prob() - events[EVENT_SLM] - iface_probs[0][2]) > 0.0) {
+
+            // 1) add correct delivery 
+            add_outcome(
+                router, 
+                OUTCOME_CORRECT_DELIVERY, 
+                (prev_state->get_in_iface_prob() - events[EVENT_SLM] - iface_probs[0][2]), 
+                prev_state->get_length() + get_origin_distance(router));
+
+            // 2) register hard fallback activation
+            add_outcome(
+                router, 
+                OUTCOME_HARD_FALLBACK_DELIVERY, 
+                (prev_state->get_in_iface_prob() - events[EVENT_SLM] - iface_probs[0][2]), 
+                prev_state->get_length());
+
+            events[EVENT_MLM] += (prev_state->get_in_iface_prob() - events[EVENT_SLM] - iface_probs[0][2]);
+        }
+
+        if ((iface_probs[0][2] > 0.0) && (router->get_id() != origin_server->get_id())) {
+
+            // 1) add correct delivery 
+            add_outcome(
+                router, 
+                OUTCOME_CORRECT_DELIVERY, 
+                iface_probs[0][2], 
+                prev_state->get_length() + 1 + get_origin_distance(router));
+
+            // 2) register hard fallback activation
+            add_outcome(
+                router, 
+                OUTCOME_HARD_FALLBACK_DELIVERY, 
+                iface_probs[0][2], 
+                prev_state->get_length());
         }
     }
 
-    // add fwd record to results
-    add_fwd(router, in_iface, prev_state, fwd_decisions);
+    // // add fwd record to results
+    // add_fwd(router, in_iface, prev_state, fwd_decisions);
     //  - add events probs to results
     add_events(router, events);
 

@@ -21,8 +21,8 @@
 #define MMH_RANDOM          0x01
 #define MMH_FALLBACK        0x02
 // 'fallback' type
-# define HARD_FALLBACK      0x02
-# define SOFT_FALLBACK      0x03
+# define HARD_FALLBACK      0x03
+# define SOFT_FALLBACK      0x02
 // resolution on / off
 #define RES_OFF             0x00
 #define RES_ON              0x01
