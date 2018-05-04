@@ -17,6 +17,7 @@ import plot_utils
 import globalr
 import cdn
 import opportunistic
+import tradeoff
 
 if __name__ == "__main__":
 
@@ -94,8 +95,10 @@ if __name__ == "__main__":
             sys.exit(1)
 
     elif args.case == 'opportunistic':
-
         opportunistic.plot(args.data_dir, args.test_file, args.output_dir)
+
+    elif args.case == 'tradeoff':
+        tradeoff.plot_tradeoff(args.data_dir, args.test_file, args.output_dir)
 
     else:
         sys.stderr.write("""%s: [ERROR] please supply a valid case\n""" % sys.argv[0]) 

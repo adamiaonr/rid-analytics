@@ -16,7 +16,7 @@ from collections import OrderedDict
 from plot_utils import *
 
 matplotlib.rcParams.update({'font.size': 16})
-topology_labels = {1221: 'Telstra (1221)', 3356: 'Level3 (3356)', 3257: 'Tiscali (3257)', 4755: 'VSNL (4755)', 7018: 'AT&T (7018)'}
+topology_labels = {1221: 'Telstra', 3356: 'Level3', 3257: 'Tiscali', 4755: 'VSNL', 7018: 'AT&T', 1337 : 'Ideal'}
 
 def add_label_cols(file_label, data):
     data['topology'] = int(file_label.split("-")[0])
@@ -29,6 +29,8 @@ def add_label_cols(file_label, data):
     data['case'] = str(file_label.split("-")[9])
 
 def read_data(data_dir, file_types = ['outcomes'], filters = {}):
+
+    print(file_types)
 
     # aggregate everything in a dataframe
     # FIXME: this will get big, fast...
@@ -69,14 +71,19 @@ def read_data(data_dir, file_types = ['outcomes'], filters = {}):
         # add label columns to _data
         add_label_cols(file_label, _data)
 
-        # calculate the average latency per each outcome type
-        #   - sum prob grouped by ['src:dst', 'type', 'latency']
-        __data = _data.groupby(['src:dst', 'type', 'latency'])['prob'].agg('sum').reset_index()
-        __data['avg-latency'] = __data['latency'] * __data['prob']
-        #   - sum prob grouped by ['src:dst', 'type']
-        _data = _data.groupby(['src:dst', 'type'])['prob'].agg('sum').reset_index()
-        #   - add avg. latency to _data
-        _data['avg-latency'] = __data.groupby(['src:dst', 'type'])['avg-latency'].agg('sum').reset_index()['avg-latency'] / _data['prob']
+        if file_type == 'outcomes':
+            # calculate the average latency per each outcome type
+            #   - sum prob grouped by ['src:dst', 'type', 'latency']
+            __data = _data.groupby(['src:dst', 'type', 'latency'])['prob'].agg('sum').reset_index()
+            __data['avg-latency'] = __data['latency'] * __data['prob']
+            #   - sum prob grouped by ['src:dst', 'type']
+            _data = _data.groupby(['src:dst', 'type'])['prob'].agg('sum').reset_index()
+            #   - add avg. latency to _data
+            _data['avg-latency'] = __data.groupby(['src:dst', 'type'])['avg-latency'].agg('sum').reset_index()['avg-latency'] / _data['prob']
+
+        elif file_type == 'events':
+            # groupby() {'topology', 'bf-size', 'req-size', 'fwd-size', 'src:dst'}, and sum() the diff event types
+            _data = _data.groupby(['topology', 'bf-size', 'req-size', 'fwd-size', 'tab-size', 'src:dst'])['llm', 'mlm', 'slm'].agg('sum').reset_index()
 
         # update main dataframe
         data[file_type] = pd.concat([data[file_type], _data], ignore_index = True)
@@ -94,11 +101,13 @@ def read_data(data_dir, file_types = ['outcomes'], filters = {}):
 def plot_no_tps(data_dir, test_dir, output_dir):
 
     # labels & stuff
-    topology_keys = ['1221', '3257', '3356', '7018']
+    # topology_keys = ['1221', '3257', '3356', '7018']
+    topology_keys = ['1221', '3257', '3356', '7018', '1337']
     # grayscale for topologies
     topology_colors = ['#000000', '#708090', '#bebebe', 'white']
     # keys
     modes = [0, 3]
+    bf_sizes = {0 : 384, 3 : 192}
     cases = ['S212', 'S512']
 
     # prepare the graph parameters
@@ -124,92 +133,118 @@ def plot_no_tps(data_dir, test_dir, output_dir):
     setlabel = True
     xbf = defaultdict()
 
-    mstr = {'0192' : 'AML\n(192)', '0384' : 'AML\n(384 bit)', '3192' : 'FB\n(192 bit)'}
+    mstr = {'0192' : 'AML\n(192)', '0384' : 'AML (384 bit)', '3192' : 'FB (192 bit)'}
     cstr = {'S212' : 2, 'S512' : 5}
 
-    for c in cases:
-        for bf in ['384', '192']:
+    for t, topology in enumerate(topology_keys):
+        for c in cases:
             for m in modes:
 
-                if (m == 3) and (bf == '384'):
-                    continue
+                cd_lat = 0.0
+                link_usage = 0.0
 
-                if (m == 0) and (bf == '192'):
-                    continue
+                if topology != '1337':
 
-                for t, topology in enumerate(topology_keys):
+                    _data = read_data(data_dir, file_types = ['events', 'outcomes'], filters = {'topology' : topology, 'case' : c, 'mode' : m})
+                    # bars  : link usage
+                    # lines : avg. latency
+                    cd_lat = float(_data['outcomes'].loc[_data['outcomes']['type'] == 'cd']['avg-latency'])
 
-                    _data = read_data(data_dir, file_types = ['outcomes'], filters = {'topology' : topology, 'case' : c, 'mode' : m, 'bf-size' : bf})['outcomes']
-                    print("topology : %s, mode : %s, case : %s, bf-size : %s" % (t, m, c, bf))
-                    print(_data)
+                    link_usage = _data['events']['mlm'].values + _data['events']['slm'].values
+                    if m == 3:
+                        __d = _data['outcomes'].loc[_data['outcomes']['type'] == 'hfd']
+                        link_usage = link_usage + __d['prob'].values * (4.0 - __d['avg-latency'].values)
 
-                    label = ['', '', '']
-                    if setlabel == True:
-                        label[0] = topology_labels[int(topology)]
-                        if t == 0:
-                            label[1] = 'corr. del.'
-                            label[2] = 'incorr. del.'
+                else:
+                    cd_lat = 4.0
+                    link_usage = 4.0
 
-                    # bars hold avg. latency
-                    print(_data.loc[_data['type'] == 'cd']['avg-latency'])
-                    cd_lat = float(_data.loc[_data['type'] == 'cd']['avg-latency'])
+                bf = bf_sizes[m]
+                print("topology : %s, mode : %s, case : %s, bf-size : %s" % (t, m, c, bf))
 
-                    ax2.bar(
-                        pos, 
-                        cd_lat,
-                        color = topology_colors[t], linewidth = 0.5, width = bar_width, label = label[0])
+                label = ['', '', '']
+                if setlabel == True:
+                    label[0] = str(mstr[str(m) + str(bf)])
+                    if m == 0:
+                        label[1] = 'avg. latency'
 
-                    # lines hold avg. # of deliveries
-                    ax1.plot(
-                        pos + (bar_width / 2.0),
-                        _data.loc[_data['type'] == 'cd']['prob'],
-                        linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = 'o', label = label[1])
+                ax2.bar(
+                    pos, 
+                    link_usage,
+                    color = topology_colors[m], linewidth = 0.5, width = bar_width, label = label[0])
 
-                    ax1.plot(
-                        pos + (bar_width / 2.0),
-                        _data.loc[_data['type'] == 'id']['prob'],
-                        linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = 'v', label = label[2])
+                # lines hold avg. # of deliveries
+                ax1.plot(
+                    pos + (bar_width / 2.0),
+                    cd_lat,
+                    linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = 'o', label = label[1])
 
-                    if t == 2:
-                        xbf[pos] = str(mstr[str(m) + bf])
+                # if t == 2:
+                #     xbf[pos] = str(mstr[str(m) + bf])
 
-                    if (t == 3) and (m == 0):
-                        xbf[pos + (1.25 * bar_width)] = '\n\n' + str(cstr[c])
+                # if (t == 3) and (m == 0):
+                #     xbf[pos + (1.25 * bar_width)] = '\n\n' + str(cstr[c])
 
-                    pos += bar_width
+                if m == 0:
+                    xbf[pos + (bar_width)] = str(cstr[c])
 
-                # only include lable once
-                setlabel = False
-                pos += (bar_width / 2.0)
+                pos += bar_width
 
-        pos += (bar_width * 2.0)
+            if c == 'S212':
+                xbf[pos + (0.25 * bar_width)] = '\n' + str(topology_labels[int(topology)])
+
+            # only include lable once
+            setlabel = False
+            pos += (bar_width / 2.0)
+
+        pos += (bar_width * 1.0)
 
     # an horizontal shaded area, for fwd efficiency
-    ax1.axhspan(0, 2, linewidth = 0.0, facecolor = '#bebebe', alpha=0.50)
+    ax1.axhspan(3, 5, linewidth = 0.0, facecolor = '#bebebe', alpha = 0.25)
 
-    # legend
-    ax2.legend(fontsize = 10, ncol = 1, loc = 'upper right')
-    ax1.legend(fontsize = 10, ncol = 1, loc = 'upper left')
+    ax1.plot(
+        [0.0 - (bar_width / 2.0), pos - (1.0 * bar_width)],
+        [3.0] * 2,
+        linewidth = 0.5, color = 'black', linestyle = ':')
+
+    ax1.plot(
+        [0.0 - (bar_width / 2.0), pos - (1.0 * bar_width)],
+        [5.0] * 2,
+        linewidth = 0.5, color = 'black', linestyle = ':')
+
+    # legends
+    leg = []
+    leg.append(ax1.legend(fontsize = 10, ncol = 1, loc = 'upper left'))
+    leg.append(ax2.legend(fontsize = 10, ncol = 1, loc = 'upper right', title = 'fwd. strategy'))
+    # set legend title fontsize to 10
+    for l in leg:
+        plt.setp(l.get_title(), fontsize = 10)
 
     # axis labels
-    ax1.set_xlabel("forwarding mode\nlocal annc. size")
+    ax1.set_xlabel("cache annc. size\ntopology")
     ax1.set_xticks(xbf.keys())
     ax1.set_xticklabels(xbf.values())
 
-    ax2.set_ylabel("avg. latency (# hops)")
-    ax1.set_ylabel("avg. # deliveries")
+    ax2.set_ylabel("avg. # of used links")
+    ax1.set_ylabel("avg. latency")
 
     # avg used link axis
-    ax2.set_xlim(0.0 - bar_width, pos - (1.5 * bar_width))
+    ax2.set_xlim(0.0 - (bar_width / 2.0), pos - (1.0 * bar_width))
     ax2.set_ylim(0, 10)
+    ax2.set_yticks([0, 1, 2, 3, 4, 5, 6])
     # ax2.set_yscale("log", nonposy = 'clip')
     # ax2.set_yticks([10**(x) for x in np.arange(0, 6, 1)])
+    # ax2.set_ylim(1, 10000)
+    # ax2.set_yscale("log", nonposy = 'clip')
+    # ax2.set_yticks([10**(x) for x in np.arange(0, 5, 1)])
+    # ax2.tick_params(axis = 'y', which = 'minor', bottom = 'off')
     
     # fwd effic axis
-    ax1.set_ylim(-1, 4)
-    ax1.set_yticks([0, 1, 2])
+    ax1.set_ylim(-2, 8)
+    ax1.set_yticks([3.0, 4.0, 5.0])
 
-    plt.savefig(os.path.join(output_dir, "cdn-no-tps.pdf"), bbox_inches='tight', format = 'pdf')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, "cdn-no-tps.pdf"), format = 'pdf')
 
 def plot_tps(data_dir, test_dir, output_dir):
 
