@@ -68,8 +68,8 @@ def add_new_test(
 
         # generate the .scn filename for this scenario
         scn_filename = ""
-        if len(add_suffixes) > 0:
-            scn_filename_suffix = '-'.join([x for x in add_suffixes])
+        if len(test_parameters['add-suffixes']) > 0:
+            scn_filename_suffix = '-'.join([x for x in test_parameters['add-suffixes']])
             scn_filename = ("configs/%s-%03d-%03d-%s.scn" % (test_id, path[0], path[-1], scn_filename_suffix))
         else:
             scn_filename = ("configs/%s-%03d-%03d.scn" % (test_id, path[0], path[-1]))                
@@ -101,19 +101,30 @@ def add_new_test(
                 tp_size     = int(tp.split(":")[1]), 
                 radius      = int(tp.split(":")[2]), 
                 n_srcs      = int(tp.split(":")[0]), 
-                annc_to     = path[0],
-                avoid_path  = path)
+                annc_to     = path[0])
 
         # additional fp routes
         for fp_record in test_parameters['fps']:
 
+            print(fp_record)
             fp_record = fp_record.split(":")
+
+            n_fp_srcs = [0,0]
+
+            if fp_record[5] == 'H':
+                n_fp_srcs = [2, 0]
+
+            elif fp_record[5] != 'I':
+                n_fp_srcs = [1, int(fp_record[5])]
+
             if fp_record[0] == 'S':
                 _topology_obj.add_fp_route(
                     src_id  = path[0],
                     fp_size = int(fp_record[1]),
                     fp_size_proportion = int(fp_record[2]),
-                    radius  = int(fp_record[3]),
+                    dist = int(fp_record[3]),
+                    annc_radius  = int(fp_record[4]),
+                    n_srcs = n_fp_srcs,
                     avoid_path = path)
 
             else:
@@ -125,6 +136,8 @@ def add_new_test(
             test_parameters['table-size'], 
             test_parameters['req-size'], 
             scn_filename)
+
+        # _topology_obj.draw_pop_level_map(os.path.join(test_dir, ("topologies/%d.pdf" % (test_parameters['topology-nr']))), filters = {'annc-size' : [1, 2]})
 
     results_dir_block = et.SubElement(test_block, "results_dir").text = os.path.join(test_dir, "results/")
 
@@ -180,7 +193,7 @@ def generate_test(
 
     # build the basic topology (no .scn file yet), and generate path examples
     topology_obj = parse_pop_level_map(topology_file)
-    topology_obj.draw_pop_level_map(os.path.join(test_dir, ("topologies/%d.pdf" % (topology_nr))))
+    # topology_obj.draw_pop_level_map(os.path.join(test_dir, ("topologies/%d.pdf" % (topology_nr))))
 
     # get n examples of paths of size s
     if len(selected_paths) > 0:
@@ -206,6 +219,12 @@ def generate_test(
                 for table_size in table_sizes:
                     for mode in modes:
 
+                        if (bf_size == 192) and (mode == '0:0'):
+                            continue
+
+                        if (bf_size == 384) and (mode == '3:1'):
+                            continue
+
                         test_parameters = defaultdict()
 
                         test_parameters['topology-nr'] = topology_nr
@@ -213,12 +232,40 @@ def generate_test(
                         test_parameters['bf-size'] = bf_size
                         test_parameters['entry-sizes'] = entry_sizes
                         test_parameters['table-size'] = int(table_size)
-                        test_parameters['fps'] = fps
-                        test_parameters['tps'] = tps
-                        test_parameters['modes'] = mode.replace(":", "-")
-                        test_parameters['add-suffixes'] = add_suffixes
 
-                        add_new_test(main_block, topology_obj, test_parameters, path_examples, test_dir)
+                        for _f, fp in enumerate(fps):
+
+                            test_parameters['modes'] = mode.replace(":", "-")
+                            test_parameters['fps'] = fp.split(',')
+                            
+                            if tps:
+                                test_parameters['tps'] = [ tps[_f] ]
+                            else:
+                                test_parameters['tps'] = tps
+
+                            if tps:
+                                test_parameters['add-suffixes'] = [fp.replace(':', '').replace(',', '') + '*' + tps[_f].replace(':', '')]
+                            else:
+                                test_parameters['add-suffixes'] = [fp.replace(':', '').replace(',', '')]
+
+                            print(test_parameters['fps'])
+                            print(test_parameters['tps'])
+                            print(test_parameters['add-suffixes'])
+
+                            add_new_test(main_block, topology_obj, test_parameters, path_examples, test_dir)
+
+                            # for tp in tps:
+                            #     test_parameters['tps'] = [tp]
+                            #     test_parameters['modes'] = mode.replace(":", "-")
+                            #     test_parameters['add-suffixes'] = [fp.replace(':', '').replace(',', '') + '*' + tp.replace(':', '')]
+
+                            #     add_new_test(main_block, topology_obj, test_parameters, path_examples, test_dir)
+
+                            # test_parameters['tps'] = tps
+                            # test_parameters['modes'] = mode.replace(":", "-")
+                            # test_parameters['add-suffixes'] = [fp.replace(':', '').replace(',', '')]
+
+                            # add_new_test(main_block, topology_obj, test_parameters, path_examples, test_dir)
 
     xmlstr = minidom.parseString(et.tostring(main_block).replace('\t', '').replace('\r', '').replace('\n', '')).toprettyxml()
     with open(test_file, "w") as f:
@@ -271,8 +318,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--add-fps", 
          help = """add fp announcements around some node n. syntax 
-            is <n id>:<annc. size>:<size %%>:<annc. radius>. if <n id> == 'S' 
-            sets <n id> to the source of request. e.g. '--add-fp "S:2:50:2' """)
+            is <fp src id>:<annc. size>:<size %%>:<annc. radius>:<# of fp srcs>. 
+            if <fp src id> == 'S', <fp src id id> is set to the source of request. e.g. '--add-fp "S:2:50:2:3' 
+            if <# of fp srcs> == 'I', nr. of fp sources is unlimited. e.g. '--add-fp "S:2:50:2:I'""")
 
     parser.add_argument(
         "--modes", 

@@ -183,26 +183,98 @@ class Topology:
         self.tp_srcs = defaultdict(set)
         self.fp_srcs = defaultdict(set)
 
-    def draw_pop_level_map(self, filename):
+    def draw_pop_level_map(self, filename, filters = {}):
 
+        # setting the positions with respect to the whole graph
+        # (not just a subgraph)
         pos = nx.spring_layout(self.topology)
-        nx.draw_networkx_nodes(
-            self.topology, 
-            pos,
-            node_color = 'red',
-            node_size = 500,
-            alpha = 0.5)
 
-        nx.draw_networkx_edges(
-            self.topology,
-            pos,
-            width = 1.0, 
-            alpha = 0.5)
-
-        labels={}
+        labels = {}
         for router in self.topology.nodes():
             labels[router] = str(router)
-        nx.draw_networkx_labels(self.topology, pos, labels, font_size = 10)
+
+        if 'annc-size' in filters:
+            # collect nodes by annc. size they send / recv
+            annc_sizes = {'fp' : defaultdict(set), 'tp' : defaultdict(set)}
+            for router in self.topology.nodes():
+                for i, neighbor_router in enumerate(self.topology.neighbors(router)):
+
+                    # print("%s <->> %s" % (router, neighbor_router))
+                    
+                    edge = self.topology.get_edge_data(router, neighbor_router)
+                    if 'fp' in edge:
+                        for fp_record in edge['fp'].split("|"):
+                            # print("fp : %s" % (fp_record))
+                            annc_sizes['fp'][int(fp_record.split(':')[2])].add(router)
+                            annc_sizes['fp'][int(fp_record.split(':')[2])].add(neighbor_router)
+
+                    if 'tp' in edge: 
+                        for tp_record in edge['tp'].split("|"):
+                            # print("tp : %s" % (tp_record))
+                            annc_sizes['tp'][int(tp_record.split(':')[2])].add(router)
+                            annc_sizes['tp'][int(tp_record.split(':')[2])].add(neighbor_router)
+
+            colors = {1 : 'black', 2 : 'red', 4 : 'red', 5 : 'blue', 10 : 'green'}
+            for s in annc_sizes['fp']:
+                
+                # generate subgraph
+                sg = self.topology.subgraph(list(annc_sizes['fp'][s]))
+
+                nx.draw_networkx_nodes(
+                    sg, 
+                    pos = pos,
+                    node_color = 'red',
+                    node_size = 500,
+                    alpha = 0.5)
+
+                nx.draw_networkx_edges(
+                    sg,
+                    pos,
+                    edge_color = colors[s],
+                    width = 1.0, 
+                    alpha = 0.5)
+
+                nx.draw_networkx_labels(sg, pos = pos, labels = labels, font_size = 10)
+
+            # for s in annc_sizes['tp']:
+                
+            #     # generate subgraph
+            #     sg = self.topology.subgraph(list(annc_sizes['tp'][s]))
+
+            #     nx.draw_networkx_nodes(
+            #         sg, 
+            #         pos = pos,
+            #         node_color = 'red',
+            #         node_size = 500,
+            #         alpha = 0.5)
+
+            #     nx.draw_networkx_edges(
+            #         sg,
+            #         pos,
+            #         edge_color = colors[s],
+            #         edge_style = 'dashed',
+            #         width = 1.0, 
+            #         alpha = 0.5)
+
+            #     nx.draw_networkx_labels(sg, pos = pos, labels = labels, font_size = 10)
+
+        # nx.draw_networkx_nodes(
+        #     self.topology, 
+        #     pos,
+        #     node_color = 'red',
+        #     node_size = 500,
+        #     alpha = 0.5)
+
+        # nx.draw_networkx_edges(
+        #     self.topology,
+        #     pos,
+        #     width = 1.0, 
+        #     alpha = 0.5)
+
+        # labels = {}
+        # for router in self.topology.nodes():
+        #     labels[router] = str(router)
+        # nx.draw_networkx_labels(self.topology, pos, labels, font_size = 10)
 
         # save the figure in <rocketfuel-file>.pdf
         plt.savefig(filename, bbox_inches='tight', format = 'pdf')
@@ -264,8 +336,8 @@ class Topology:
     def set_shortest_paths(self, shortest_paths):
         self.shortest_paths = shortest_paths
 
-    def get_neighbors_within_radius(self, node_id, radius):
-        return [node for node in nx.single_source_shortest_path(self.topology, node_id, radius)]
+    def get_neighbors_within_dist(self, node_id, dist):
+        return [node for node in nx.single_source_shortest_path(self.topology, node_id, dist)]
 
     # add true positive entries to a topology (.scn file). 
     # we start by applying changes in a networkx object, then call 
@@ -280,7 +352,7 @@ class Topology:
         if tp_src_id == -1:
 
             # extract neighbors of annc_to at radius hops from it
-            neighbors = self.get_neighbors_within_radius(annc_to, radius)
+            neighbors = self.get_neighbors_within_dist(annc_to, radius)
             # select n_srcs neighbors
             for neighbor in neighbors:
 
@@ -356,7 +428,7 @@ class Topology:
                         # get src and dst ends of the edge
                         src, dst = path[i], path[i + 1]
                         # determine the interface of dst to which we should add the tp info
-                        edge = self.topology.get_edge_data(src, dst);
+                        edge = self.topology.get_edge_data(src, dst)
 
                         # we will save the pre-existing tp info on a dict
                         edge_tps = defaultdict()
@@ -403,7 +475,6 @@ class Topology:
         
         # get all shortest path starting at tp_src
         routes = self.get_shortest_paths()[tp_src_id]
-        
         # add a tp entry to the *local* iface of tp_src
         self.topology.add_edge(tp_src_id, tp_src_id, 
             type = 'internal', 
@@ -421,7 +492,7 @@ class Topology:
                 # get src and dst ends of the edge
                 src, dst = path[i], path[i + 1]
                  # determine the interface of dst to which we should add the tp info
-                edge = self.topology.get_edge_data(src, dst);
+                edge = self.topology.get_edge_data(src, dst)
 
                 iface = 0
                 if int(edge['e1'].split(':', 1)[0]) == dst:
@@ -434,45 +505,61 @@ class Topology:
 
         return 0
 
-    def add_fp_route(self, src_id, fp_size = 2, fp_size_proportion = 10, radius = 1, avoid_path = []):
+    def add_fp_route(self, src_id, fp_size = 2, fp_size_proportion = 10, annc_radius = 1, dist = 1, avoid_path = [], n_srcs = [0,0]):
 
-        # get neighbors within radius of src_id
-        neighbors = self.get_neighbors_within_radius(src_id, radius)
+        # get neighbors within dist of src_id
+        neighbors = self.get_neighbors_within_dist(src_id, dist)
+
+        n_neighbors = len(neighbors)
+        if (n_srcs[0] == 2):
+            n_srcs[1] = n_neighbors
 
         # iterate over neighbors of src_id
         for neighbor in neighbors:
 
-            # find the path from neighbor to src_id
+            # if specified, add a limited number of sources
+            if (n_srcs[0] > 0) and (n_srcs[1] < 1):
+                return 0
+
+            if (n_srcs[0] == 2) and (n_srcs[1] < (n_neighbors / 2)):
+                return 0
+
+            # skip possible fp caches w/ 50% probability if n_srcs[0] is of mode 2
+            if (n_srcs[0] > 0) and (bool(random.getrandbits(1))):
+                continue
+
+            # iterate over all paths starting in the neighbor
             for path in self.get_shortest_paths()[neighbor]:
 
                 path = [ int(p) for p in path.split(",") ]
 
-                # if the end of that path isn't src_id, continue
-                if path[-1] != src_id:
+                # if neighbor is below dist hops from source, abort
+                if ((len(path) - 1) < dist):
+                    # print("%d -> %d : %s (%d : no dist)" % (path[0], path[-1], str(path), len(path) - 1))
                     continue
 
-                # if neighbor is below radius hops, abort
-                if ((len(path) - 1) < radius):
-                    # print("%d -> %d : %s (%d : no radius)" % (path[0], path[-1], str(path), len(path) - 1))
-                    continue
+                # # if the end of that path isn't src_id, continue
+                # if path[-1] != src_id:
+                #     continue
 
                 # if neighbor is in avoid_path, continue
-                if neighbor in avoid_path:
-                    print("potential fp src in avoid path : %d vs. [%s]. aborting." % (neighbor, avoid_path))
+                if neighbor in (avoid_path[:dist] + avoid_path[dist + 1:]):
+                    # print("Topology::add_fp_route() : [INFO] potential fp src in avoid path : %d vs. [%s]. aborting." % (neighbor, avoid_path))
                     continue
 
                 # add path[0] - i.e. the origin of the fp route - to the fp_srcs dict
                 self.fp_srcs[fp_size].add(path[0])
+                # print("Topology::add_fp_route() : [INFO] adding fp route : %d -> %d : %s (%d)" % (path[0], path[-1], str(path), len(path) - 1))
 
-                print("adding fp route : %d -> %d : %s (%d)" % (path[0], path[-1], str(path), len(path) - 1))
+                # update the nr of srcs added so far
+                if (n_srcs[0] > 0):
+                    n_srcs[1] = (n_srcs[1] - 1)
 
-                # add a fp entry to the local iface of neighbor. this is basically 
-                # an edge with the same head and tail
-
-                # get any fp edge attribute, if already existent. the point is to 
-                # update it if a previous entry for the same iface:size already exists
+                # add a fp entry to the local iface of neighbor. 
+                # this is basically an edge with the same head and tail
+                # get any fp edge attribute, if already existent. 
+                # the point is to update it if a previous entry for the same iface:size already exists
                 edge = self.topology.get_edge_data(neighbor, neighbor)
-
                 # we will save the pre-existing fp info on a dict
                 edge_fps = defaultdict()
                 if (edge is not None) and ('fp' in edge):
@@ -503,14 +590,19 @@ class Topology:
                 # print("add <fwd_size_dist size='%d'>%.2f</fwd_size_dist> to <link local='%d'>\n" 
                 #     % (fp_size, (float(fp_size_proportion) / 100.0), 0))
 
-                for i in xrange(len(path) - 1):
+                # for i in xrange(len(path) - 1):
+                for i in xrange(annc_radius):
 
-                    # get src and dst ends of the edge. the announcement works 
-                    # from src -> dst, as such, it should be stored in the iface of dst.
+                    # make sure we don't over the end of a path
+                    if (i + 1) > (len(path) - 1):
+                        break
+
+                    # get src and dst ends of the edge. 
+                    # the announcement works from src -> dst, as such, it should be stored in the iface of dst.
                     src, dst = path[i], path[i + 1]
 
                     # determine the interface of dst to which we should add the fp info
-                    edge = self.topology.get_edge_data(src, dst);
+                    edge = self.topology.get_edge_data(src, dst)
                     # retrieve any pre-existing fp information in the form of a dict(), if any
                     edge_fps = defaultdict()
                     if 'fp' in edge:
@@ -526,6 +618,7 @@ class Topology:
                         iface = edge['e1']
                     else:
                         iface = edge['e2']
+
                     # if a fp record for fp_size already exists on this iface, 
                     # update the proportion value. if not, just add a new key
                     edge_fps_key = ("%s:%d" % (iface, fp_size))
@@ -635,7 +728,6 @@ class Topology:
 
         self.stats['avg-path-outdegree'] = list(set(avg_path_outdegrees))
         self.stats['path-lengths'] = sorted(list(set(path_lengths)), reverse = True)
-
         self.stats['min-outdegree'] = np.min(degree_sequence)
         self.stats['med-outdegree'] = np.median(degree_sequence)
         self.stats['mean-outdegree'] = np.mean(degree_sequence)
@@ -692,7 +784,7 @@ class Topology:
             for i, neighbor_router in enumerate(self.topology.neighbors(router)):
 
                 # extract the attributes of the link
-                edge = self.topology.get_edge_data(router, neighbor_router);
+                edge = self.topology.get_edge_data(router, neighbor_router)
 
                 # distribute the link ifaces 'a' and 'b' over local and remote
                 local_iface     = 0

@@ -215,6 +215,11 @@ int Prob::calc_lm_prob(
 
     // if there are no entries for this iface, a match is impossible
     // as such, match size f = 0 has prob 1.0 of happening
+    if (iface_fp_data->is_blocked) { 
+        for (int t = (int) this->n; t >= 0; t--) (*lmp)[i][t][0] = 1.0;
+        return 0; 
+    }
+
     if (iface_fp_data->num_entries < 1.0) {
         for (int t = (int) this->n; t >= 0; t--) (*lmp)[i][t][0] = 1.0;
         return 0;
@@ -460,7 +465,7 @@ int Prob::calc_fptree_probs(
         }
 
         // P(T_i = 0) = 1.0 - SUM {for all t > 0} [ srt[i][t] * P(T_in = t) ]
-        this->fptree_prob[0][i][0] = 1.0 - cumulative_fptree_prob[0];
+        this->fptree_prob[0][i][0] = (__float080) ((float) 1.0 - (float) cumulative_fptree_prob[0]);
         this->fptree_prob[1][i][0] = (__float080) ((float) 1.0 - (float) cumulative_fptree_prob[1]);
 
         // std::cout << "Prob::calc_fptree_probs() : P(T[" << (int) i << "] = 0) = 1.0 - " 
@@ -554,14 +559,26 @@ int Prob::calc_iface_prob(
         //      + (1 - P(T_in = 0)) * (P(L_i | T_i = 0, B) * T_i = 0, B)    // event B
 
         // - P(L_i, T_i = 0)
-        lm_marg_prob[i][f] += 
+        __float080 __joint_prob = 
             ((*in_fptree_prob)[0] * event_a[0][f] * (((*iface_fp_data)[0][i]->is_blocked && (f > 0)) ? 0.0 : 1.0))
             + ((1.0 - (*in_fptree_prob)[0]) * (this->lm_cond_prob[i][0][f] * this->fptree_prob[0][i][0]));
+        lm_marg_prob[i][f] += __joint_prob;
+
+        // if (__joint_prob > 0.0 || __joint_prob < 0.0) {
+
+        //     std::cout << "\t[0] = " << (*in_fptree_prob)[0] << std::endl;
+        //     std::cout << "\t[1] = " << event_a[0][f] << std::endl;
+        //     std::cout << "\t[2] = " << (((*iface_fp_data)[0][i]->is_blocked && (f > 0)) ? 0.0 : 1.0) << std::endl;
+        //     std::cout << "\t[3] = " << (1.0 - (*in_fptree_prob)[0]) << std::endl;
+        //     std::cout << "\t[4] = " << (this->lm_cond_prob[i][0][f]) << std::endl;
+        //     std::cout << "\t[5] = " << (this->fptree_prob[0][i][0]) << std::endl;
+        // }
 
         // - P(L_~i, T_~i = 0)
-        lm_complement_marg_prob[i][f] += 
+        __joint_prob = 
             ((*in_fptree_prob)[0] * event_a[1][f])
             + ((1.0 - (*in_fptree_prob)[0]) * (this->lm_complement_cond_prob[i][0][f] * this->fptree_prob[1][i][0]));
+        lm_complement_marg_prob[i][f] += __joint_prob;
 
         for (uint8_t t = 1; t < (this->n + 1); t++) {
 
@@ -571,7 +588,7 @@ int Prob::calc_iface_prob(
             lm_marg_prob[i][f] += joint_prob;
 
             // print if P(L_i = l, T_i = t) > 0.0
-            // if (joint_prob > 0.0) {
+            // if (joint_prob > 0.0 || joint_prob < 0.0) {
             //     std::cout << "\t[" << (int) t << "] +" 
             //         << (joint_prob) << " (" << this->lm_cond_prob[i][t][f] << " x " << this->fptree_prob[0][i][t] << ")"
             //         << " to P(L_" << (int) i << " = " << (int) f << ") = " << lm_marg_prob[i][f] << std::endl;
@@ -585,7 +602,7 @@ int Prob::calc_iface_prob(
             // add the joint P(L_{~i} = l, T_{~i} = t) to marginal P(L_{~i} = l)
             lm_complement_marg_prob[i][f] += joint_prob;
             // print if P(L_{~i} = l, T_{~i} = t) > 0.0
-            // if (joint_prob > 0.0) {
+            // if (joint_prob > 0.0 || joint_prob < 0.0) {
             //     std::cout << "\t[" << (int) t << "] +" 
             //         << (joint_prob) << " (" << this->lm_complement_cond_prob[i][t][f] << " x " << this->fptree_prob[1][i][t] << ")"
             //         << " to P(L_{~" << (int) i << "} = " << f << ") = " << lm_complement_marg_prob[i][f] << std::endl;
@@ -609,7 +626,7 @@ int Prob::calc_iface_prob(
 
         for (uint8_t k = 0; k < f; k++) {
 
-            // a) L_i > L_{~i} >= L_0
+            // a) L_i > [ L_{~i} AND L_0]
             // [ i ][~i ][ 0 ]
             //   2    0    0
             //   2    0    1
@@ -620,14 +637,17 @@ int Prob::calc_iface_prob(
 
             if (i > 0) {
 
-                for (uint8_t j = 0; j < f; j++)
+                for (uint8_t j = 0; j < f; j++) {
+                    // std::cout << "\t (a) [" << (int) f << "][" << (int) k << "][" << (int) j << "]" << std::endl;
                     prob[0] += _p * lm_marg_prob[0][j];
+                }
 
-                // b) L_i == L_0 > L_{i}
+                // b) L_i == L_0 > L_{~i}
                 // [ i ][~i ][ 0 ]
                 //   2    0    2
                 //   2    1    2
                 //   1    0    1
+                // std::cout << "\t (b) [" << (int) f << "][" << (int) k << "][" << (int) f << "]" << std::endl;
                 prob[1] += (_p * lm_marg_prob[0][f]);
 
             } else {
@@ -635,8 +655,8 @@ int Prob::calc_iface_prob(
             }
         }
 
-        // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " > L~{" << (int) i << "} >= L_0 [" << f << "] = " << prob[0] << std::endl;
-        // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} =  L_0 [" << f << "] = " << prob[1] << std::endl;
+        // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " > [ L~{" << (int) i << "} AND L_0 ] [" << f << "] = " << prob[0] << std::endl;
+        // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " [ > L~{" << (int) i << "} ] AND  [ = L_0 ] [" << f << "] = " << prob[1] << std::endl;
 
         __float080 __p = (lm_marg_prob[i][f] * lm_complement_marg_prob[i][f]);
 
@@ -648,6 +668,7 @@ int Prob::calc_iface_prob(
                 //   2    2    0
                 //   2    2    1
                 //   1    1    0
+                // std::cout << "\t (c) [" << (int) f << "][" << (int) f << "][" << (int) k << "]" << std::endl;
                 prob[2] += (__p * lm_marg_prob[0][k]);
             }
 
@@ -656,17 +677,17 @@ int Prob::calc_iface_prob(
             //   2    2    2
             //   1    1    1
             //   0    0    0
+            // std::cout << "\t (d) [" << (int) f << "][" << (int) f << "][" << (int) f << "]" << std::endl;
             prob[3] = (__p  * lm_marg_prob[0][f]);
 
         } else {
-
             prob[3] = __p;
         }
 
-        // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} >  L_0 [" << f << "] = " << prob[2] << std::endl;
-        // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} =  L_0)[" << f << "] = " << prob[3] << std::endl;
+        // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} > L_0 [" << f << "] = " << prob[2] << std::endl;
+        // std::cout << "Prob::calc_iface_prob() : L_" << (int) i << " = L~{" << (int) i << "} = L_0)[" << f << "] = " << prob[3] << std::endl;
 
-        iface_prob[0] += prob[0];                                   // P(L_i >  L_{~i}) : SINGLE MATCH ONLY
+        iface_prob[0] += (prob[0]);                                 // P(L_i >  L_{~i}) : SINGLE MATCH ONLY
         iface_prob[1] += (prob[0] + prob[2]);                       // P(L_i >= L_{~i}) : MULTIPLE MATCH (NO LOCAL MATCHES)
         iface_prob[2] += (prob[0] + prob[1] + prob[2] + prob[3]);   // P(L_i >= L_{~i}) : MULTIPLE MATCH (W/ LOCAL MATCHES)
 
@@ -707,6 +728,11 @@ int Prob::calc_probs(
 
     // calc P(L_i = l | P_i = p) and P(L_{~i} = l | P_{~i} = p)
     // time complexity : O(N^2 * I)
+    for (unsigned i = 0; i < this->iface_num; i++) {
+        this->lm_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
+        this->lm_complement_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
+    }
+
     if (calc_lm_probs(iface_fp_data, tree_bitmasks) < 0) 
         return -1;
 
@@ -741,7 +767,9 @@ int Prob::calc_probs(
         }
     }
 
-    // clear the marginal probability placeholder vectors
+    // clear the conditional and marginal probability placeholder vectors
+    this->lm_cond_prob.clear();
+    this->lm_complement_cond_prob.clear();
     this->lm_marg_prob.clear();
     this->lm_complement_marg_prob.clear();
 

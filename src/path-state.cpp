@@ -8,7 +8,7 @@ Path_State::Path_State(RID_Router * router, int req_size) {
     this->path_status = (int) OUTCOME_UNDEF;
     this->path_prob = 0.0;
     // event & event prob
-    this->event = (int) EVENT_UNKNOWN;
+    this->event = (int) 0x07;
     this->event_prob = 0.0;
 
     this->in_fptree_prob = std::vector<__float080>(req_size + 1, 0.0);

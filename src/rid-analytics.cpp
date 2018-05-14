@@ -72,22 +72,28 @@ void RID_Analytics::init_output(
     //  -# ifaces.tsv       : description of fwding events, including iface probs per router
 
     // file names follow the convention <type>.<label>.<unix-timestamp>.tsv
-    this->output_file = std::vector<std::ofstream> (3);
-    std::string filename[3] = {"events", "outcomes", "forwarding"};
-    for (int i = 0; i < 3; i++) {
+    // this->output_file = std::vector<std::ofstream> (3);
+    // std::string filename[3] = {"events", "outcomes", "forwarding"};
+    // for (int i = 0; i < 3; i++) {
+    //     filename[i] += std::string(".") + label + std::string(".") + get_unix_timestamp() + std::string(".tsv");
+    //     this->output_file[i].open(output_dir + std::string("/") + filename[i]);
+    // }
+    this->output_file = std::vector<std::ofstream> (2);
+    std::string filename[2] = {"events", "outcomes"};
+    for (int i = 0; i < 2; i++) {
         filename[i] += std::string(".") + label + std::string(".") + get_unix_timestamp() + std::string(".tsv");
         this->output_file[i].open(output_dir + std::string("/") + filename[i]);
     }
 
     // events header
-    this->output_file[0] << "router\tnlm\tmlm\tllm\tslm\n";
+    this->output_file[0] << "router\tnlm\tmlm\tllm\tslmc\tslmi\tfpd\n";
     // outcome header
     this->output_file[1] << "router\ttype\tprob\tlatency\n";
-    // forwarding header
-    this->output_file[2] << "from\tinprob\tinto";
-    for (auto const& r : this->routers)
-        this->output_file[2] << "\t" << r.second->get_id();
-    this->output_file[2] << "\n";
+    // // forwarding header
+    // this->output_file[2] << "from\tinprob\tinto";
+    // for (auto const& r : this->routers)
+    //     this->output_file[2] << "\t" << r.second->get_id();
+    // this->output_file[2] << "\n";
     
     // ifaces header
     // determine router w/ largest iface_num
@@ -461,8 +467,14 @@ void RID_Analytics::add_events(
 
     // header: router\tnlm\tllm\tmlm\tslm\n
     this->output_file[0] << router->get_id();
-    for (unsigned int e = 0; e < events.size(); e++)
+    for (unsigned int e = 0; e < events.size(); e++) {
+
+        // if(((e == EVENT_SLMC) || (e == EVENT_SLMI) || (e == EVENT_LLM)) && events[e] > 1.1)
+        //     std::cout << "RID_Analytics::add_events() : [ERROR] E[" << ((e == EVENT_LLM) ? "LLM" : "SLMx") << "] = " 
+        //         << events[e] << " (> 1.0) @R" << router->get_id() << std::endl;
+
         this->output_file[0] << "\t" << events[e];
+    }
     this->output_file[0] << "\n";
 }
 
@@ -653,7 +665,13 @@ int RID_Analytics::make_fwd_decision(
             // MMH_FLOOD uses P(L_i >= L_{~i}), w/ local matches
             path_prob = iface_probs[i][2];
             // SM event only considers P(L_i > L_{~i})
-            events[EVENT_SLM] += iface_probs[i][0];
+
+            if (this->tp_sizes[router->get_id()][i] > 0) {
+                events[EVENT_SLMC] += iface_probs[i][0];
+            } else {
+                events[EVENT_SLMI] += iface_probs[i][0];
+            }
+
             // MM event refers to P(L_i == L_{~i}), as such we do:
             //  P(L_i >= L_{~i}) - P(L_i > L_{~i})
             // FIXME : this will be used to calculate the avg. nr. of links 
@@ -680,7 +698,10 @@ int RID_Analytics::make_fwd_decision(
 
             // otherwise, use iface_probs[i][0]
             path_prob = iface_probs[i][0];
-            events[EVENT_SLM] += iface_probs[i][0];
+            if (this->tp_sizes[router->get_id()][i] > 0)
+                events[EVENT_SLMC] += iface_probs[i][0];
+            else
+                events[EVENT_SLMI] += iface_probs[i][0];
         }
 
         // if path prob = 0.0, skip the addition of a fwd decision
@@ -729,7 +750,13 @@ int RID_Analytics::make_fwd_decision(
     }
 
     // FIXME: special handling of SOFT_FALLBACK case
-    if ((this->mode & 0x03) == SOFT_FALLBACK) {
+    if (this->mode == MMH_FLOOD) {
+
+        events[EVENT_FPD] = std::max(
+            (__float080) 0.0, 
+            (prev_state->get_in_iface_prob() - events[EVENT_SLMC] - events[EVENT_SLMI] - iface_probs[0][0]));
+
+    } else if ((this->mode & 0x03) == SOFT_FALLBACK) {
 
         bool updated = false;
         for (unsigned int k = 0; k < fwd_decisions.size(); k++) {
@@ -773,26 +800,34 @@ int RID_Analytics::make_fwd_decision(
 
     } else if ((this->mode & 0x03) == HARD_FALLBACK) {
 
-        if ((prev_state->get_in_iface_prob() - events[EVENT_SLM] - iface_probs[0][2]) > 0.0) {
+        __float080 mm_prob = std::max(
+            (__float080) 0.0, 
+            (prev_state->get_in_iface_prob() - events[EVENT_SLMC] - events[EVENT_SLMI] - iface_probs[0][2]));
+        
+        events[EVENT_FPD] = mm_prob;
+
+        if (mm_prob > 0.0) {
 
             // 1) add correct delivery 
             add_outcome(
                 router, 
                 OUTCOME_CORRECT_DELIVERY, 
-                (prev_state->get_in_iface_prob() - events[EVENT_SLM] - iface_probs[0][2]), 
+                (mm_prob), 
                 prev_state->get_length() + get_origin_distance(router));
 
             // 2) register hard fallback activation
             add_outcome(
                 router, 
                 OUTCOME_HARD_FALLBACK_DELIVERY, 
-                (prev_state->get_in_iface_prob() - events[EVENT_SLM] - iface_probs[0][2]), 
-                prev_state->get_length());
+                (mm_prob), 
+                get_origin_distance(router));
 
-            events[EVENT_MLM] += (prev_state->get_in_iface_prob() - events[EVENT_SLM] - iface_probs[0][2]);
+            events[EVENT_MLM] += mm_prob;
         }
 
-        if ((iface_probs[0][2] > 0.0) && (router->get_id() != origin_server->get_id())) {
+        if ((iface_probs[0][2] > 0.0) && (router->get_id() != origin_server->get_id()) && (!(this->tp_sizes[router->get_id()][0] > 0))) {
+
+            events[EVENT_SLMI] += iface_probs[0][2];
 
             // 1) add correct delivery 
             add_outcome(
@@ -806,7 +841,7 @@ int RID_Analytics::make_fwd_decision(
                 router, 
                 OUTCOME_HARD_FALLBACK_DELIVERY, 
                 iface_probs[0][2], 
-                prev_state->get_length());
+                get_origin_distance(router));
         }
     }
 

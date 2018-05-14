@@ -8,13 +8,15 @@
 #define END_OF_PATH         (int) -1
 
 // interface events
-#define EVENT_NUM       0x04 // hack : we don't count w/ EVENT_TTL
+#define EVENT_NUM       0x06 // hack : we don't count w/ EVENT_TTL
 #define EVENT_NLM       0x00 // no link matches
 #define EVENT_MLM       0x01 // multiple link matches
 #define EVENT_LLM       0x02 // local link match
-#define EVENT_SLM       0x03 // single link match (other than local)
-#define EVENT_TTL       0x04 // drop due to rtt expiration
-#define EVENT_UNKNOWN   0x05
+#define EVENT_SLMC      0x03 // single link match && tp (other than local)
+#define EVENT_SLMI      0x04 // single link match && fp (other than local)
+#define EVENT_FPD       0x05 // false positive detection
+#define EVENT_TTL       0x06 // drop due to rtt expiration
+#define EVENT_UNKNOWN   0x07
 
 // multiple match & incorrect delivery handling
 #define MMH_FLOOD           0x00

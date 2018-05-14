@@ -59,7 +59,7 @@ def read_data(data_dir, file_types = ['outcomes', 'events']):
 
         elif file_type == 'events':
             # groupby() {'topology', 'bf-size', 'req-size', 'fwd-size', 'src:dst'}, and sum() the diff event types
-            _data = _data.groupby(['topology', 'bf-size', 'req-size', 'fwd-size', 'tab-size', 'src:dst'])['llm', 'mlm', 'slm'].agg('sum').reset_index()
+            _data = _data.groupby(['topology', 'bf-size', 'req-size', 'fwd-size', 'tab-size', 'src:dst'])['llm', 'mlm', 'slmc', 'slmi', 'fpd'].agg('sum').reset_index()
 
         # update main dataframe
         data[file_type] = pd.concat([data[file_type], _data], ignore_index = True)
@@ -70,7 +70,7 @@ def read_data(data_dir, file_types = ['outcomes', 'events']):
         if file_type == 'outcomes':
             data[file_type] = data[file_type].groupby(['topology', 'bf-size', 'req-size', 'fwd-size', 'tab-size', 'type'])['prob'].agg('mean').reset_index()
         elif file_type == 'events':
-            data[file_type] = data[file_type].groupby(['topology', 'bf-size', 'req-size', 'tab-size', 'fwd-size'])[['llm', 'mlm', 'slm']].agg('mean').reset_index()
+            data[file_type] = data[file_type].groupby(['topology', 'bf-size', 'req-size', 'tab-size', 'fwd-size'])[['llm', 'mlm', 'slmc', 'slmi', 'fpd']].agg('mean').reset_index()
 
     return data
 
@@ -100,7 +100,7 @@ def plot_table_req_size_tradeoff(data_dir, test_dir, output_dir):
         ax[tt].xaxis.grid(True)
         ax[tt].yaxis.grid(True)
 
-        ax[tt].set_title("%s (%s)" % (topology_labels[tp], tp), fontsize = 10)
+        ax[tt].set_title("%s (%s)" % (topology_labels[tp], tp), fontsize = 12)
 
         pos = 0.0
         for t, ts in enumerate(ts_keys):
@@ -110,7 +110,7 @@ def plot_table_req_size_tradeoff(data_dir, test_dir, output_dir):
             for rs in rs_keys:
 
                 __data = _data.loc[_data['req-size'] == rs]
-                ts_series.append((__data['mlm'].values + __data['slm'].values) / 4.0)
+                ts_series.append((__data['mlm'].values + __data['slmi'].values + __data['slmc'].values) / 4.0)
 
             print(int(math.log10(int(ts))))
             print(np.arange(0, len(ts_series), 1))
@@ -121,7 +121,7 @@ def plot_table_req_size_tradeoff(data_dir, test_dir, output_dir):
                 linewidth = 1.0, color = 'black', linestyle = '-', markersize = 5, marker = markers[t], 
                 label = '10e' + str(int(math.log10(int(ts)))))
 
-        ax[tt].set_ylabel("link usage")
+        ax[tt].set_ylabel("link usage\nexcess")
         ax[tt].set_yscale("log", nonposy = 'clip')
         ax[tt].set_ylim(xlims[tt], ylims[tt])
 
@@ -134,11 +134,19 @@ def plot_table_req_size_tradeoff(data_dir, test_dir, output_dir):
 
     # legend
     leg = []
-    leg.append(ax[0].legend(fontsize = 9, ncol = 2, loc = 'upper left', title = 'table size', handletextpad = 0.2))
-    leg.append(ax[1].legend(fontsize = 9, ncol = 2, loc = 'upper left', title = 'table size', handletextpad = 0.2))
+    leg.append(ax[0].legend(
+        fontsize = 12, 
+        ncol = 2, loc = 'upper left', title = 'table size', 
+        handletextpad = 0.2, handlelength = 0.575, labelspacing = 0.2, columnspacing = 0.3,
+        bbox_to_anchor=(0.0, 1.100)))
+    leg.append(ax[1].legend(
+        fontsize = 12, 
+        ncol = 2, loc = 'upper left', title = 'table size', 
+        handletextpad = 0.2, handlelength = 0.575, labelspacing = 0.2, columnspacing = 0.3,
+        bbox_to_anchor=(0.0, 1.100)))
     # set legend title fontsize to 10
     for l in leg:
-        plt.setp(l.get_title(), fontsize = 9)
+        plt.setp(l.get_title(), fontsize = 12)
 
     # axis labels
     ax[1].set_xlabel("request size")
@@ -383,7 +391,7 @@ def plot_bf_sizes(data_dir, test_dir, output_dir):
 
         if topology == 'ideal':
             ax1.axvline(x = (pos - (0.75 * bar_width)), linewidth = 0.5, linestyle = '-', color = 'black')
-            ax1.axvspan(pos - (0.75 * bar_width), pos + (6 * bar_width) + bar_width, linewidth = 0.0, facecolor = '#bebebe', alpha = 0.20)
+            ax1.axvspan(pos - (0.75 * bar_width), pos + (8 * bar_width) + bar_width, linewidth = 0.0, facecolor = '#bebebe', alpha = 0.50)
 
         for f, fwd in enumerate(fwd_entry_keys):
             for b, bf in enumerate(bf_keys):
@@ -395,7 +403,7 @@ def plot_bf_sizes(data_dir, test_dir, output_dir):
                         & (data['events']['bf-size'] == bf)
                         & (data['events']['fwd-size'] == fwd)]
 
-                    value = _data['mlm'] + _data['slm']
+                    value = _data['mlm'] + _data['slmc'] + _data['slmi']
 
                 else:
                     value = 4.0
@@ -417,12 +425,12 @@ def plot_bf_sizes(data_dir, test_dir, output_dir):
                 #     linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = 'o', label = label[1])
 
                 if b == 1:
-                    xbf[pos + (0.5 * bar_width)] = str(fwd)
+                    xbf[pos + (bar_width)] = str(fwd)
 
                 pos += bar_width
 
             if f == 0:
-                xbf[pos + (0.25 * bar_width)] = '\n' + str(topology_labels[topology])
+                xbf[pos + (0.5 * bar_width)] = '\n' + str(topology_labels[topology])
 
             # only include lable once
             setlabel = False
@@ -434,10 +442,13 @@ def plot_bf_sizes(data_dir, test_dir, output_dir):
 
     # legend
     leg = []
-    leg.append(ax1.legend(fontsize = 10, ncol = 1, loc = 'upper right', title = 'bf size'))
+    leg.append(ax1.legend(
+        fontsize = 12, 
+        ncol = 2, loc = 'upper right', title = 'bf size',
+        handletextpad = 0.2, handlelength = 1.0, labelspacing = 0.2, columnspacing = 0.5))
     # set legend title fontsize to 10
     for l in leg:
-        plt.setp(l.get_title(), fontsize = 10)
+        plt.setp(l.get_title(), fontsize = 12)
 
     # ax1.legend(fontsize = 10, ncol = 1, loc = 'upper left')
 

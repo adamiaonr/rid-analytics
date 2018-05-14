@@ -18,6 +18,7 @@ import globalr
 import cdn
 import opportunistic
 import tradeoff
+import event_breakdown
 
 if __name__ == "__main__":
 
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     # options (self-explanatory)
     parser.add_argument(
         "--data-dir", 
-         help = """dir w/ .tsv files.""")
+         help = """dir(s) w/ .tsv files.""")
     parser.add_argument(
         "--output-dir", 
          help = """dir on which to print graphs.""")
@@ -49,9 +50,10 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    # if an output dir is not specified, use data-dir
     if not args.output_dir:
-        args.output_dir = args.data_dir
+        sys.stderr.write("""%s: [ERROR] please supply an output dir!\n""" % sys.argv[0]) 
+        parser.print_help()
+        sys.exit(1)
 
     if not args.test_file:
         sys.stderr.write("""%s: [ERROR] please supply a .test file path!\n""" % sys.argv[0]) 
@@ -85,17 +87,36 @@ if __name__ == "__main__":
             parser.print_help()
             sys.exit(1)
 
-        if args.subcase == 'no-tps':
-            cdn.plot_no_tps(args.data_dir, args.test_file, args.output_dir)
-        elif args.subcase == 'tps':
-            cdn.plot_tps(args.data_dir, args.test_file, args.output_dir)
+        if args.subcase == 'usage':
+            cdn.plot_usage(args.data_dir, args.test_file, args.case, args.output_dir)
+        elif args.subcase == 'breakdown':
+            cdn.plot_breakdown(args.data_dir, args.test_file, args.case, args.output_dir)
         else:
             sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
             parser.print_help()
             sys.exit(1)
 
     elif args.case == 'opportunistic':
-        opportunistic.plot(args.data_dir, args.test_file, args.output_dir)
+
+        if args.subcase == 'usage':
+            cdn.plot_usage_(args.data_dir, args.test_file, args.case, args.output_dir)
+        elif args.subcase == 'breakdown':
+            cdn.plot_breakdown_(args.data_dir, args.test_file, args.case, args.output_dir)
+        else:
+            sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
+            parser.print_help()
+            sys.exit(1)
+
+    elif args.case == 'cdn-lpm':
+
+        if args.subcase == 'usage':
+            cdn.plot_usage_(args.data_dir, args.test_file, args.case, args.output_dir)
+        elif args.subcase == 'breakdown':
+            cdn.plot_breakdown_(args.data_dir, args.test_file, args.case, args.output_dir)
+        else:
+            sys.stderr.write("""%s: [ERROR] please supply a valid subcase for %s case\n""" % (sys.argv[0], args.case))
+            parser.print_help()
+            sys.exit(1)
 
     elif args.case == 'tradeoff':
         tradeoff.plot_tradeoff(args.data_dir, args.test_file, args.output_dir)

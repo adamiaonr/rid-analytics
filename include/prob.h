@@ -5,15 +5,6 @@
 // double', decided to go with the alias '__float080' (80 bit size)
 #define __float080 long double
 
-// interface events
-#define EVENT_NUM       0x04 // hack : we don't count w/ EVENT_TTL
-#define EVENT_NLM       0x00 // no link matches
-#define EVENT_MLM       0x01 // multiple link matches
-#define EVENT_LLM       0x02 // local link match
-#define EVENT_SLM       0x03 // single link match (other than local)
-#define EVENT_TTL       0x04 // drop due to rtt expiration
-#define EVENT_UNKNOWN   0x05
-
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -68,10 +59,10 @@ class Prob {
         // initialize prob arrays:
         //  - P(L_i = l | P_i = p)
         //  - P(L_(~i) = l | P_(~i) = p)
-        for (unsigned i = 0; i < this->iface_num; i++) {
-            this->lm_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
-            this->lm_complement_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
-        }
+        // for (unsigned i = 0; i < this->iface_num; i++) {
+        //     this->lm_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
+        //     this->lm_complement_cond_prob.push_back(std::vector<std::vector<__float080> > ((n + 1), std::vector<__float080> ((n + 1), 0.0)));
+        // }
 
         //  - P(P_i = p) and P(P_(~i) = p)
         this->fptree_prob.push_back(std::vector<std::vector<__float080> > ((this->iface_num), std::vector<__float080> ((n + 1), 0.0)));
