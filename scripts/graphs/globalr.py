@@ -87,6 +87,9 @@ def plot_table_req_size_tradeoff(data_dir, test_dir, output_dir):
 
     # use the classic plot style
     plt.style.use('classic')
+    # avoid Type 3 fonts
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
 
     # fig
     fig = plt.figure(figsize = (5, 3.5))
@@ -369,6 +372,9 @@ def plot_bf_sizes(data_dir, test_dir, output_dir):
 
     # use the classic plot style
     plt.style.use('classic')
+    # avoid Type 3 fonts
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
 
     # fig
     fig = plt.figure(figsize=(5, 3.5))

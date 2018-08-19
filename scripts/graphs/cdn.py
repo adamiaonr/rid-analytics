@@ -126,6 +126,9 @@ def plot_breakdown(data_dir, test_dir, scenario, output_dir):
     bar_width = 0.10
     # use the classic plot style
     plt.style.use('classic')
+    # avoid Type 3 fonts
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
 
     # fig
     fig = plt.figure(figsize=(5, 3.5))
@@ -319,6 +322,10 @@ def plot_usage(data_dir, test_dir, scenario, output_dir):
     bar_width = 0.10
     # use the classic plot style
     plt.style.use('classic')
+    # avoid Type 3 fonts
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
+
     # fig
     fig = plt.figure(figsize=(5, 3.5))
     # (1) avg. nr. of used links (bar chart)
@@ -646,6 +653,9 @@ def plot_breakdown_(data_dir, test_dir, scenario, output_dir):
     bar_width = 0.10
     # use the classic plot style
     plt.style.use('classic')
+    # avoid Type 3 fonts
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
 
     # fig
     fig = plt.figure(figsize=(5, 3.5))
@@ -901,6 +911,10 @@ def plot_usage_(data_dir, test_dir, scenario, output_dir):
     bar_width = 0.10
     # use the classic plot style
     plt.style.use('classic')
+    # avoid Type 3 fonts
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
+
     # fig
     fig = plt.figure(figsize=(5, 3.5))
     # (1) avg. nr. of used links (bar chart)
@@ -1006,7 +1020,11 @@ def plot_usage_(data_dir, test_dir, scenario, output_dir):
                 ax1.plot(
                     latency[_mode]['xx'],
                     latency[_mode]['yy'],
-                    linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = markers[_bf], label = _label[_mode])
+                    linewidth = 0.0, color = 'black', linestyle = '-', markersize = 5, marker = markers[_bf], label = _label[_mode])
+                # ax1.plot(
+                #     latency[_mode]['xx'],
+                #     latency[_mode]['yy'],
+                #     linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = markers[_bf], label = _label[_mode])
 
         pos += (bar_width * 1.0)
 
@@ -1214,7 +1232,11 @@ def plot_usage_(data_dir, test_dir, scenario, output_dir):
                 ax1.plot(
                     latency[_mode]['xx'],
                     latency[_mode]['yy'],
-                    linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = markers[_bf], label = _label[_mode])
+                    linewidth = 0.0, color = 'black', linestyle = '-', markersize = 5, marker = markers[_bf], label = _label[_mode])
+                # ax1.plot(
+                #     latency[_mode]['xx'],
+                #     latency[_mode]['yy'],
+                #     linewidth = 1.5, color = 'black', linestyle = '-', markersize = 5, marker = markers[_bf], label = _label[_mode])
 
         pos += (bar_width * 1.0)
 

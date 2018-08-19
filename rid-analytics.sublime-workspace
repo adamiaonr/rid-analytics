@@ -4,40 +4,336 @@
 		"selected_items":
 		[
 			[
-				"pa",
-				"path"
+				"cac",
+				"caches"
 			],
 			[
-				"selec",
-				"selected_paths"
+				"el",
+				"elif"
 			],
 			[
-				"fwd",
-				"fwd_decisions"
+				"cd",
+				"cdn-lpm"
 			],
 			[
-				"fwd_",
-				"fwd_decision"
+				"tes",
+				"test_parameters"
 			],
 			[
-				"event_n",
-				"event_nums"
+				"tp",
+				"tps"
 			],
 			[
-				"even",
-				"events"
+				"fp",
+				"fps"
+			],
+			[
+				"_",
+				"_mode"
+			],
+			[
+				"la",
+				"label"
+			],
+			[
+				"bf",
+				"bf_sizes"
+			],
+			[
+				"mar",
+				"markers"
+			],
+			[
+				"ls",
+				"lstrip"
+			],
+			[
+				"cas",
+				"case"
+			],
+			[
+				"sl",
+				"slmc"
+			],
+			[
+				"hf",
+				"hfd_contrib"
+			],
+			[
+				"__",
+				"__d"
+			],
+			[
+				"me",
+				"metacase"
+			],
+			[
+				"case",
+				"cases"
+			],
+			[
+				"re",
+				"replace"
+			],
+			[
+				"n_",
+				"n_neighbors"
+			],
+			[
+				"annc_",
+				"annc_sizes"
+			],
+			[
+				"ne",
+				"neighbor_router"
+			],
+			[
+				"ro",
+				"router"
+			],
+			[
+				"tp_",
+				"tp_record"
+			],
+			[
+				"fi",
+				"filters"
+			],
+			[
+				"out",
+				"out_degree"
+			],
+			[
+				"in",
+				"indegree"
+			],
+			[
+				"nei",
+				"neighbor_ids"
+			],
+			[
+				"sen",
+				"send_buff"
+			],
+			[
+				"no",
+				"node"
+			],
+			[
+				"ni",
+				"nid"
+			],
+			[
+				"co",
+				"count"
+			],
+			[
+				"neh",
+				"neighbor_ids"
+			],
+			[
+				"n",
+				"nids"
+			],
+			[
+				"sel",
+				"self"
+			],
+			[
+				"se",
+				"selected_candidates"
+			],
+			[
+				"ar",
+				"args"
+			],
+			[
+				"S10",
+				"S1010021"
+			],
+			[
+				"titl",
+				"titles"
+			],
+			[
+				"def",
+				"defaultdict"
+			],
+			[
+				"da",
+				"data"
 			],
 			[
 				"pr",
-				"prob"
+				"print"
 			],
 			[
-				"pre",
-				"prev_state"
+				"nr_",
+				"nr_rounds"
 			],
 			[
-				"iface",
-				"iface_probs"
+				"prev",
+				"prev_row"
+			],
+			[
+				"nr",
+				"nr_rounds"
+			],
+			[
+				"sed",
+				"send_buff"
+			],
+			[
+				"topo",
+				"topology"
+			],
+			[
+				"slm",
+				"slmc"
+			],
+			[
+				"fwd",
+				"fwd_case"
+			],
+			[
+				"fw",
+				"fwd_case"
+			],
+			[
+				"sou",
+				"sources"
+			],
+			[
+				"m",
+				"mstr"
+			],
+			[
+				"dat",
+				"data_dir"
+			],
+			[
+				"li",
+				"link_usage"
+			],
+			[
+				"sr",
+				"str"
+			],
+			[
+				"for",
+				"forwarding"
+			],
+			[
+				"to",
+				"topology"
+			],
+			[
+				"EVE",
+				"EVENT_MLM"
+			],
+			[
+				"end",
+				"endl"
+			],
+			[
+				"s",
+				"std"
+			],
+			[
+				"cl",
+				"clear"
+			],
+			[
+				"jo",
+				"joint_prob"
+			],
+			[
+				"ev",
+				"EVENT_SLMI"
+			],
+			[
+				"lin",
+				"link_usage"
+			],
+			[
+				"ti",
+				"tight"
+			],
+			[
+				"ba",
+				"bar_width"
+			],
+			[
+				"get",
+				"get_id"
+			],
+			[
+				"ori",
+				"origin_server"
+			],
+			[
+				"th",
+				"this"
+			],
+			[
+				"_da",
+				"_data"
+			],
+			[
+				"b",
+				"bf_keys"
+			],
+			[
+				"ve",
+				"verification"
+			],
+			[
+				"font",
+				"fontsize"
+			],
+			[
+				"le",
+				"leg"
+			],
+			[
+				"lege",
+				"legend"
+			],
+			[
+				"str",
+				"strategy"
+			],
+			[
+				"id",
+				"ideal"
+			],
+			[
+				"topology_",
+				"topology_labels"
+			],
+			[
+				"line",
+				"linestyle"
+			],
+			[
+				"ts",
+				"ts_series"
+			],
+			[
+				"ta",
+				"tab-size"
+			],
+			[
+				"ts_",
+				"ts_series"
+			],
+			[
+				"rs",
+				"rs_keys"
+			],
+			[
+				"get_i",
+				"get_in_iface_prob"
 			],
 			[
 				"ifa",
@@ -48,538 +344,194 @@
 				"OUTCOME_HARD_FALLBACK_DELIVERY"
 			],
 			[
-				"fl",
-				"flood"
+				"nex",
+				"next_state"
 			],
 			[
-				"ou",
-				"outcome"
+				"del",
+				"delete"
 			],
 			[
-				"la",
-				"latency"
+				"pro",
+				"prob_mod"
 			],
 			[
-				"out",
-				"outcome"
+				"if",
+				"iface"
 			],
 			[
-				"hand",
-				"handle_llm"
+				"out_",
+				"out_fptree_probs"
 			],
 			[
-				"make",
-				"make_fwd_decision"
+				"add_",
+				"add_fwd_decision"
 			],
 			[
-				"es",
-				"else"
-			],
-			[
-				"pat",
+				"pah",
 				"path_prob"
 			],
 			[
-				"bi",
-				"bitset"
-			],
-			[
-				"def",
-				"define"
-			],
-			[
-				"rou",
-				"router"
-			],
-			[
-				"on",
-				"on_path_to_origin"
-			],
-			[
-				"b",
-				"bitmask"
-			],
-			[
-				"by",
-				"byte_ix"
-			],
-			[
-				"bit",
-				"bitmask"
-			],
-			[
-				"ori",
-				"origin_server"
-			],
-			[
-				"path",
-				"path-to-origin"
-			],
-			[
-				"fall",
-				"fallback_prob"
-			],
-			[
-				"fal",
-				"fallback_prob"
-			],
-			[
-				"se",
-				"set_yticks"
-			],
-			[
-				"ax",
-				"ax1"
-			],
-			[
-				"el",
-				"else"
-			],
-			[
-				"bf",
-				"bf_key"
-			],
-			[
-				"x",
-				"xticks"
-			],
-			[
-				"ar",
-				"arange"
-			],
-			[
-				"whi",
-				"white"
-			],
-			[
-				"set",
-				"set_xticklabels"
-			],
-			[
-				"eff",
-				"efficiency"
-			],
-			[
-				"labe",
-				"label"
-			],
-			[
-				"topo",
-				"topology_labels"
-			],
-			[
-				"set_y",
-				"set_yticks"
-			],
-			[
-				"bar",
-				"bar_width"
-			],
-			[
-				"ba",
-				"bar_width"
-			],
-			[
-				"sl",
-				"slm"
-			],
-			[
-				"ev",
-				"events"
-			],
-			[
-				"to",
-				"topology_keys"
-			],
-			[
-				"bf_",
-				"bf_keys"
-			],
-			[
-				"res",
-				"reset_index"
-			],
-			[
-				"fil",
-				"file_type"
-			],
-			[
-				"da",
-				"data"
-			],
-			[
-				"read",
-				"read_data"
-			],
-			[
-				"re",
-				"return"
-			],
-			[
-				"eve",
-				"events"
-			],
-			[
-				"dat",
-				"data_dir"
-			],
-			[
-				"add",
-				"add_label_cols"
-			],
-			[
-				"req",
-				"req-size"
-			],
-			[
-				"_",
-				"_data"
-			],
-			[
-				"top",
-				"topology"
-			],
-			[
-				"file_",
-				"file_name"
-			],
-			[
-				"fi",
-				"file_type"
-			],
-			[
-				"max",
-				"max_tree"
-			],
-			[
-				"key",
-				"keys"
-			],
-			[
-				"so",
-				"source"
-			],
-			[
-				"sou",
-				"sources"
-			],
-			[
-				"n_",
-				"n_avail_srcs"
-			],
-			[
-				"ski",
-				"skipping"
-			],
-			[
-				"sour",
-				"source_picked"
-			],
-			[
-				"ran",
-				"randint"
-			],
-			[
-				"tp",
-				"tps"
-			],
-			[
-				"tp_",
-				"tp_src_id"
-			],
-			[
-				"sourc",
-				"sources"
-			],
-			[
-				"cu",
-				"curr_path_size"
-			],
-			[
-				"sh",
-				"shortest_paths"
-			],
-			[
-				"nr",
-				"nr_paths"
-			],
-			[
-				"fp",
-				"fps"
-			],
-			[
-				"tab",
-				"table_sizes"
-			],
-			[
-				"entr",
-				"entry_size_records"
-			],
-			[
-				"test",
-				"test_dir"
-			],
-			[
-				"fo",
-				"folder"
-			],
-			[
-				"con",
-				"configs"
-			],
-			[
-				"dir",
-				"directory"
-			],
-			[
-				"joi",
-				"joint_prob"
-			],
-			[
-				"calc",
-				"calc_marginal_probs"
-			],
-			[
-				"mar",
-				"marginal_prob"
-			],
-			[
-				"ini",
-				"init"
-			],
-			[
-				"en",
-				"endl"
-			],
-			[
-				"cum",
-				"cumulative_fp_prob"
-			],
-			[
-				"lt",
-				"lt_ratio"
-			],
-			[
-				"tre",
-				"tree_bitmask"
-			],
-			[
-				"loca",
-				"local_tree_ratio"
-			],
-			[
-				"tr",
-				"trees"
-			],
-			[
-				"sha",
-				"shared_trees"
-			],
-			[
-				"cou",
-				"count_shared_trees"
-			],
-			[
-				"ent",
-				"entry_prop"
-			],
-			[
-				"num",
-				"num_entries"
-			],
-			[
-				"co",
-				"count"
-			],
-			[
-				"count_s",
-				"count_set_bits"
-			],
-			[
-				"nu",
-				"num_entries"
-			],
-			[
-				"EVE",
-				"EVENT_MLM"
+				"f",
+				"fptree_prob"
 			],
 			[
 				"lm",
 				"lm_marg_prob"
 			],
 			[
-				"beg",
-				"begin"
-			],
-			[
-				"next",
-				"next_state"
-			],
-			[
-				"run",
-				"run_rec"
-			],
-			[
-				"lm_co",
-				"lm_cond_prob"
-			],
-			[
-				"block",
-				"blocked_ifaces_num"
-			],
-			[
-				"ingre",
-				"ingress_prob"
-			],
-			[
-				"pro",
-				"prob_total"
-			],
-			[
-				"if",
+				"iface",
 				"iface_prob"
 			],
 			[
-				"prob_",
-				"prob_total"
+				"prob",
+				"prob"
 			],
 			[
 				"lm_",
-				"lm_prob_complement"
+				"lm_marg_prob"
 			],
 			[
-				"it",
-				"int"
+				"prob_l",
+				"prob_local_total"
 			],
 			[
-				"lmp",
-				"lm_prob_complement"
+				"prob_",
+				"prob_strict"
 			],
 			[
-				"log",
-				"log_prob_fp_smeq"
+				"prob_s",
+				"prob_strict"
 			],
 			[
-				"log_pro",
-				"log_prob_fp_smeq"
+				"Pro",
+				"Prob"
 			],
 			[
-				"tot",
-				"total_prob"
+				"_daa",
+				"_data_dir"
 			],
 			[
-				"toa",
-				"total_prob"
+				"ver",
+				"verify_paths"
 			],
 			[
-				"cond",
-				"cond_prob"
+				"veri",
+				"verify"
 			],
 			[
-				"cal",
-				"calc_event_probs"
+				"si",
+				"size"
 			],
 			[
-				"no",
-				"no_match_prob"
+				"rem",
+				"remove_from_bitmask"
 			],
 			[
-				"EV",
-				"EVENT_NLM"
+				"sc",
+				"scn_file"
 			],
 			[
-				"in_",
-				"in_iface"
+				"pa",
+				"path"
 			],
 			[
-				"nei",
-				"neighbor_probs"
+				"al",
+				"altered"
 			],
 			[
-				"att",
-				"attached_router_probs"
+				"inf",
+				"infr"
 			],
 			[
-				"RID_",
-				"RID_Router"
+				"test_",
+				"test_dir"
 			],
 			[
-				"R",
-				"RID"
+				"origin",
+				"origin_iface"
 			],
 			[
-				"RI",
-				"RID_Router"
+				"upda",
+				"updated"
 			],
 			[
-				"get",
-				"get_id"
+				"sof",
+				"soft_fallback_fix"
+			],
+			[
+				"max",
+				"max_prob"
+			],
+			[
+				"path",
+				"path_prob"
+			],
+			[
+				"mai",
+				"main_block"
+			],
+			[
+				"test",
+				"test_file"
+			],
+			[
+				"avo",
+				"avoid_path"
+			],
+			[
+				"ds",
+				"dst"
+			],
+			[
+				"vis",
+				"visited_dsts"
+			],
+			[
+				"dst",
+				"dsts"
+			],
+			[
+				"new_",
+				"new_tp_node"
+			],
+			[
+				"new",
+				"new_nodes"
+			],
+			[
+				"tp_s",
+				"tp_size"
+			],
+			[
+				"ch",
+				"child"
+			],
+			[
+				"curr",
+				"curr_tp_node"
+			],
+			[
+				"an",
+				"anncd"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "src/run-analysis.cpp",
+			"file": "scripts/graphs/cdn.py",
 			"settings":
 			{
-				"buffer_size": 8315,
+				"buffer_size": 50323,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "src/rid-analytics.cpp",
+			"file": "scripts/graphs/plot.py",
 			"settings":
 			{
-				"buffer_size": 29012,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "include/rid-analytics.h",
-			"settings":
-			{
-				"buffer_size": 3938,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "include/path-state.h",
-			"settings":
-			{
-				"buffer_size": 2784,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/rid-router.cpp",
-			"settings":
-			{
-				"buffer_size": 11209,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "include/rid-router.h",
-			"settings":
-			{
-				"buffer_size": 5355,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/prob.cpp",
-			"settings":
-			{
-				"buffer_size": 25693,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "include/prob.h",
-			"settings":
-			{
-				"buffer_size": 5519,
+				"buffer_size": 4474,
 				"line_ending": "Unix"
 			}
 		}
@@ -624,134 +576,134 @@
 	},
 	"file_history":
 	[
-		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot.py",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/tradeoff.py",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/opportunistic.py",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/base.py",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/globalr.py",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot_utils.py",
+		"/home/adamiaonr/workbench/rid-analytics/src/rid-analytics.cpp",
+		"/home/adamiaonr/workbench/sandbox/usb-find.sh",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/misc/flooding.py",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/convert_rocketfuel.py",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/generate_tests.py",
-		"/home/adamiaonr/Downloads/wysg.txt",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/1221-192-10-01-10000000-0-0-013-005.scn",
-		"/home/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/1337-192-10-01-10000000-0-0-000-004.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/1337-192-10-01-10000000-0-0-002-003.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/pop-level-maps/4755/edges.wt",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/pop-level-maps/dummy/edges.wt",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/pop-level-maps/1221/edges.wt",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/run_evaluation.py",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.1221-192-10-01-10000000-0-0-043-000.1521401085.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.1221-192-10-01-10000000-0-0-043-000.1521401085.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.1221-192-10-01-10000000-0-0-043-000.1521402539.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/outcomes.1221-192-10-01-10000000-0-0-43-2.1521138181.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.1221-192-10-01-10000000-0-0-043-000.1521400563.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.1221-192-10-01-10000000-0-0-043-000.1521400563.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/1221.test",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1521400444.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1521400368.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1521400444.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1521400368.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/1221-256-10-01-10000000-0-0-007-011.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.1221-192-10-01-10000000-0-0-1-42.1521138180.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.3356-192-10-01-10000000-0-0-0-20.1521127522.tsv",
 		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/cdn.py",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/6.fdist",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/7.fdist",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/8.fdist",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/9.fdist",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/10.fdist",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/5.fdist",
-		"/home/adamiaonr/workbench/rid-analytics/include/path-state.h",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/3356-192-10-01-10000000-0-0-000-020.scn",
-		"/home/adamiaonr/workbench/wifi-vehicles/data-analysis/src/auth.py",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot.py",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/rocketfuel/verify_tests.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/configs/7018-192-10-01-10000000-3-1-002-078-S450221S550221*152.scn",
+		"/home/adamiaonr/Downloads/wysg.txt",
+		"/home/adamiaonr/Downloads/xxxxxxxxxxxxxxx",
+		"/home/adamiaonr/Downloads/xxxxx",
+		"/home/adamiaonr/workbench/rid-analytics/index.html",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/results/events.3356-192-10-01-10000000-3-1-0-20-S45022HS55022H*152.1526249966.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/configs/3356.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/configs/3356-192-10-01-10000000-3-1-000-020-S45022HS55022H*152.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/configs/7018-192-10-01-10000000-3-1-002-078-S45022HS55022H*152.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-010-000-S25022IS35022I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-010-000-S35022IS45022I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/3356.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-lpm/no-tps/results/events.3356-192-10-01-10000000-3-1-0-20-S750221S1050221.1526251753.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-lpm/no-tps/results/events.3356-192-10-01-10000000-3-1-25-20-S75022IS105022I.1526251753.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/results/events.3356-192-10-01-10000000-3-1-0-20-S450221S550221*152.1526249966.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/results/events.3356-192-10-01-10000000-3-1-0-20-S45022IS55022I*152.1526249966.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-111-003-S550221S650221.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-111-003-S55022IS65022I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/src/prob.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-010-000-S45022IS55022I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/events.7018-192-10-01-10000000-3-1-111-3-S55022IS65022I.1526169211.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/configs/7018-192-10-01-10000000-3-1-029-008-S35022IS45022I*132.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/configs/7018.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/events.7018-192-10-01-10000000-3-1-107-3-S350221S450221.1526165882.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/events.7018-192-10-01-10000000-3-1-107-3-S35022IS45022I.1526165883.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/events.7018-192-10-01-10000000-3-1-107-3-S450221S550221.1526165884.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/events.7018-192-10-01-10000000-3-1-107-3-S45022IS55022I.1526165884.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/events.7018-192-10-01-10000000-3-1-17-1-S350221S450221.1526165882.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/events.7018-192-10-01-10000000-3-1-17-1-S35022IS45022I.1526165883.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/configs/7018-192-10-01-10000000-3-1-001-003-S45022IS55022I*142.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/tps/configs/7018-192-10-01-10000000-3-1-026-008-S35022IS45022I*132.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-036-008-S45022HS55022H.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-067-021-S45022IS55022I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-063-006-S410022IS510022I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-008-001-S410022HS510022H.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/7018-192-10-01-10000000-3-1-002-079-S21002I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn-partialle/no-tps/configs/1221-192-10-01-10000000-0-0-028-005-S510023.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn-partialle/tps/configs/1221-192-10-01-10000000-0-0-005-011-S51002I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn-partialle/tps/configs/1221-192-10-01-10000000-0-0-011-005-S510023.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn-partialle/tps/configs/1221-192-10-01-10000000-0-0-016-005-S510023.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-breakdown/no-tps/results/events.3257-192-10-01-10000000-3-1-15-5-S1010023.1525773532.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-breakdown/no-tps/results/events.3257-192-10-01-10000000-3-1-10-12-S1010021.1525773532.tsv",
+		"/home/adamiaonr/workbench/wifi-vehicles/wifi-assist/src/blind-handovers/covmap_example.py",
 		"/home/adamiaonr/workbench/wifi-vehicles/data-analysis/src/availability.py",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.1221-192-10-01-10000000-0-0-1-42.1521037814.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/7018-192-10-01-10000000-0-0-014-053.scn",
+		"/home/adamiaonr/workbench/wifi-vehicles/wifi-assist/src/blind-handovers/coverage_map.py",
+		"/home/adamiaonr/workbench/wifi-vehicles/wifi-assist/src/blind-handovers/coverage_map.pyc",
+		"/home/adamiaonr/workbench/wifi-vehicles/wifi-assist/src/blind-handovers/availability.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/tps/results/events.3257-192-10-01-10000000-3-1-13-15-S101002I.1525714239.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/tps/results/outcomes.3257-192-10-01-10000000-3-1-13-15-S101002I.1525714239.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/tps/configs/3257-192-10-01-10000000-3-1-009-012-S101002I.scn",
 		"/home/adamiaonr/workbench/rid-analytics/include/rid-analytics.h",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/base.py",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/3257-192-10-01-10000000-0-0-000-012.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.3257-192-10-01-10000000-0-0-0-12.1520985979.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.3257-192-10-01-10000000-0-0-0-12.1521024878.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.3257-192-10-01-10000000-0-0-13-15.1520985979.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/outcomes.1221-192-10-01-10000000-0-0-1-42.1520985785.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/4755-192-10-01-10000000-0-0-007-004.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/outcomes.3257-512-10-01-10000000-0-0-21-19.1520798964.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/4755.test",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/request-sizes/configs/1221-192-05-01-10000000-0-0-018-002.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/request-sizes/configs/1221.test",
-		"/home/adamiaonr/workbench/networking-sandbox/python-ip-stack/src/tap.py",
-		"/home/adamiaonr/Downloads/text-as-you-go.txt",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.1221-192-10-01-10000000-0-0-018-002.1520728766.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.1221-192-10-01-10000000-0-0-018-002.1520728766.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/1221-192-10-01-10000000-0-0-018-002.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/request-sizes/configs/1221-192-10-01-10000000-0-0-018-002.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/4755-192-05-01-10000000-0-0-007-004.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/configs/1221.test",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/request-sizes/configs/1221-192-05-05-10000000-0-0-026-005.scn",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520638884.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520638884.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520638884.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520532624.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520532624.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520608923.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520608923.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520608923.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520532624.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520531333.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520531333.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520531333.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520530260.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520530260.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520530260.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520528556.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520528556.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520528556.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520528047.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520528047.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520528047.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520527611.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520527611.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520527611.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520525537.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520525537.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520525537.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520525169.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520525169.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520525169.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.4755-192-05-01-10000000-0-0-7-4.1520522616.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520522616.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/forwarding.4755-192-05-01-10000000-0-0-7-4.1520520818.tsv",
-		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.4755-192-05-01-10000000-0-0-7-4.1520522616.tsv",
 		"/home/adamiaonr/workbench/rid-analytics/include/rid-router.h",
+		"/home/adamiaonr/workbench/rid-analytics/src/path-state.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/include/path-state.h",
 		"/home/adamiaonr/workbench/rid-analytics/include/prob.h",
-		"/home/adamiaonr/Downloads/rid-analytics-bad-run",
-		"/home/adamiaonr/Downloads/consulting",
-		"/home/adamiaonr/Downloads/stuffy",
-		"/home/adamiaonr/workbench/rid-analytics/src/graph.cpp",
-		"/home/adamiaonr/workbench/degiro/degiro.py",
-		"/home/adamiaonr/workbench/machine-learning/2017/src/hw2/ex1.py",
-		"/home/adamiaonr/Downloads/outfile.pc",
-		"/home/adamiaonr/Downloads/sigcomm-16.pc",
-		"/home/adamiaonr/Downloads/wifi-log",
-		"/home/adamiaonr/Downloads/wpa.log",
-		"/home/adamiaonr/Downloads/wpa.log.log",
-		"/home/adamiaonr/Downloads/wpa-supplicant.log",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot_base.py",
-		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/plot_opportunistic.py",
-		"/home/adamiaonr/Downloads/run-analysis-test",
-		"/home/adamiaonr/Downloads/apt-get.bs",
-		"/home/adamiaonr/Downloads/here.txt",
-		"/home/adamiaonr/Downloads/output01",
-		"/home/adamiaonr/Downloads/route",
-		"/home/adamiaonr/Downloads/backup.cpp",
-		"/home/adamiaonr/Downloads/xport",
-		"/home/adamiaonr/Downloads/variables-to-watch.txt",
-		"/home/adamiaonr/Downloads/test",
-		"/home/adamiaonr/Downloads/test.cpp",
-		"/home/adamiaonr/Downloads/1221-192-10-01-10000000-0-0-003-030.scn",
-		"/home/adamiaonr/Downloads/plot.py",
-		"/home/adamiaonr/Downloads/x.scn",
-		"/home/adamiaonr/Downloads/1221-256-10-05-10000000-0-0-010-000.scn",
-		"/home/adamiaonr/Downloads/fml",
-		"/home/adamiaonr/Downloads/hello"
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-breakdown/tps/results/events.3257-192-10-01-10000000-0-0-10-12-S1010021.1525771972.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-breakdown/tps/results/events.3257-192-10-01-10000000-0-0-10-12-S101002I.1525771974.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-breakdown/no-tps/results/events.7018-192-10-01-10000000-0-0-109-1-S1010021.1525772216.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-breakdown/no-tps/configs/3257.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-breakdown/no-tps/configs/7018.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic-breakdown/no-tps/configs/1221.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/tps/results/outcomes.3257-192-10-01-10000000-3-1-13-15-S101002I.1525713548.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/tps/results/events.3257-192-10-01-10000000-3-1-13-15-S101002I.1525713548.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/no-tps/results/events.3257-192-10-01-10000000-3-1-12-1-S101002I.1525710640.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/tps/configs/3257-192-10-01-10000000-3-1-000-019-S101002I.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn-partial/no-tps/configs/3257.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/no-tps/results/outcomes.3257-192-10-01-10000000-3-1-12-1-S101002I.1525710640.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/opportunistic/no-tps/configs/3257.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/1221.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/3257-192-10-01-10000000-0-0-004-019-S512.scn",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/configs/1221-192-10-01-10000000-0-0-004-014-S512.scn",
+		"/home/adamiaonr/workbench/rid-analytics/scripts/graphs/event_breakdown.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/7018.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/3356.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/3257.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/1221.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.1221-192-10-01-10000000-0-0-1-43.1525545958.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/outcomes.1221-192-10-01-10000000-0-0-1-43.1525532883.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.1221-192-10-01-10000000-0-0-1-43.1525532883.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.1221-192-10-01-10000000-0-0-1-43.1525532837.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/rocketfuel/tests/results/events.1221-192-10-01-10000000-0-0-1-43.1525530153.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/src/run-analysis.cpp",
+		"/home/adamiaonr/workbench/rid-analytics/Makefile",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/breakdown/configs/1221.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/breakdown/configs/3257.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/breakdown/configs/3356.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/breakdown/configs/7018.test",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/results/events.1221-192-10-01-10000000-0-0-1-43.1525369978.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/events.7018-256-10-01-10000000-3-1-34-8.1525425817.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-192-10-01-10000000-3-1-34-8.1525425816.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-256-10-01-10000000-3-1-34-8.1525425817.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/events.7018-192-10-01-10000000-3-1-34-8.1525425816.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-192-10-01-10000000-3-1-39-3.1525425816.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-256-10-01-10000000-3-1-39-3.1525425817.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/events.7018-192-10-01-10000000-3-1-39-3.1525425816.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/events.7018-256-10-01-10000000-3-1-39-3.1525425817.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/events.7018-192-10-01-10000000-3-1-105-0.1525425816.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-192-10-01-10000000-3-1-105-0.1525425816.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-192-06-01-10000000-3-1-85-0.1525425814.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-192-06-01-10000000-3-1-84-0.1525425814.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/events.7018-512-06-01-10000000-3-1-27-13.1525363533.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-512-06-01-10000000-3-1-27-13.1525363533.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-192-06-01-10000000-3-1-27-13.1525363532.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-192-06-01-10000000-3-1-27-13.1525425814.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-512-06-01-10000000-3-1-27-13.1525425814.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/outcomes.7018-512-06-01-10000000-3-1-65-21.1525363533.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/events.1221-192-10-01-10000000-3-1-10-0-S512.1525129090.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/events.7018-192-06-01-10000000-3-1-27-13.1525363532.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/cdn/no-tps/results/outcomes.1221-192-10-01-10000000-3-1-10-0-S512.1525129090.tsv",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/trade-off/results/forwarding.7018-192-06-01-10000000-3-1-27-13.1525363532.tsv",
+		"/home/adamiaonr/workbench/rid-testapp/scripts/plot-stats.py",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/5.fdist",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/4.fdist",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/examples/diff-distributions/3.fdist",
+		"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/configs/1221-192-10-05-10000000-0-0-012-006.scn"
 	],
 	"find":
 	{
@@ -771,134 +723,134 @@
 		"case_sensitive": true,
 		"find_history":
 		[
-			"calc_iface_prob",
-			"calc_lm_prob",
-			"calc_lm_probs",
-			"tps",
-			"selected_paths",
-			"event_n",
-			"event_nums",
-			"set_in_",
-			"in_iface_prob",
-			"get_in",
-			"get_pa",
-			"output_file[3]",
-			"fwd_decisions",
-			"fwd_decision",
-			"add_fwd",
-			"OUTCOME_FEEDBACK_DELIVERY",
-			"RES",
-			"OPTION_RESOLV_MODE",
-			"conditional",
-			"lt",
-			"local tree",
+			"plot",
+			"plot_usage",
+			"breakdown",
+			"around",
+			"around ",
+			"savefig",
+			"\"0\">5</tp>",
+			"fontsize",
+			"_data",
+			"router=\"2",
+			"get_neighbors_within_dist",
+			"4</tp>",
+			"3</tp>",
+			"5</tp>",
+			"4</tp>",
+			"to_tree_bitmask",
+			"router",
+			"size=\"4\">",
+			"random",
+			"get_neighbors_within_radius",
+			"radius",
+			"draw_pop_",
+			";",
+			"edges",
+			"draw_pop_level_map",
+			"pdf",
+			"radius",
+			"get_shortest_paths",
+			"<tp iface=\"0\">5",
+			"<tp iface=\"0\">",
+			"<tp iface=\"0\">5",
+			"topology_colors",
+			"mstr",
+			"scenarios/cdn-partialle",
+			"1:5:2",
+			"10</tp>",
+			"5</tp>",
+			"opportu",
+			"print(",
+			"192:",
+			"192|",
+			"add_su",
+			"scenarios/cdn-no-avoid",
+			"into : 20[",
+			"into : 2[",
+			"RID_Router::forward() : P(in) = 1",
+			"into : 3[",
+			"router id=\"4",
+			"2</tp>",
+			"scenarios/cdn-no-avoid/no-tps",
+			"--add-fps \"S:5:100:2\"",
+			"--add-fps \"S:2:100:2\"",
+			"cd",
+			"scenarios/cdn/no-tps",
+			"avoid_",
 			"slm",
-			"slm stack",
-			"slm record",
-			"slm_stack",
-			"run_record",
-			"router id=\"1",
-			"router id=\"1\"",
-			"handle_slm",
-			"run_record",
-			"RID_Analytics::fwd_decision_record",
-			"RID_Analytics::run_record",
-			"run_record",
-			"OUTCOME_HARD_FALLBACK_DELIVERY",
-			"on_path_to_origin",
-			"OUTCOME_FALLBACK_DELIVERY",
-			"mode",
-			"MMH",
-			"MMH_FLOOD",
-			"OPTION_RESOLV_MODE",
-			"resolv_mode",
-			"RES_FALLBACKS",
-			"on_path_to_origin",
-			"origin",
-			"mode",
-			"size=\"2\"",
-			"21	",
-			"43	",
-			"46	",
-			"6	",
-			"ttl",
-			"grid",
-			"style",
-			"sort",
-			"unique",
-			"avg",
-			"to_frame",
-			"groupby",
-			"plot_opportunistic",
-			"plot_cdn",
-			"global",
-			"plot_global",
-			"base",
-			"tp ifa",
-			" - ",
-			"status",
-			"cd",
-			"1.",
-			"outdegree",
-			"randint",
-			"tp iface=\"",
-			"tps",
-			"no rad",
-			"is_string_like",
-			"topology_nr",
-			"set_ttl",
-			"ttl",
-			"force",
-			"parse_pop_level_map",
-			"Topology",
-			"trim_topology",
-			"ic",
-			"_i",
-			"this->lm_complement_marg_prob",
-			"this->lm_marg_prob",
-			"lm_complement_marg_prob",
-			"id",
-			"cd",
-			"id",
-			"RID_Router()",
-			"RID_R",
-			"initialize",
-			"initialized",
-			"id=\"",
-			"initialized",
-			"invalid",
-			"iface_fp_data",
-			"ic",
-			"calc_fptree_probs",
-			"in_prob",
-			"out_fptree_probs",
-			"calc_out_fptree_prob",
-			"fwd_size_dist",
-			"fwd_dist",
-			"add_fwd_table_entry",
-			"f_distr",
-			"in_prob",
-			"cout",
-			"iface_fp_data.",
-			"<Prob::fp_data",
-			"iface_fp_data",
-			"iface_fp_data.",
-			"iface_fp_data",
-			"fp_data",
-			"Prob::fp_data",
-			"calc_log_prob_fp_neq",
-			"tree_bitmask",
-			"tree_bi",
-			"tree",
-			"iface_complement",
-			"calc_lm_probs",
+			"into : 0[",
+			"RID_Router::forward() : P(in) = 1",
+			"events",
+			"add_events(",
+			"21[",
+			"fptree_prob",
+			"21[",
+			"EVENT_SLM",
+			"prev_state->get_in_iface_prob() - events[EVENT_SLMC] - events[EVENT_SLMI] - iface_probs[0][2]",
+			"EVENT_SLM",
+			"EVENT_TTL",
+			"EVENT_SLM",
+			"add_fwd(",
+			"output_file[2]",
+			"0 : 2",
+			"lm_complement_cond_prob",
 			"calc_lm_prob",
-			"in_fptree",
-			"p",
-			"tree_bitmask",
-			"iface_fp_data",
-			"fp_data",
-			"get_fp_data"
+			"0 : 2",
+			": 2",
+			") = 1",
+			"= 2",
+			"ERROR",
+			"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/bf-sizes/",
+			"iface_probs[i][2]",
+			"iface_probs[0][2]",
+			"events[EVENT_LLM]",
+			"get_pop_level_statistics",
+			"print_pop_level_statistics",
+			"labels",
+			"verify_tps",
+			"fix_tps",
+			"global/tab-sizes-prefix-exclusion-tradeoff",
+			"100000000",
+			"ax1",
+			"values",
+			"RID_Router::forward() : [INFO] iface probs :",
+			"RID_Router::forward() : P(in) = 1\n",
+			"router id=\"1\"",
+			"RID_Router::forward() : P(in) = 1\n",
+			"cd",
+			"RID_Router::forward() : P(in) = 1\n",
+			"cd",
+			"RID_Router::forward() : P(in) = 1\n",
+			"prev_state",
+			"cd",
+			"RID_Router::forward() : P(in) = 1\n",
+			"add_fwd(",
+			"add_fwd_de",
+			"add_fwd",
+			"RID_Router::forward() : P(in) = 1\n",
+			"L_6",
+			"L_15",
+			"L_{~15}",
+			"L_{~6}",
+			"L_{~5}",
+			"L_5",
+			"RID_Router::forward() : P(in) = 1\n",
+			"router id=\"2\"",
+			"RID_Router::forward() : P(in) = 1\n",
+			"cd",
+			"RID_Router::forward() : P(in) = 1\n",
+			"delete",
+			"get_fp_data",
+			"get_fp_da",
+			"verbose",
+			"iface_p",
+			"into : 3[2]",
+			"RID_Router::forward() : P(in) = 1\n",
+			"107[1]",
+			"RID_Router::forward() : P(in) = 1\n",
+			"cout",
+			"RID_Router::forward() : P(in) = 1\n"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -906,6 +858,49 @@
 		"regex": false,
 		"replace_history":
 		[
+			"annc_radius",
+			"dist",
+			"colors",
+			"modes_str",
+			"scenarios/opportunistic-breakdown/",
+			"1:10:2",
+			"scenarios/cdn-partial",
+			"scenarios/cdn-no-avoid/tps",
+			"--add-fps \"S:5:100:2\" --add-tps \"1:5:2\"",
+			"--add-fps \"S:2:100:2\" --add-tps \"1:2:2\"",
+			"scenarios/cdn-no-avoid/no-tps",
+			"mm_prob",
+			"/home/adamiaonr/workbench/rid-analytics/experiments/evaluation/scenarios/global/breakdown/",
+			"trade-off",
+			"10000000",
+			"ax[tt]",
+			"L_2",
+			"L_3",
+			"L_{~3}",
+			"L_{~2}",
+			"L_{~1}",
+			"L_1",
+			"3257",
+			"3356",
+			"7018",
+			"scenarios/opportunistic/no-tps/configs/",
+			"3356",
+			"3257",
+			"7018",
+			"n_srcs",
+			"annc_to",
+			"src",
+			"3257",
+			"3356",
+			"7018",
+			"tps",
+			"3356",
+			"3257",
+			"7018",
+			"t",
+			"(*log_prob_fp_neq)",
+			"(*log_prob_fp_smeq)",
+			"t",
 			"fwd_decisions",
 			"fwd_deciions",
 			"fwd_decisions",
@@ -990,50 +985,7 @@
 			"log_prob_fp_neq",
 			"log_prob_fp_eq",
 			"req_size",
-			"f_distr",
-			"[i]",
-			"f_r_distr",
-			"f_distr",
-			"f_r_distr",
-			"bool anti = false",
-			"(*lmp)",
-			"lmp",
-			"lm",
-			"this->lm_array",
-			"iface_fp_data",
-			"blocked_ifaces",
-			"this->n",
-			"get_req_size",
-			"iface_on_fptree",
-			"iface_fp_data.tp_size",
-			"iface_fp_data.num_entries",
-			"uint8_t",
-			"f_r_distr",
-			"f_distr",
-			"router->fwd_table[",
-			"log_prob_fp_lg",
-			"log_prob_fp_sm_eq",
-			"router->tp_sizes[",
-			"Prob::",
-			"calc_log_prob_fp_lg",
-			"calc_log_fp_lg",
-			"log_prob_fp_lg",
-			"log_prob_fp_lg_than",
-			"calc_lm_prob",
-			"calc_largest_match_prob",
-			"in_fptree_prob",
-			"calc_log_fwd_event_prob(",
-			"calc_fwd_event_probs(",
-			"calc_iface_probs(",
-			"calc_iface_events_probs(",
-			"calc_log_forwarding_event_prob(",
-			"iface_events_prob",
-			"calc_forwarding_event_probs(",
-			"calc_forwarding_event_probs",
-			"calc_forwarding_event_prob",
-			"calc_marginal_prob",
-			"s",
-			"joint_lmp"
+			"f_distr"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1044,243 +996,61 @@
 	"groups":
 	[
 		{
-			"selected": 6,
+			"selected": 1,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "src/run-analysis.cpp",
+					"file": "scripts/graphs/cdn.py",
 					"settings":
 					{
-						"buffer_size": 8315,
+						"buffer_size": 50323,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								6278,
-								6278
+								46965,
+								46965
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/C++/C++.tmLanguage",
+							"syntax": "Packages/Python/Python.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": 0.0,
-						"translation.y": 694.0,
+						"translation.x": 83.0,
+						"translation.y": 17802.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "src/rid-analytics.cpp",
+					"file": "scripts/graphs/plot.py",
 					"settings":
 					{
-						"buffer_size": 29012,
+						"buffer_size": 4474,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								20470,
-								20470
+								3765,
+								3765
 							]
 						],
 						"settings":
 						{
-							"rulers":
-							[
-								80
-							],
-							"syntax": "Packages/C++/C++.tmLanguage",
+							"syntax": "Packages/Python/Python.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 8442.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "include/rid-analytics.h",
-					"settings":
-					{
-						"buffer_size": 3938,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3042,
-								3042
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "include/path-state.h",
-					"settings":
-					{
-						"buffer_size": 2784,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								309,
-								309
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 585.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "src/rid-router.cpp",
-					"settings":
-					{
-						"buffer_size": 11209,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								8019,
-								8019
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-								80
-							],
-							"spell_check": true,
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 2670.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "include/rid-router.h",
-					"settings":
-					{
-						"buffer_size": 5355,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4154,
-								4154
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 90.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "src/prob.cpp",
-					"settings":
-					{
-						"buffer_size": 25693,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								15708,
-								15708
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-								80
-							],
-							"spell_check": true,
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 5899.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "include/prob.h",
-					"settings":
-					{
-						"buffer_size": 5519,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4038,
-								4038
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/C++/C++.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1620.0,
+						"translation.y": 1125.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1480,6 +1250,6 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 197.0,
+	"side_bar_width": 401.0,
 	"status_bar_visible": true
 }
